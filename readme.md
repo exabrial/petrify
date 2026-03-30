@@ -56,6 +56,6 @@ Petrify takes a different approach: compile the tree ensemble directly to JVM by
     - This is done so your models extend from and use ASL2.0 classes at runtime
 - All all other files in this project are licensed under EUPL-1.2
     - This license allows you to safely use unmodified/un-extended code in closed-source commercial projects, without revealing your company's proprietary application code in most cases.
-    - However: Note that if you modify/extend Petrify, distrute it, and/or offer online access to apps through a modified/extended Petrify, it is required by law that the source code for your Petrify changeset be made available _first_, before offering said access to your app or distribution.
+    - However: Note that if you modify/extend Petrify, distribute it, and/or offer online access to apps through a modified/extended Petrify, it is required by law that the source code for your Petrify changeset be made available _first_, before offering said access to your app or distribution.
     - Again, this does not include your proprietary application source code, just the changeset to Petrify
 - ONNX, XGBoost, LightGBM, scikit-learn, and other names are trademarks; this project is not endorsed by nor affiliated with them
