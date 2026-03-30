@@ -10,6 +10,15 @@
 	<artifactId>petrify-onnx-proto</artifactId>
 	<packaging>jar</packaging>
 
+	<licenses>
+		<license>
+			<name>Apache-2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>Apache License, Version 2.0</comments>
+		</license>
+	</licenses>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.google.protobuf</groupId>

@@ -6,8 +6,8 @@ import java.lang.invoke.MethodHandles;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.exabrial.petrify.internal.model.Grove;
 import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.model.Grove;
 
 class PetrifyTest {
 

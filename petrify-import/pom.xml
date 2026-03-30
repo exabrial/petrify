@@ -18,6 +18,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.exabrial</groupId>
+			<artifactId>petrify-compiler-model</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.exabrial</groupId>
 			<artifactId>petrify-onnx-proto</artifactId>
 			<scope>compile</scope>
 		</dependency>

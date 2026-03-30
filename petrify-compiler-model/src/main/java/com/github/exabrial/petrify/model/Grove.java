@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.internal.model;
+package com.github.exabrial.petrify.model;
 
 import static com.github.exabrial.petrify.model.PetrifyConstants.packLong;
 

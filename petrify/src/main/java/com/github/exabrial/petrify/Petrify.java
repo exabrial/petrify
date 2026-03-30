@@ -15,12 +15,12 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.exabrial.petrify.internal.model.Grove;
-import com.github.exabrial.petrify.internal.model.LeafClassEntry;
 import com.github.exabrial.petrify.internal.model.Stratum;
-import com.github.exabrial.petrify.internal.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.model.Grove;
+import com.github.exabrial.petrify.model.LeafClassEntry;
 import com.github.exabrial.petrify.model.PetrifyConstants;
+import com.github.exabrial.petrify.model.exception.UnexpectedCometImpact;
 
 public class Petrify {
 	public static final String PETRIFIED_FOSSIL = "PetrifiedFossil$Petrify0x";

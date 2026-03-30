@@ -8,7 +8,7 @@ Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tr
 
 No interpretation, no array traversal, no pointer chasing, just raw comparisons and conditional jumps. Your Decision Tree is encoded as JVM Bytecode and executes lightning fast.
 
-Once your ONNX models are compiled, the only dependency is the `Fossil` `interfaces` from the `petrify-model` submodule. This provides an entry point into your model.
+Once your ONNX models are compiled, the only dependency is the `Fossil` `interfaces` from the `petrify-model` submodule (ASL2.0 licensed). This provides an entry point into your model.
 
 ## Motivation
 
@@ -80,8 +80,10 @@ void testXgboostSimple() {
 ## License and other boring legal notes
 
 - All files in this project are copyrighted
-- The files in `petrify-model` are Apache Source Licensed (ASL2.0)
+- All files in `petrify-model` are Apache Source Licensed (ASL2.0)
     - This is done so your models extend from and use ASL2.0 classes at runtime
+- All files in `petrify-onnx-proto` are Apache Source Licensed (ASL2.0)
+    - `onnx-ml.proto` copied from main ONNX project. Their license is maintained.
 - All all other files in this project are licensed under EUPL-1.2
     - This license allows you to safely use unmodified/un-extended code in closed-source commercial projects, without revealing your company's proprietary application code in most cases.
     - However: Note that if you modify/extend Petrify, distribute it, and/or offer online access to apps through a modified/extended Petrify, it is required by law that the source code for your Petrify changeset be made available _first_, before offering said access to your app or distribution.

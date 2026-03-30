@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import com.github.exabrial.petrify.internal.model.Grove;
-import com.github.exabrial.petrify.internal.model.exception.UnexpectedCometImpact;
+import com.github.exabrial.petrify.model.Grove;
 import com.github.exabrial.petrify.model.PetrifyConstants;
+import com.github.exabrial.petrify.model.exception.UnexpectedCometImpact;
 
 import onnx.OnnxMl.AttributeProto;
 import onnx.OnnxMl.GraphProto;
