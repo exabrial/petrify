@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.Petrify;
 import com.github.exabrial.petrify.imprt.Arborist;
+import com.github.exabrial.petrify.internal.model.Grove;
 import com.github.exabrial.petrify.model.Fossil;
-import com.github.exabrial.petrify.model.Grove;
 
 /**
  * Uses a real XGBoost-exported ONNX model with 3 trees (n_estimators=3), BRANCH_LT node mode,

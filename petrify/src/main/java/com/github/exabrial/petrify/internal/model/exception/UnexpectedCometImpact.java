@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.model.exception;
+package com.github.exabrial.petrify.internal.model.exception;
 
 public class UnexpectedCometImpact extends RuntimeException {
 	private static final long serialVersionUID = 1L;

@@ -13,7 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.github.exabrial</groupId>
-			<artifactId>petrify-model</artifactId>
+			<artifactId>petrify</artifactId>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

@@ -1,3 +1,8 @@
+/*
+ * Licensed under the terms of Apache Source License 2.0
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
 package com.github.exabrial.petrify.model;
 
 import java.io.Serializable;
