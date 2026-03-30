@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.exabrial.petrify.internal.model.Stratum;
-import com.github.exabrial.petrify.model.LeafClassEntry;
 import com.github.exabrial.petrify.model.Fossil;
 import com.github.exabrial.petrify.model.Grove;
+import com.github.exabrial.petrify.model.LeafClassEntry;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 import com.github.exabrial.petrify.model.exception.UnexpectedCometImpact;
 
@@ -29,6 +29,7 @@ public class Petrify {
 	protected static final int SLOT_THIS = 0;
 	protected static final int SLOT_FEATURES = 1;
 	protected static final int SLOT_SCORES = 2;
+	protected static final String TREE_METHOD_PREFIX = "tree_";
 
 	protected static int counter = 0;
 
@@ -36,14 +37,15 @@ public class Petrify {
 		try {
 			final Stratum stratum = new Stratum(grove);
 
-			final byte[] fossilBytes = ClassFile.of().build(
-					ClassDesc.of(lookup.lookupClass().getPackageName(), PETRIFIED_FOSSIL + Integer.toHexString(counter++)),
-					(final ClassBuilder classBuilder) -> {
-						setJdk(classBuilder);
-						implementFossilInterface(classBuilder);
-						createDefaultConstructor(classBuilder);
-						implementPredictMethod(classBuilder, stratum);
-					});
+			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
+					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
+				setJdk(classBuilder);
+				implementFossilInterface(classBuilder);
+				createDefaultConstructor(classBuilder);
+				createMethodPerEnsemble(classBuilder, stratum);
+				implementPredictMethod(classBuilder, stratum, thisClass);
+			});
 
 			final Class<?> clazz = lookup.defineClass(fossilBytes);
 			final Fossil fossil = (Fossil) clazz.getDeclaredConstructor().newInstance();
@@ -53,7 +55,19 @@ public class Petrify {
 		}
 	}
 
-	protected void implementPredictMethod(final ClassBuilder classBuilder, final Stratum stratum) {
+	protected void createMethodPerEnsemble(final ClassBuilder classBuilder, final Stratum stratum) {
+		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, ConstantDescs.CD_float.arrayType(),
+				ConstantDescs.CD_float.arrayType());
+		for (final int treeId : stratum.grove.getTreeRootIds()) {
+			final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
+			emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
+		}
+	}
+
+	protected void implementPredictMethod(final ClassBuilder classBuilder, final Stratum stratum, final ClassDesc thisClass) {
+		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, ConstantDescs.CD_float.arrayType(),
+				ConstantDescs.CD_float.arrayType());
+
 		classBuilder.withMethodBody(Fossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, ConstantDescs.CD_float.arrayType()),
 				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
 					// Create per-class score accumulator floats
@@ -61,10 +75,12 @@ public class Petrify {
 					codeBuilder.newarray(TypeKind.FLOAT);
 					codeBuilder.astore(SLOT_SCORES);
 
-					// Walk each tree; emitLeaf accumulates weights into scores[classId]
+					// Invoke each tree method: this.tree_N(features, scores)
 					for (final int treeId : stratum.grove.getTreeRootIds()) {
-						final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
-						emitTree(codeBuilder, stratum, treeId, rootArrayIdx);
+						codeBuilder.aload(SLOT_THIS);
+						codeBuilder.aload(SLOT_FEATURES);
+						codeBuilder.aload(SLOT_SCORES);
+						codeBuilder.invokevirtual(thisClass, TREE_METHOD_PREFIX + treeId, treeMethodDesc);
 					}
 
 					// Prep and call fossil.classify(scores, postTransform, isBinarySingleScore)
@@ -83,6 +99,18 @@ public class Petrify {
 
 					// Return the value from classLabel lookup to the callee. We did it!
 					codeBuilder.ireturn();
+				});
+	}
+
+	protected void emitTreeMethod(final ClassBuilder classBuilder, final MethodTypeDesc treeMethodDesc, final Stratum stratum,
+			final int treeId, final int rootArrayIdx) {
+		// Emit a tree as a private method: tree_N(float[] features, float[] scores) -> void
+
+		// Slot layout matches predict(): this=0, features=1, scores=2
+		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_PRIVATE,
+				(final CodeBuilder codeBuilder) -> {
+					emitTree(codeBuilder, stratum, treeId, rootArrayIdx);
+					codeBuilder.return_();
 				});
 	}
 
