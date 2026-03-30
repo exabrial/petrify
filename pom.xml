@@ -8,7 +8,7 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<description>ONNX tree ensemble to JVM bytecode compiler</description>
-	<n>${project.artifactId}</n>
+	<name>${project.artifactId}</name>
 
 	<url>https://github.com/exabrial/petrify</url>
 	<scm>
@@ -26,7 +26,7 @@
 
 	<licenses>
 		<license>
-			<n>EUPL-1.2</n>
+			<name>EUPL-1.2</name>
 			<url>https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt</url>
 			<distribution>repo</distribution>
 			<comments>European Union Public Licence v1.2</comments>
@@ -36,7 +36,7 @@
 	<developers>
 		<developer>
 			<id>exabrial</id>
-			<n>Jonathan S. Fisher</n>
+			<name>Jonathan S. Fisher</name>
 			<properties>
 				<dev.pgp.fingerprint>871638A21A7F2C38066471420306A354336B4F0D</dev.pgp.fingerprint>
 			</properties>
@@ -216,7 +216,7 @@
 	<pluginRepositories>
 		<pluginRepository>
 			<id>central</id>
-			<n>Central Repository</n>
+			<name>Central Repository</name>
 			<releases>
 				<checksumPolicy>fail</checksumPolicy>
 			</releases>
