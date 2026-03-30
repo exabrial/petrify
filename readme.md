@@ -48,8 +48,36 @@ We looked at the existing options and weren't happy with any of them.
 
 Petrify takes a different approach: compile the tree ensemble directly to JVM bytecode. The result is a plain Java class with no runtime dependencies beyond the `Fossil` interface. No JNI, no native libraries, no interpretation loop, no PMML conversion step.
 
+## Usage
 
-### License and other boring legal notes
+### Maven Coordinates
+
+- coming soon
+
+### Compiling a model at runtime
+
+1. Open your ONNX Tree as a `Grove`
+2. Call `fossil = petrify.fossilize(MethodHandles.lookup(), grove)` to compile it to bytecode
+3. Invoke your model! `fossil.predict(floats)`
+
+```java
+@Test
+void testXgboostSimple() {
+  final Arborist arborist = new Arborist();
+  final Grove grove = arborist.toGrove("/test-models/xgboostSimple.onnx");
+
+  final Petrify petrify = new Petrify();
+  final Fossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+  assertEquals(1, fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
+}
+```
+
+### Compiling ONNX using Maven
+
+- coming soon
+
+## License and other boring legal notes
 
 - All files in this project are copyrighted
 - The files in `petrify-model` are Apache Source Licensed (ASL2.0)
