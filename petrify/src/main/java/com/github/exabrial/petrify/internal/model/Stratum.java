@@ -3,9 +3,6 @@ package com.github.exabrial.petrify.internal.model;
 import java.util.List;
 import java.util.Map;
 
-import com.github.exabrial.petrify.model.Grove;
-import com.github.exabrial.petrify.model.LeafClassEntry;
-
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
