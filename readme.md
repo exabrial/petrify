@@ -4,15 +4,45 @@ ONNX tree ensemble -> JVM bytecode compiler. Trees go in, fossils (bytecode) com
 
 ## Overview
 
+### Theory of operation
+
 Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tree ensemble) and emits a class at runtime that implements `Fossil.predict(float[])`. 
 
 No interpretation, no array traversal, no pointer chasing, just raw comparisons and conditional jumps. Your Decision Tree is encoded as JVM Bytecode and executes lightning fast.
 
-Once your ONNX models are compiled, the only dependency is the `Fossil` `interfaces` from the `petrify-model` submodule (ASL2.0 licensed). This provides an entry point into your model.
+Once your ONNX models are compiled, the only dependency is the `Fossil` interface from the `petrify-model` submodule. (Your actual model extends ASL2 code, safe for business). This interface provides an entry point into your model.
 
-## Motivation
 
-We needed fast, lightweight tree ensemble inference on the JVM without dragging in a heavyweight runtime or relying on interpretation.
+### Supported Models
+
+Petrify operates on the ONNX `TreeEnsembleClassifier` and `TreeEnsembleRegressor` operators, so any framework that exports tree ensembles to ONNX should work. The table below lists known-compatible frameworks and model types.
+
+| Framework | Model Type | Task | ONNX Export | Tested |
+|-----------|-----------|------|-------------|--------|
+| XGBoost | `XGBClassifier` | Binary classification | Native (`model.save_model("m.onnx")`) | ✅ |
+| XGBoost | `XGBClassifier` | Multiclass classification | Native | ✅ |
+| LightGBM | `LGBMClassifier` | Multiclass classification | `onnxmltools` / `skl2onnx` | ✅ |
+| CatBoost | `CatBoostClassifier` | Multiclass classification | Native (`model.save_model("m.onnx")`) | ✅ |
+| scikit-learn | `DecisionTreeClassifier` | Binary classification | `skl2onnx` | ✅ |
+| scikit-learn | `RandomForestClassifier` | Multiclass classification | `skl2onnx` | ✅ |
+| scikit-learn | `ExtraTreesClassifier` | Multiclass classification | `skl2onnx` | ✅ |
+| scikit-learn | `GradientBoostingRegressor` | Regression | `skl2onnx` | ✅ |
+| scikit-learn | `LogisticRegression` (tree-exported) | Multiclass classification | `skl2onnx` | ✅ |
+| XGBoost | `XGBRegressor` | Regression | Native | |
+| LightGBM | `LGBMRegressor` | Regression | `onnxmltools` / `skl2onnx` | |
+| CatBoost | `CatBoostRegressor` | Regression | Native | |
+| scikit-learn | `RandomForestRegressor` | Regression | `skl2onnx` | |
+| scikit-learn | `ExtraTreesRegressor` | Regression | `skl2onnx` | |
+| scikit-learn | `GradientBoostingClassifier` | Classification | `skl2onnx` | |
+| scikit-learn | `HistGradientBoostingClassifier` | Classification | `skl2onnx` | |
+| scikit-learn | `HistGradientBoostingRegressor` | Regression | `skl2onnx` | |
+
+If your model exports to ONNX using `TreeEnsembleClassifier`, `TreeEnsembleRegressor`, or `TreeEnsemble` operators with `BRANCH_LEQ`, `BRANCH_LT`, `BRANCH_GEQ`, or `BRANCH_GT` node modes, Petrify should handle it.
+
+
+### Motivation (Why compile to native?)
+
+We needed fast, lightweight tree ensemble inference on the JVM without dragging in a heavyweight runtime or relying on interpretation. The java source code route is also really messy, triggers many source code alarms, and is a sharp point in builds.
 
 We looked at the existing options and weren't happy with any of them.
 
@@ -40,17 +70,17 @@ We looked at the existing options and weren't happy with any of them.
 * m2cgen
     - https://github.com/BayesWitnesses/m2cgen
     - Transpiles trained Python model objects `.java` source file
-    - Giant nest `if/then/else`
+    - Giant nest of `if/then/else`
     - Runs into 64kb method limits
     - Reads scikit-learn, XGBoost, LightGBM model objects directly, not ONNX
     - Last commit was 2022
     - No runtime dependencies in the generated code, hey nice!
 
-Petrify takes a different approach: compile the tree ensemble directly to JVM bytecode. The result is a plain Java class with no runtime dependencies beyond the `Fossil` interface. No JNI, no native libraries, no interpretation loop, no PMML conversion step.
+Petrify takes a different approach: compile the tree ensemble directly to JVM bytecode. The result is a plain Java class with no runtime dependencies beyond the `Fossil` interface. No JNI, no native libraries, no interpretation loop, no Java source conversion step.
 
 ## Usage
 
-### Maven Coordinates
+### Maven Lib Coordinates
 
 - coming soon
 
@@ -63,17 +93,17 @@ Petrify takes a different approach: compile the tree ensemble directly to JVM by
 ```java
 @Test
 void testXgboostSimple() {
-  final Arborist arborist = new Arborist();
-  final Grove grove = arborist.toGrove("/test-models/xgboostSimple.onnx");
+ final Arborist arborist = new Arborist();
+ final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, "/test-models/xgboostSimple.onnx");
 
-  final Petrify petrify = new Petrify();
-  final Fossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+ final Petrify petrify = new Petrify();
+ final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 
-  assertEquals(1, fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
+ assertEquals(1, fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 }
 ```
 
-### Compiling ONNX using Maven
+### Pre-Compiling ONNX to JVM Classes at buildtime using Maven
 
 - coming soon
 
@@ -83,9 +113,9 @@ void testXgboostSimple() {
 - All files in `petrify-model` are Apache Source Licensed (ASL2.0)
     - This is done so your models extend from and use ASL2.0 classes at runtime
 - All files in `petrify-onnx-proto` are Apache Source Licensed (ASL2.0)
-    - `onnx-ml.proto` copied from main ONNX project. Their license is maintained.
+    - `onnx-ml.proto` copied from the main ONNX project. Their license and rights are maintained.
 - All all other files in this project are licensed under EUPL-1.2
     - This license allows you to safely use unmodified/un-extended code in closed-source commercial projects, without revealing your company's proprietary application code in most cases.
     - However: Note that if you modify/extend Petrify, distribute it, and/or offer online access to apps through a modified/extended Petrify, it is required by law that the source code for your Petrify changeset be made available _first_, before offering said access to your app or distribution.
-    - Again, this does not include your proprietary application source code, just the changeset to Petrify
-- ONNX, XGBoost, LightGBM, scikit-learn, and other names are trademarks; this project is not endorsed by nor affiliated with them
+    - Again, this does not include your proprietary application source code, just the changeset to Petrify.
+- ONNX, XGBoost, LightGBM, scikit-learn, and other names are trademarks; this project is not endorsed by nor affiliated with them.
