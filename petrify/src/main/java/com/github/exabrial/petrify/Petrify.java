@@ -259,8 +259,9 @@ public class Petrify {
 
 	protected void emitTreeMethod(final ClassBuilder classBuilder, final MethodTypeDesc treeMethodDesc, final Stratum stratum,
 			final int treeId, final int rootArrayIdx) {
-		// Emit a tree as a private method: tree_N(float[] features, float[] scores) -> void Slot layout matches predict(): this=0,
-		// features=1, scores=2
+		// Emit a tree as a private method: tree_N(float[] features, float[] scores) -> void
+
+		// Slot layout matches predict(): this=0, features=1, scores=2
 		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_PRIVATE,
 				(final CodeBuilder codeBuilder) -> {
 					emitTree(codeBuilder, stratum, treeId, rootArrayIdx);
