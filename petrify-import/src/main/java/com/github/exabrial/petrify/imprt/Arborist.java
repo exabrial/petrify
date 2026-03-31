@@ -3,10 +3,12 @@ package com.github.exabrial.petrify.imprt;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
-import com.github.exabrial.petrify.model.Grove;
+import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.github.exabrial.petrify.model.PetrifyConstants;
-import com.github.exabrial.petrify.model.exception.UnexpectedCometImpact;
 
 import onnx.OnnxMl.AttributeProto;
 import onnx.OnnxMl.GraphProto;
@@ -14,6 +16,8 @@ import onnx.OnnxMl.ModelProto;
 import onnx.OnnxMl.NodeProto;
 
 public class Arborist implements PetrifyConstants {
+	protected static final Set<String> KNOWN_OP_TYPES = Set.of(
+			OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE, OP_CAST, OP_ZIP_MAP, OP_IDENTITY);
 
 	public Grove toGrove(final String classpathLocation) {
 		final ModelProto model = loadModel(classpathLocation);
@@ -33,13 +37,20 @@ public class Arborist implements PetrifyConstants {
 	}
 
 	protected NodeProto findTreeEnsembleNode(final GraphProto graph) {
+		NodeProto treeNode = null;
 		for (final NodeProto node : graph.getNodeList()) {
 			final String opType = node.getOpType();
 			if (OP_TREE_ENSEMBLE_CLASSIFIER.equals(opType) || OP_TREE_ENSEMBLE.equals(opType)) {
-				return node;
+				treeNode = node;
+			} else if (!KNOWN_OP_TYPES.contains(opType)) {
+				throw new UnexpectedPreservative("ONNX graph contains unsupported operator: " + opType);
 			}
 		}
-		throw new UnexpectedCometImpact("No TreeEnsembleClassifier or TreeEnsemble node found in ONNX graph");
+		if (treeNode == null) {
+			throw new UnexpectedCometImpact("No TreeEnsembleClassifier or TreeEnsemble node found in ONNX graph");
+		} else {
+			return treeNode;
+		}
 	}
 
 	protected Grove mapToGrove(final NodeProto treeNode) {
@@ -62,8 +73,9 @@ public class Arborist implements PetrifyConstants {
 				case "class_weights" -> grove.setClassWeights(toFloatArray(attr.getFloatsList()));
 				case "classlabels_int64s" -> grove.setClassLabelsInt64s(toLongArray(attr.getIntsList()));
 				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
+				case "base_values" -> grove.setBaseValues(toFloatArray(attr.getFloatsList()));
 				default -> {
-					// ignore unknown attributes
+					throw new UnexpectedPreservative("Unknown ONNX TreeEnsemble attribute: " + name);
 				}
 			}
 		}

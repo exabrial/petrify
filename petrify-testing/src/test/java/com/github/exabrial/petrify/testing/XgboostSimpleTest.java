@@ -7,14 +7,14 @@ import java.lang.invoke.MethodHandles;
 import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.Petrify;
+import com.github.exabrial.petrify.compiler.model.Grove;
 import com.github.exabrial.petrify.imprt.Arborist;
 import com.github.exabrial.petrify.model.Fossil;
-import com.github.exabrial.petrify.model.Grove;
 
 /**
- * Uses a real XGBoost-exported ONNX model with 3 trees (n_estimators=3), BRANCH_LT node mode,
- * post_transform=LOGISTIC, and sklearn-style binary encoding (class_ids all 0). This test
- * will fail until Petrify supports multi-tree ensemble weight accumulation and post_transform.
+ * Uses a real XGBoost-exported ONNX model with 3 trees (n_estimators=3), BRANCH_LT node mode, post_transform=LOGISTIC, and
+ * sklearn-style binary encoding (class_ids all 0). This test will fail until Petrify supports multi-tree ensemble weight accumulation
+ * and post_transform.
  */
 class XgboostSimpleTest {
 

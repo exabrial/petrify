@@ -9,6 +9,9 @@ public interface PetrifyConstants {
 	// ONNX operator types
 	String OP_TREE_ENSEMBLE_CLASSIFIER = "TreeEnsembleClassifier";
 	String OP_TREE_ENSEMBLE = "TreeEnsemble";
+	String OP_CAST = "Cast";
+	String OP_ZIP_MAP = "ZipMap";
+	String OP_IDENTITY = "Identity";
 
 	// Node modes
 	byte MODE_LEAF = 0;

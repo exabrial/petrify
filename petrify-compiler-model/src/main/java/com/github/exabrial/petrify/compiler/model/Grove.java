@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.model;
+package com.github.exabrial.petrify.compiler.model;
 
 import static com.github.exabrial.petrify.model.PetrifyConstants.packLong;
 
@@ -32,6 +32,7 @@ public class Grove implements Serializable {
 
 	protected long[] classLabelsInt64s;
 	protected byte postTransform;
+	protected float[] baseValues;
 
 	public int[] getTreeRootIds() {
 		return Arrays.stream(nodesTreeIds).distinct().toArray();

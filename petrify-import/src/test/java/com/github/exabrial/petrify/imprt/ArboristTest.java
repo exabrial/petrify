@@ -8,8 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.exabrial.petrify.model.Grove;
-import com.github.exabrial.petrify.model.exception.UnexpectedCometImpact;
+import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.google.protobuf.ByteString;
 
 import onnx.OnnxMl.AttributeProto;
@@ -60,7 +61,7 @@ class ArboristTest {
 	void testFindTreeEnsembleNodeThrowsWhenNotFound() {
 		final GraphProto graph = GraphProto.newBuilder().addNode(NodeProto.newBuilder().setOpType("Conv").build()).build();
 
-		assertThrows(UnexpectedCometImpact.class, () -> arborist.findTreeEnsembleNode(graph));
+		assertThrows(UnexpectedPreservative.class, () -> arborist.findTreeEnsembleNode(graph));
 	}
 
 	@Test

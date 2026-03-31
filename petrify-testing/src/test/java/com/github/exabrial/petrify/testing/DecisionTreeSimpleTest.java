@@ -7,9 +7,9 @@ import java.lang.invoke.MethodHandles;
 import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.Petrify;
+import com.github.exabrial.petrify.compiler.model.Grove;
 import com.github.exabrial.petrify.imprt.Arborist;
 import com.github.exabrial.petrify.model.Fossil;
-import com.github.exabrial.petrify.model.Grove;
 
 class DecisionTreeSimpleTest {
 
