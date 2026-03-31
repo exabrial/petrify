@@ -6,13 +6,10 @@ ONNX tree ensemble -> JVM bytecode compiler. Trees go in, fossils (bytecode) com
 
 ### Theory of operation
 
-Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tree ensemble) and emits a class:
+Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tree ensemble) and emits a compiled class:
 
-```
-...
+```java
 final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
-
-...
 final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 ```
 
