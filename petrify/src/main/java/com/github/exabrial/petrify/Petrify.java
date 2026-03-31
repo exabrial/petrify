@@ -83,6 +83,9 @@ public class Petrify {
 						codeBuilder.invokevirtual(thisClass, TREE_METHOD_PREFIX + treeId, treeMethodDesc);
 					}
 
+					// Apply per-class bias before post-transform
+					emitBaseValues(codeBuilder, stratum.grove.getBaseValues());
+
 					// Prep and call fossil.classify(scores, postTransform, isBinarySingleScore)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.aload(SLOT_SCORES);
@@ -206,6 +209,26 @@ public class Petrify {
 			codeBuilder.fadd();
 			// Store the add result back into the array
 			codeBuilder.fastore();
+		}
+	}
+
+	protected void emitBaseValues(final CodeBuilder codeBuilder, final float[] baseValues) {
+		if (baseValues == null) {
+			return;
+		} else {
+			for (int classIdx = 0; classIdx < baseValues.length; classIdx++) {
+				if (baseValues[classIdx] != 0.0f) {
+					// Same pattern as emitLeaf: scores[classIdx] += baseValue
+					codeBuilder.aload(SLOT_SCORES);
+					codeBuilder.ldc(classIdx);
+					codeBuilder.dup2();
+
+					codeBuilder.faload();
+					codeBuilder.ldc(baseValues[classIdx]);
+					codeBuilder.fadd();
+					codeBuilder.fastore();
+				}
+			}
 		}
 	}
 
