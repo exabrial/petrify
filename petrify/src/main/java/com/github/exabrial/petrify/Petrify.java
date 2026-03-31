@@ -310,10 +310,7 @@ public class Petrify {
 		codeBuilder.faload();
 		codeBuilder.ldc(threshold);
 
-		// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy. For LEQ/LT:
-		// NaN-to-false needs fcmpg (NaN->1, jumps to false). NaN-to-true needs fcmpl (NaN->-1, stays in true). For GEQ/GT: NaN-to-false
-		// needs fcmpl (NaN->-1, jumps to false). NaN-to-true needs fcmpg (NaN->1, stays in true). In other words, GT/GEQ invert the
-		// fcmpg/fcmpl polarity relative to LEQ/LT.
+		// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy.
 		final byte mode = stratum.grove.getNodesModes()[arrayIdx];
 		final int missingTracksTrue = stratum.grove.getNodesMissingValueTracksTrue()[arrayIdx];
 		final boolean invertNanPolarity = mode == PetrifyConstants.MODE_BRANCH_GT || mode == PetrifyConstants.MODE_BRANCH_GEQ;
