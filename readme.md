@@ -6,7 +6,15 @@ ONNX tree ensemble -> JVM bytecode compiler. Trees go in, fossils (bytecode) com
 
 ### Theory of operation
 
-Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tree ensemble) and emits a class at runtime that implements `Fossil.predict(float[])`. 
+Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tree ensemble) and emits a class:
+
+```
+...
+final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+...
+final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
+```
 
 No interpretation, no array traversal, no pointer chasing, just raw comparisons and conditional jumps. Your Decision Tree is encoded as JVM Bytecode and executes lightning fast.
 
