@@ -20,6 +20,7 @@ import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import com.github.exabrial.petrify.compiler.model.LeafTargetEntry;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.internal.model.ClassifierStratum;
 import com.github.exabrial.petrify.internal.model.RegressorStratum;
 import com.github.exabrial.petrify.internal.model.Stratum;
@@ -273,7 +274,7 @@ public class Petrify {
 		final byte mode = stratum.grove.getNodesModes()[arrayIdx];
 		switch (mode) {
 
-			case PetrifyConstants.MODE_BRANCH_LEQ, PetrifyConstants.MODE_BRANCH_LT -> {
+			case PetrifyConstants.MODE_BRANCH_LEQ, PetrifyConstants.MODE_BRANCH_LT, PetrifyConstants.MODE_BRANCH_GEQ, PetrifyConstants.MODE_BRANCH_GT -> {
 				emitBranch(codeBuilder, stratum, treeId, arrayIdx);
 			}
 
@@ -286,13 +287,13 @@ public class Petrify {
 						emitRegressorLeaf(codeBuilder, regressorStratum, treeId, arrayIdx);
 					}
 					default -> {
-						throw new UnexpectedCometImpact("Unknown stratum type: " + stratum.getClass().getName());
+						throw new UnexpectedTreeBranch("Unknown stratum type: " + stratum.getClass().getName());
 					}
 				}
 			}
 
 			default -> {
-				throw new UnexpectedCometImpact("Unknown tree mode: " + mode);
+				throw new UnexpectedTreeBranch("Unknown tree mode: " + mode);
 			}
 		}
 	}
@@ -309,32 +310,48 @@ public class Petrify {
 		codeBuilder.faload();
 		codeBuilder.ldc(threshold);
 
-		// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy
+		// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy. For LEQ/LT:
+		// NaN-to-false needs fcmpg (NaN->1, jumps to false). NaN-to-true needs fcmpl (NaN->-1, stays in true). For GEQ/GT: NaN-to-false
+		// needs fcmpl (NaN->-1, jumps to false). NaN-to-true needs fcmpg (NaN->1, stays in true). In other words, GT/GEQ invert the
+		// fcmpg/fcmpl polarity relative to LEQ/LT.
+		final byte mode = stratum.grove.getNodesModes()[arrayIdx];
 		final int missingTracksTrue = stratum.grove.getNodesMissingValueTracksTrue()[arrayIdx];
-		if (missingTracksTrue == 0) {
+		final boolean invertNanPolarity = mode == PetrifyConstants.MODE_BRANCH_GT || mode == PetrifyConstants.MODE_BRANCH_GEQ;
+		if (missingTracksTrue == 0 != invertNanPolarity) {
 			codeBuilder.fcmpg();
 		} else {
 			codeBuilder.fcmpl();
 		}
 		// We now have one of {-1, 0, 1} on the stack
 
-		final byte mode = stratum.grove.getNodesModes()[arrayIdx];
 		// Compute the correct opcode for the upcoming ifThenElse
 		final Opcode branchOpcode = switch (mode) {
-			// feature <= threshold (stack is -1 or 0)
+			// feature <= threshold: true when stack is -1 or 0, false when 1
 			case PetrifyConstants.MODE_BRANCH_LEQ -> {
 				// IFGT jumps when stack > 0 (stack is 1), which is the false branch
 				yield Opcode.IFGT;
 			}
 
-			// feature < threshold (stack is -1)
+			// feature < threshold: true when stack is -1, false when 0 or 1
 			case PetrifyConstants.MODE_BRANCH_LT -> {
 				// IFGE jumps when stack >= 0 (stack is 0 or 1), which is the false branch
 				yield Opcode.IFGE;
 			}
 
+			// feature >= threshold: true when stack is 0 or 1, false when -1
+			case PetrifyConstants.MODE_BRANCH_GEQ -> {
+				// IFLT jumps when stack < 0 (stack is -1), which is the false branch
+				yield Opcode.IFLT;
+			}
+
+			// feature > threshold: true when stack is 1, false when -1 or 0
+			case PetrifyConstants.MODE_BRANCH_GT -> {
+				// IFLE jumps when stack <= 0 (stack is -1 or 0), which is the false branch
+				yield Opcode.IFLE;
+			}
+
 			default -> {
-				throw new UnexpectedCometImpact("Unknown branch mode: " + mode);
+				throw new UnexpectedTreeBranch("Unknown branch mode: " + mode);
 			}
 		};
 
