@@ -278,12 +278,16 @@ public class Petrify {
 			}
 
 			case PetrifyConstants.MODE_LEAF -> {
-				if (stratum instanceof final ClassifierStratum classifierStratum) {
-					emitClassifierLeaf(codeBuilder, classifierStratum, treeId, arrayIdx);
-				} else if (stratum instanceof final RegressorStratum regressorStratum) {
-					emitRegressorLeaf(codeBuilder, regressorStratum, treeId, arrayIdx);
-				} else {
-					throw new UnexpectedCometImpact("Unknown stratum type: " + stratum.getClass().getName());
+				switch (stratum) {
+					case final ClassifierStratum classifierStratum -> {
+						emitClassifierLeaf(codeBuilder, classifierStratum, treeId, arrayIdx);
+					}
+					case final RegressorStratum regressorStratum -> {
+						emitRegressorLeaf(codeBuilder, regressorStratum, treeId, arrayIdx);
+					}
+					default -> {
+						throw new UnexpectedCometImpact("Unknown stratum type: " + stratum.getClass().getName());
+					}
 				}
 			}
 
