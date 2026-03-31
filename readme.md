@@ -11,6 +11,13 @@ Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tr
 ```java
 final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
+
+// Do something with your prediction now
+if (prediction == SPANISH_INQUISITION) {
+ throw new UnexpectedInquistionException();
+} else {
+ // Inconceivable.
+}
 ```
 
 No interpretation, no array traversal, no pointer chasing, just raw comparisons and conditional jumps. Your Decision Tree is encoded as JVM Bytecode and executes lightning fast.
