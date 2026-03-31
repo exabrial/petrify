@@ -6,23 +6,23 @@ import java.lang.invoke.MethodHandles;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.exabrial.petrify.compiler.model.Grove;
-import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
+import com.github.exabrial.petrify.model.ClassifierFossil;
 
 class PetrifyTest {
 
 	@Test
 	void test() {
 		final Petrify petrify = new Petrify();
-		final Grove grove = exampleGrove();
-		final Fossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+		final ClassifierGrove grove = exampleGrove();
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 		final int prediction = fossil.predict(new float[] { 6.0f });
 
 		assertEquals(1, prediction);
 	}
 
-	static Grove exampleGrove() {
-		final Grove grove = new Grove();
+	static ClassifierGrove exampleGrove() {
+		final ClassifierGrove grove = new ClassifierGrove();
 		grove.setNodesTreeIds(new int[] { 0, 0, 0 });
 		grove.setNodesNodeIds(new int[] { 0, 1, 2 });
 		grove.setNodesModes(new byte[] { 1, 0, 0 });

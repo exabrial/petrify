@@ -1,0 +1,38 @@
+/*
+ * Licensed under the terms of Apache Source License 2.0
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+package com.github.exabrial.petrify.model;
+
+public interface RegressionFossil extends Fossil {
+	String aggregate = "aggregate";
+	String predict = "predict";
+
+	float predict(float[] features);
+
+	/**
+	 * Applies the post_transform to the accumulated score and returns the result.
+	 */
+	default float aggregate(final float score, final byte postTransform) {
+		final float result;
+		switch (postTransform) {
+			case PetrifyConstants.POST_TRANSFORM_NONE -> {
+				result = score;
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_LOGISTIC -> {
+				result = logistic(score);
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_PROBIT -> {
+				result = probit(score);
+			}
+
+			default -> {
+				throw new IllegalArgumentException("Unknown post_transform: " + postTransform);
+			}
+		}
+		return result;
+	}
+}

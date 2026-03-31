@@ -7,9 +7,9 @@ import java.lang.invoke.MethodHandles;
 import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.Petrify;
-import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.imprt.Arborist;
-import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.model.ClassifierFossil;
 
 /**
  * Uses a LightGBM-exported ONNX model trained on California housing data binned into 3 price tiers (low/medium/high). 90 trees (30
@@ -21,10 +21,10 @@ class LightgbmHousingTierTest {
 	@Test
 	void testLightgbmHousingTier() {
 		final Arborist arborist = new Arborist();
-		final Grove grove = arborist.toGrove("/test-models/lightgbmHousingTier.onnx");
+		final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, "/test-models/lightgbmHousingTier.onnx");
 
 		final Petrify petrify = new Petrify();
-		final Fossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 
 		// Class 0 (low price tier) predictions
 		assertEquals(0, fossil.predict(new float[] { 5.555099964141846f, 9.0f, 6.709506988525391f, 1.0651408433914185f, 1518.0f,

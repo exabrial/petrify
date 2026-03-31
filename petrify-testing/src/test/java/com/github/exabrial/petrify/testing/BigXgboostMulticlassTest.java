@@ -7,9 +7,9 @@ import java.lang.invoke.MethodHandles;
 import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.Petrify;
-import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.imprt.Arborist;
-import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.model.ClassifierFossil;
 
 /**
  * Uses a real XGBoost-exported ONNX model with 250 trees (50 estimators x 5 classes), max_depth=6, BRANCH_LT node mode,
@@ -20,10 +20,10 @@ class BigXgboostMulticlassTest {
 	@Test
 	void testBigXgboostMulticlass() {
 		final Arborist arborist = new Arborist();
-		final Grove grove = arborist.toGrove("/test-models/bigXgboostMulticlass.onnx");
+		final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, "/test-models/bigXgboostMulticlass.onnx");
 
 		final Petrify petrify = new Petrify();
-		final Fossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 
 		// Class 0 predictions
 		assertEquals(0,

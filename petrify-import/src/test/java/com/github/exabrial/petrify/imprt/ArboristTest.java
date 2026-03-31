@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.google.protobuf.ByteString;
@@ -28,7 +28,7 @@ class ArboristTest {
 	@Test
 	void testMapToGrove() {
 		final NodeProto treeNode = buildTreeEnsembleNode();
-		final Grove grove = arborist.mapToGrove(treeNode);
+		final ClassifierGrove grove = arborist.mapToClassifierGrove(treeNode);
 
 		assertNotNull(grove);
 		assertArrayEquals(new int[] { 0, 0, 0 }, grove.getNodesTreeIds());

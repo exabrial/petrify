@@ -5,7 +5,10 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
+import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.RegressorGrove;
+import com.github.exabrial.petrify.compiler.model.exception.MismatchedTreeSpecies;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.github.exabrial.petrify.model.PetrifyConstants;
@@ -17,12 +20,31 @@ import onnx.OnnxMl.NodeProto;
 
 public class Arborist implements PetrifyConstants {
 	protected static final Set<String> KNOWN_OP_TYPES = Set.of(
-			OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE, OP_CAST, OP_ZIP_MAP, OP_IDENTITY);
+			OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE, OP_TREE_ENSEMBLE_REGRESSOR, OP_CAST, OP_ZIP_MAP, OP_IDENTITY);
 
-	public Grove toGrove(final String classpathLocation) {
+	@SuppressWarnings("unchecked")
+	public <T extends Grove> T toGrove(final Class<T> groveType, final String classpathLocation) {
 		final ModelProto model = loadModel(classpathLocation);
 		final NodeProto treeNode = findTreeEnsembleNode(model.getGraph());
-		return mapToGrove(treeNode);
+		final String opType = treeNode.getOpType();
+
+		if (groveType == ClassifierGrove.class) {
+			if (!OP_TREE_ENSEMBLE_CLASSIFIER.equals(opType) && !OP_TREE_ENSEMBLE.equals(opType)) {
+				throw new MismatchedTreeSpecies(
+						"Requested ClassifierGrove but ONNX contains operator: " + opType);
+			} else {
+				return (T) mapToClassifierGrove(treeNode);
+			}
+		} else if (groveType == RegressorGrove.class) {
+			if (!OP_TREE_ENSEMBLE_REGRESSOR.equals(opType)) {
+				throw new MismatchedTreeSpecies(
+						"Requested RegressorGrove but ONNX contains operator: " + opType);
+			} else {
+				return (T) mapToRegressorGrove(treeNode);
+			}
+		} else {
+			throw new UnexpectedCometImpact("Unknown grove type: " + groveType.getName());
+		}
 	}
 
 	protected ModelProto loadModel(final String classpathLocation) {
@@ -40,21 +62,22 @@ public class Arborist implements PetrifyConstants {
 		NodeProto treeNode = null;
 		for (final NodeProto node : graph.getNodeList()) {
 			final String opType = node.getOpType();
-			if (OP_TREE_ENSEMBLE_CLASSIFIER.equals(opType) || OP_TREE_ENSEMBLE.equals(opType)) {
+			if (OP_TREE_ENSEMBLE_CLASSIFIER.equals(opType) || OP_TREE_ENSEMBLE.equals(opType)
+					|| OP_TREE_ENSEMBLE_REGRESSOR.equals(opType)) {
 				treeNode = node;
 			} else if (!KNOWN_OP_TYPES.contains(opType)) {
 				throw new UnexpectedPreservative("ONNX graph contains unsupported operator: " + opType);
 			}
 		}
 		if (treeNode == null) {
-			throw new UnexpectedCometImpact("No TreeEnsembleClassifier or TreeEnsemble node found in ONNX graph");
+			throw new UnexpectedCometImpact("No TreeEnsembleClassifier, TreeEnsemble, or TreeEnsembleRegressor node found in ONNX graph");
 		} else {
 			return treeNode;
 		}
 	}
 
-	protected Grove mapToGrove(final NodeProto treeNode) {
-		final Grove grove = new Grove();
+	protected ClassifierGrove mapToClassifierGrove(final NodeProto treeNode) {
+		final ClassifierGrove grove = new ClassifierGrove();
 		for (final AttributeProto attr : treeNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
@@ -75,7 +98,37 @@ public class Arborist implements PetrifyConstants {
 				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
 				case "base_values" -> grove.setBaseValues(toFloatArray(attr.getFloatsList()));
 				default -> {
-					throw new UnexpectedPreservative("Unknown ONNX TreeEnsemble attribute: " + name);
+					throw new UnexpectedPreservative("Unknown ONNX TreeEnsembleClassifier attribute: " + name);
+				}
+			}
+		}
+		return grove;
+	}
+
+	protected RegressorGrove mapToRegressorGrove(final NodeProto treeNode) {
+		final RegressorGrove grove = new RegressorGrove();
+		for (final AttributeProto attr : treeNode.getAttributeList()) {
+			final String name = attr.getName();
+			switch (name) {
+				case "nodes_treeids" -> grove.setNodesTreeIds(toIntArray(attr.getIntsList()));
+				case "nodes_nodeids" -> grove.setNodesNodeIds(toIntArray(attr.getIntsList()));
+				case "nodes_modes" -> grove.setNodesModes(toModeBytes(attr.getStringsList()));
+				case "nodes_featureids" -> grove.setNodesFeatureIds(toIntArray(attr.getIntsList()));
+				case "nodes_values" -> grove.setNodesValues(toFloatArray(attr.getFloatsList()));
+				case "nodes_truenodeids" -> grove.setNodesTrueNodeIds(toIntArray(attr.getIntsList()));
+				case "nodes_falsenodeids" -> grove.setNodesFalseNodeIds(toIntArray(attr.getIntsList()));
+				case "nodes_hitrates" -> grove.setNodesHitRates(toFloatArray(attr.getFloatsList()));
+				case "nodes_missing_value_tracks_true" -> grove.setNodesMissingValueTracksTrue(toIntArray(attr.getIntsList()));
+				case "target_treeids" -> grove.setTargetTreeIds(toIntArray(attr.getIntsList()));
+				case "target_nodeids" -> grove.setTargetNodeIds(toIntArray(attr.getIntsList()));
+				case "target_ids" -> grove.setTargetIds(toIntArray(attr.getIntsList()));
+				case "target_weights" -> grove.setTargetWeights(toFloatArray(attr.getFloatsList()));
+				case "n_targets" -> grove.setNTargets((int) attr.getI());
+				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
+				case "base_values" -> grove.setBaseValues(toFloatArray(attr.getFloatsList()));
+				case "aggregate_function" -> grove.setAggregateFunction(toAggregateFunction(attr.getS().toStringUtf8()));
+				default -> {
+					throw new UnexpectedPreservative("Unknown ONNX TreeEnsembleRegressor attribute: " + name);
 				}
 			}
 		}
@@ -131,6 +184,16 @@ public class Arborist implements PetrifyConstants {
 			case "SOFTMAX_ZERO" -> POST_TRANSFORM_SOFTMAX_ZERO;
 			case "PROBIT" -> POST_TRANSFORM_PROBIT;
 			default -> throw new UnexpectedCometImpact("Unknown post_transform: " + transform);
+		};
+	}
+
+	protected byte toAggregateFunction(final String function) {
+		return switch (function) {
+			case "SUM" -> PetrifyConstants.AGGREGATE_SUM;
+			case "AVERAGE" -> PetrifyConstants.AGGREGATE_AVERAGE;
+			case "MIN" -> PetrifyConstants.AGGREGATE_MIN;
+			case "MAX" -> PetrifyConstants.AGGREGATE_MAX;
+			default -> throw new UnexpectedCometImpact("Unknown aggregate_function: " + function);
 		};
 	}
 }
