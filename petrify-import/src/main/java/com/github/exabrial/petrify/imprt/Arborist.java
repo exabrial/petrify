@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
-import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.LinearClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.MismatchedTreeSpecies;
+import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.github.exabrial.petrify.model.PetrifyConstants;
@@ -19,60 +20,75 @@ import onnx.OnnxMl.ModelProto;
 import onnx.OnnxMl.NodeProto;
 
 public class Arborist implements PetrifyConstants {
-	protected static final Set<String> KNOWN_OP_TYPES = Set.of(
-			OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE, OP_TREE_ENSEMBLE_REGRESSOR, OP_CAST, OP_ZIP_MAP, OP_IDENTITY);
+	protected Set<String> ML_OP_TYPES = Set.of(OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE, OP_TREE_ENSEMBLE_REGRESSOR,
+			OP_LINEAR_CLASSIFIER);
+	protected Set<String> PASSTHROUGH_OP_TYPES = Set.of(OP_CAST, OP_ZIP_MAP, OP_NORMALIZER, OP_IDENTITY);
 
 	@SuppressWarnings("unchecked")
-	public <T extends Grove> T toGrove(final Class<T> groveType, final String classpathLocation) {
+	public <T> T toGrove(final Class<T> groveType, final String classpathLocation) {
 		final ModelProto model = loadModel(classpathLocation);
-		final NodeProto treeNode = findTreeEnsembleNode(model.getGraph());
-		final String opType = treeNode.getOpType();
+		final NodeProto mlNode = findMLNode(model.getGraph());
+		final String opType = mlNode.getOpType();
 
-		if (groveType == ClassifierGrove.class) {
-			if (!OP_TREE_ENSEMBLE_CLASSIFIER.equals(opType) && !OP_TREE_ENSEMBLE.equals(opType)) {
-				throw new MismatchedTreeSpecies(
-						"Requested ClassifierGrove but ONNX contains operator: " + opType);
-			} else {
-				return (T) mapToClassifierGrove(treeNode);
+		final Object grove = switch (opType) {
+
+			case OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE -> {
+				if (groveType != ClassifierGrove.class) {
+					throw new MismatchedTreeSpecies("ONNX contains " + opType + " but requested: " + groveType.getSimpleName());
+				} else {
+					yield mapToClassifierGrove(mlNode);
+				}
 			}
-		} else if (groveType == RegressorGrove.class) {
-			if (!OP_TREE_ENSEMBLE_REGRESSOR.equals(opType)) {
-				throw new MismatchedTreeSpecies(
-						"Requested RegressorGrove but ONNX contains operator: " + opType);
-			} else {
-				return (T) mapToRegressorGrove(treeNode);
+
+			case OP_TREE_ENSEMBLE_REGRESSOR -> {
+				if (groveType != RegressorGrove.class) {
+					throw new MismatchedTreeSpecies("ONNX contains " + opType + " but requested: " + groveType.getSimpleName());
+				} else {
+					yield mapToRegressorGrove(mlNode);
+				}
 			}
-		} else {
-			throw new UnexpectedCometImpact("Unknown grove type: " + groveType.getName());
-		}
+
+			case OP_LINEAR_CLASSIFIER -> {
+				if (groveType != LinearClassifierGrove.class) {
+					throw new MismatchedTreeSpecies("ONNX contains " + opType + " but requested: " + groveType.getSimpleName());
+				} else {
+					yield mapToLinearClassifierGrove(mlNode);
+				}
+			}
+
+			default -> {
+				throw new UnexpectedPreservative("No mapping for ML operator: " + opType);
+			}
+		};
+		return (T) grove;
 	}
 
 	protected ModelProto loadModel(final String classpathLocation) {
 		try (final InputStream is = getClass().getResourceAsStream(classpathLocation)) {
 			if (is == null) {
-				throw new UnexpectedCometImpact("ONNX model not found on classpath: " + classpathLocation);
+				throw new MissingSpecimen("ONNX model not found on classpath: " + classpathLocation);
+			} else {
+				return ModelProto.parseFrom(is);
 			}
-			return ModelProto.parseFrom(is);
 		} catch (final IOException e) {
 			throw new UnexpectedCometImpact(e);
 		}
 	}
 
-	protected NodeProto findTreeEnsembleNode(final GraphProto graph) {
-		NodeProto treeNode = null;
+	protected NodeProto findMLNode(final GraphProto graph) {
+		NodeProto mlNode = null;
 		for (final NodeProto node : graph.getNodeList()) {
 			final String opType = node.getOpType();
-			if (OP_TREE_ENSEMBLE_CLASSIFIER.equals(opType) || OP_TREE_ENSEMBLE.equals(opType)
-					|| OP_TREE_ENSEMBLE_REGRESSOR.equals(opType)) {
-				treeNode = node;
-			} else if (!KNOWN_OP_TYPES.contains(opType)) {
+			if (ML_OP_TYPES.contains(opType)) {
+				mlNode = node;
+			} else if (!PASSTHROUGH_OP_TYPES.contains(opType)) {
 				throw new UnexpectedPreservative("ONNX graph contains unsupported operator: " + opType);
 			}
 		}
-		if (treeNode == null) {
-			throw new UnexpectedCometImpact("No TreeEnsembleClassifier, TreeEnsemble, or TreeEnsembleRegressor node found in ONNX graph");
+		if (mlNode == null) {
+			throw new UnexpectedCometImpact("No supported ML operator node found in ONNX graph");
 		} else {
-			return treeNode;
+			return mlNode;
 		}
 	}
 
@@ -135,36 +151,26 @@ public class Arborist implements PetrifyConstants {
 		return grove;
 	}
 
-	protected int[] toIntArray(final List<Long> longs) {
-		final int[] result = new int[longs.size()];
-		for (int i = 0; i < longs.size(); i++) {
-			result[i] = longs.get(i).intValue();
+	protected LinearClassifierGrove mapToLinearClassifierGrove(final NodeProto mlNode) {
+		final LinearClassifierGrove grove = new LinearClassifierGrove();
+		for (final AttributeProto attr : mlNode.getAttributeList()) {
+			final String name = attr.getName();
+			switch (name) {
+				case "coefficients" -> grove.setCoefficients(toFloatArray(attr.getFloatsList()));
+				case "intercepts" -> grove.setIntercepts(toFloatArray(attr.getFloatsList()));
+				case "classlabels_ints" -> grove.setClasslabelsInts(toLongArray(attr.getIntsList()));
+				case "multi_class" -> grove.setMultiClass((int) attr.getI());
+				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
+				default -> {
+					throw new UnexpectedPreservative("Unknown ONNX LinearClassifier attribute: " + name);
+				}
+			}
 		}
-		return result;
-	}
-
-	protected long[] toLongArray(final List<Long> longs) {
-		final long[] result = new long[longs.size()];
-		for (int i = 0; i < longs.size(); i++) {
-			result[i] = longs.get(i);
-		}
-		return result;
-	}
-
-	protected float[] toFloatArray(final List<Float> floats) {
-		final float[] result = new float[floats.size()];
-		for (int i = 0; i < floats.size(); i++) {
-			result[i] = floats.get(i);
-		}
-		return result;
-	}
-
-	protected byte[] toModeBytes(final List<com.google.protobuf.ByteString> strings) {
-		final byte[] result = new byte[strings.size()];
-		for (int i = 0; i < strings.size(); i++) {
-			result[i] = toModeByte(strings.get(i).toStringUtf8());
-		}
-		return result;
+		final int nClasses = grove.getIntercepts().length;
+		final int nFeatures = grove.getCoefficients().length / nClasses;
+		grove.setNClasses(nClasses);
+		grove.setNFeatures(nFeatures);
+		return grove;
 	}
 
 	protected byte toModeByte(final String mode) {
@@ -199,5 +205,37 @@ public class Arborist implements PetrifyConstants {
 			case "MAX" -> PetrifyConstants.AGGREGATE_MAX;
 			default -> throw new UnexpectedCometImpact("Unknown aggregate_function: " + function);
 		};
+	}
+
+	protected int[] toIntArray(final List<Long> longs) {
+		final int[] result = new int[longs.size()];
+		for (int i = 0; i < longs.size(); i++) {
+			result[i] = longs.get(i).intValue();
+		}
+		return result;
+	}
+
+	protected long[] toLongArray(final List<Long> longs) {
+		final long[] result = new long[longs.size()];
+		for (int i = 0; i < longs.size(); i++) {
+			result[i] = longs.get(i);
+		}
+		return result;
+	}
+
+	protected float[] toFloatArray(final List<Float> floats) {
+		final float[] result = new float[floats.size()];
+		for (int i = 0; i < floats.size(); i++) {
+			result[i] = floats.get(i);
+		}
+		return result;
+	}
+
+	protected byte[] toModeBytes(final List<com.google.protobuf.ByteString> strings) {
+		final byte[] result = new byte[strings.size()];
+		for (int i = 0; i < strings.size(); i++) {
+			result[i] = toModeByte(strings.get(i).toStringUtf8());
+		}
+		return result;
 	}
 }

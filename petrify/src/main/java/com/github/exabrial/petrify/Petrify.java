@@ -18,6 +18,7 @@ import java.util.List;
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import com.github.exabrial.petrify.compiler.model.LeafTargetEntry;
+import com.github.exabrial.petrify.compiler.model.LinearClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
@@ -82,6 +83,82 @@ public class Petrify {
 		} catch (final Exception e) {
 			throw new UnexpectedCometImpact(e);
 		}
+	}
+
+	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final LinearClassifierGrove grove) {
+		try {
+			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
+					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
+				setJdk(classBuilder);
+				implementFossilInterface(classBuilder, ClassifierFossil.class);
+				createDefaultConstructor(classBuilder);
+				implementLinearClassifierPredictMethod(classBuilder, grove);
+			});
+
+			final Class<?> clazz = lookup.defineClass(fossilBytes);
+			final ClassifierFossil fossil = (ClassifierFossil) clazz.getDeclaredConstructor().newInstance();
+			return fossil;
+		} catch (final Exception e) {
+			throw new UnexpectedCometImpact(e);
+		}
+	}
+
+	protected void implementLinearClassifierPredictMethod(final ClassBuilder classBuilder, final LinearClassifierGrove grove) {
+		classBuilder.withMethodBody(ClassifierFossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, ConstantDescs.CD_float.arrayType()),
+				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
+					final int nClasses = grove.getNClasses();
+					final int nFeatures = grove.getNFeatures();
+					final float[] coefficients = grove.getCoefficients();
+					final float[] intercepts = grove.getIntercepts();
+
+					// Create per-class score accumulator: float[] scores = new float[nClasses]
+					codeBuilder.ldc(nClasses);
+					codeBuilder.newarray(TypeKind.FLOAT);
+					codeBuilder.astore(SLOT_SCORES);
+
+					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
+					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
+						// scores[classIdx] = intercepts[classIdx]
+						codeBuilder.aload(SLOT_SCORES);
+						codeBuilder.ldc(classIdx);
+						codeBuilder.ldc(intercepts[classIdx]);
+
+						// Accumulate: += features[f] * coefficients[c * nFeatures + f]
+						for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
+							final float coefficient = coefficients[classIdx * nFeatures + featureIdx];
+							// Don't bother emitting bytecode for 0
+							if (coefficient != 0.0f) {
+								codeBuilder.aload(SLOT_FEATURES);
+								codeBuilder.ldc(featureIdx);
+								codeBuilder.faload();
+								codeBuilder.ldc(coefficient);
+								codeBuilder.fmul();
+								codeBuilder.fadd();
+							}
+						}
+
+						// Store the accumulated score
+						codeBuilder.fastore();
+					}
+
+					// Prep and invoke fossil.classify(scores, postTransform, isBinarySingleScore)
+					final boolean isBinarySingleScore = grove.toIsBinarySingleScore();
+					codeBuilder.aload(SLOT_THIS);
+					codeBuilder.aload(SLOT_SCORES);
+					codeBuilder.ldc((int) grove.getPostTransform());
+					codeBuilder.ldc(isBinarySingleScore ? 1 : 0);
+					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
+							ClassifierFossil.classify, MethodTypeDesc.of(ConstantDescs.CD_int, ConstantDescs.CD_float.arrayType(),
+									ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
+
+					// Lookup the class array index in the classLabels
+					final long[] classLabels = grove.getClasslabelsInts();
+					emitClassLabelLookup(codeBuilder, classLabels);
+
+					// Return the value from classLabel lookup to the callee
+					codeBuilder.ireturn();
+				});
 	}
 
 	protected void implementClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierStratum stratum,

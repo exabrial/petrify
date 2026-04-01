@@ -10,8 +10,10 @@ public interface PetrifyConstants {
 	String OP_TREE_ENSEMBLE_CLASSIFIER = "TreeEnsembleClassifier";
 	String OP_TREE_ENSEMBLE = "TreeEnsemble";
 	String OP_TREE_ENSEMBLE_REGRESSOR = "TreeEnsembleRegressor";
+	String OP_LINEAR_CLASSIFIER = "LinearClassifier";
 	String OP_CAST = "Cast";
 	String OP_ZIP_MAP = "ZipMap";
+	String OP_NORMALIZER = "Normalizer";
 	String OP_IDENTITY = "Identity";
 
 	// Node modes

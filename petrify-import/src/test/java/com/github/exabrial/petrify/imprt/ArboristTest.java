@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
+import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.google.protobuf.ByteString;
@@ -53,7 +54,7 @@ class ArboristTest {
 		final NodeProto treeNode = buildTreeEnsembleNode();
 		final GraphProto graph = GraphProto.newBuilder().addNode(treeNode).build();
 
-		final NodeProto found = arborist.findTreeEnsembleNode(graph);
+		final NodeProto found = arborist.findMLNode(graph);
 		assertEquals("TreeEnsembleClassifier", found.getOpType());
 	}
 
@@ -61,12 +62,12 @@ class ArboristTest {
 	void testFindTreeEnsembleNodeThrowsWhenNotFound() {
 		final GraphProto graph = GraphProto.newBuilder().addNode(NodeProto.newBuilder().setOpType("Conv").build()).build();
 
-		assertThrows(UnexpectedPreservative.class, () -> arborist.findTreeEnsembleNode(graph));
+		assertThrows(UnexpectedPreservative.class, () -> arborist.findMLNode(graph));
 	}
 
 	@Test
 	void testLoadModelThrowsOnMissingResource() {
-		assertThrows(UnexpectedCometImpact.class, () -> arborist.loadModel("nonexistent.onnx"));
+		assertThrows(MissingSpecimen.class, () -> arborist.loadModel("nonexistent.onnx"));
 	}
 
 	@Test
