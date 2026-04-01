@@ -1,56 +1,144 @@
 # Petrify
 
-ONNX tree ensemble -> JVM bytecode compiler. Trees go in, fossils (bytecode) come out.
+ONNX ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out.
 
 ## Overview
 
 ### Theory of operation
 
-Petrify reads a `Grove` (the ONNX-faithful parallel array representation of a tree ensemble) and emits a compiled class:
+Petrify reads a model representation (a `Grove`) and emits a compiled class (a `Fossil`):
 
 ```java
+// Load a grove; 
+final Grove = arborist.toGrove(..., "/path/to/model.onnx");
+
+// Compile your model as bytecode:
 final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+// Now make as many predictions as you like
 final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 
-// Do something with your prediction now
+// Do something with your prediction:
 if (prediction == SPANISH_INQUISITION) {
  throw new UnexpectedInquistionException();
 } else {
- // Inconceivable.
+ // Profits!
 }
 ```
 
-No interpretation, no array traversal, no pointer chasing, just raw comparisons and conditional jumps. Your Decision Tree is encoded as JVM Bytecode and executes lightning fast.
+No interpretation, no array traversal, no pointer chasing; just raw comparisons, conditional jumps, and arithmetic baked into bytecode. Your model executes as native JVM instructions.
 
-Once your ONNX models are compiled, the only dependency is the `Fossil` interface from the `petrify-model` submodule. (Your actual model extends ASL2 code, safe for business). This interface provides an entry point into your model.
+Once your ONNX models are compiled, the only runtime dependency is the `Fossil` interface from the `petrify-model` submodule (ASL2-licensed, safe for business). This interface provides the entry point into your model. Once your model is compiled, no execution runtime is needed, making Petrify the ultimate lightweight champ to run your models.
 
 
-### Supported Models
+## Model Coverage
 
-Petrify operates on the ONNX `TreeEnsembleClassifier` and `TreeEnsembleRegressor` operators, so any framework that exports tree ensembles to ONNX should work. The table below lists known-compatible frameworks and model types.
+### Supported ONNX Operators
 
-| Framework | Model Type | Task | ONNX Export | Tested |
-|-----------|-----------|------|-------------|--------|
-| XGBoost | `XGBClassifier` | Binary classification | Native (`model.save_model("m.onnx")`) | ✅ |
-| XGBoost | `XGBClassifier` | Multiclass classification | Native | ✅ |
-| LightGBM | `LGBMClassifier` | Multiclass classification | `onnxmltools` / `skl2onnx` | ✅ |
-| CatBoost | `CatBoostClassifier` | Multiclass classification | Native (`model.save_model("m.onnx")`) | ✅ |
-| scikit-learn | `DecisionTreeClassifier` | Binary classification | `skl2onnx` | ✅ |
-| scikit-learn | `RandomForestClassifier` | Multiclass classification | `skl2onnx` | ✅ |
-| scikit-learn | `ExtraTreesClassifier` | Multiclass classification | `skl2onnx` | ✅ |
-| scikit-learn | `GradientBoostingRegressor` | Regression | `skl2onnx` | ✅ |
-| scikit-learn | `LogisticRegression` (tree-exported) | Multiclass classification | `skl2onnx` | ✅ |
-| XGBoost | `XGBRegressor` | Regression | Native | |
-| LightGBM | `LGBMRegressor` | Regression | `onnxmltools` / `skl2onnx` | |
-| CatBoost | `CatBoostRegressor` | Regression | Native | |
-| scikit-learn | `RandomForestRegressor` | Regression | `skl2onnx` | |
-| scikit-learn | `ExtraTreesRegressor` | Regression | `skl2onnx` | |
-| scikit-learn | `GradientBoostingClassifier` | Classification | `skl2onnx` | |
-| scikit-learn | `HistGradientBoostingClassifier` | Classification | `skl2onnx` | |
-| scikit-learn | `HistGradientBoostingRegressor` | Regression | `skl2onnx` | |
+| ONNX Operator | Task | Status |
+|---|---|---|
+| `TreeEnsembleClassifier` | Classification (binary & multiclass) | ✅ Supported |
+| `TreeEnsembleRegressor` | Regression | ✅ Supported |
+| `TreeEnsemble` | Classification / Regression | ✅ Supported |
+| `LinearClassifier` | Classification (binary & multiclass) | ✅ Supported |
+| `LinearRegressor` | Regression | Planned |
+| `SVMClassifier` | Classification | Planned |
+| `SVMRegressor` | Regression | Planned |
 
-If your model exports to ONNX using `TreeEnsembleClassifier`, `TreeEnsembleRegressor`, or `TreeEnsemble` operators with `BRANCH_LEQ`, `BRANCH_LT`, `BRANCH_GEQ`, or `BRANCH_GT` node modes, Petrify should handle it.
+Tree node modes supported:
 
+* `BRANCH_LEQ`
+* `BRANCH_LT`
+* `BRANCH_GEQ`
+* `BRANCH_GTE`
+* `BRANCH_GT`
+* `BRANCH_EQ`
+* `BRANCH_NEQ`
+
+Passthrough operators (safely ignored during import):
+
+* `Cast`
+* `ZipMap`
+* `Normalizer`
+* `Identity`
+
+### Supported Frameworks
+
+Any framework that exports to a supported ONNX operator should work. The table below lists known-compatible frameworks and model types.
+
+| Framework | Model Type | Task | Test Included |
+|-----------|-----------|------|--------|
+| XGBoost | `XGBClassifier` | Binary classification | ✅ |
+| XGBoost | `XGBClassifier` | Multiclass classification | ✅ |
+| LightGBM | `LGBMClassifier` | Multiclass classification | ✅ |
+| CatBoost | `CatBoostClassifier` | Multiclass classification | ✅ |
+| scikit-learn | `DecisionTreeClassifier` | Binary classification | ✅ |
+| scikit-learn | `RandomForestClassifier` | Multiclass classification | ✅ |
+| scikit-learn | `ExtraTreesClassifier` | Multiclass classification | ✅ |
+| scikit-learn | `GradientBoostingRegressor` | Regression | ✅ |
+| scikit-learn | `GradientBoostingClassifier` | Multiclass classification | ✅ |
+| scikit-learn | `LogisticRegression` | Multiclass classification | ✅ |
+| scikit-learn | `LinearRegression` | Regression | ✅ |
+| XGBoost | `XGBRegressor` | Regression | |
+| LightGBM | `LGBMRegressor` | Regression | |
+| CatBoost | `CatBoostRegressor` | Regression | |
+| scikit-learn | `RandomForestRegressor` | Regression | |
+| scikit-learn | `ExtraTreesRegressor` | Regression | |
+| scikit-learn | `HistGradientBoostingClassifier` | Classification | |
+| scikit-learn | `HistGradientBoostingRegressor` | Regression | |
+## Usage
+
+### Maven Lib Coordinates
+
+- coming soon
+
+### Compiling a model at runtime
+
+1. Use `Arborist` to load your ONNX model into a grove
+2. Call `petrify.fossilize(MethodHandles.lookup(), grove)` to compile it to bytecode
+3. Invoke your model with `fossil.predict(features)`
+
+#### Tree ensemble (XGBoost, LightGBM, CatBoost, scikit-learn trees)
+
+```java
+final Arborist arborist = new Arborist();
+final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, "/models/xgboostSimple.onnx");
+
+final Petrify petrify = new Petrify();
+final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+assertEquals(1, fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
+```
+
+#### Linear classifier (scikit-learn LogisticRegression)
+
+```java
+final Arborist arborist = new Arborist();
+final LinearClassifierGrove grove = arborist.toGrove(LinearClassifierGrove.class, "/models/logistic.onnx");
+
+final Petrify petrify = new Petrify();
+final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+assertEquals(0, fossil.predict(new float[] { 1.6812f, 25.0f, 4.1922f, 1.0223f, 1392.0f, 3.8774f, 36.06f, -119.01f }));
+```
+
+#### Tree regression
+
+```java
+final Arborist arborist = new Arborist();
+final RegressorGrove grove = arborist.toGrove(RegressorGrove.class, "/models/regression.onnx");
+
+final Petrify petrify = new Petrify();
+final RegressionFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1.0238f, 322.0f, 2.5556f, 37.88f, -122.23f });
+```
+
+### Pre-Compiling ONNX to JVM Classes at buildtime using Maven
+
+- coming soon
+
+## Bootnotes
 
 ### Motivation (Why compile to native?)
 
@@ -90,36 +178,8 @@ We looked at the existing options and weren't happy with any of them.
 
 Petrify takes a different approach: compile the tree ensemble directly to JVM bytecode. The result is a plain Java class with no runtime dependencies beyond the `Fossil` interface. No JNI, no native libraries, no interpretation loop, no Java source conversion step.
 
-## Usage
 
-### Maven Lib Coordinates
-
-- coming soon
-
-### Compiling a model at runtime
-
-1. Open your ONNX Tree as a `Grove`
-2. Call `fossil = petrify.fossilize(MethodHandles.lookup(), grove)` to compile it to bytecode
-3. Invoke your model! `fossil.predict(floats)`
-
-```java
-@Test
-void testXgboostSimple() {
- final Arborist arborist = new Arborist();
- final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, "/test-models/xgboostSimple.onnx");
-
- final Petrify petrify = new Petrify();
- final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
-
- assertEquals(1, fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
-}
-```
-
-### Pre-Compiling ONNX to JVM Classes at buildtime using Maven
-
-- coming soon
-
-## License and other boring legal notes
+### License and other boring legal notes
 
 - All files in this project are copyrighted
 - All files in `petrify-model` are Apache Source Licensed (ASL2.0)

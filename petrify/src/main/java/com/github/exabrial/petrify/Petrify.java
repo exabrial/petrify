@@ -19,6 +19,7 @@ import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import com.github.exabrial.petrify.compiler.model.LeafTargetEntry;
 import com.github.exabrial.petrify.compiler.model.LinearClassifierGrove;
+import com.github.exabrial.petrify.compiler.model.LinearRegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
@@ -102,6 +103,61 @@ public class Petrify {
 		} catch (final Exception e) {
 			throw new UnexpectedCometImpact(e);
 		}
+	}
+
+	public RegressionFossil fossilize(final MethodHandles.Lookup lookup, final LinearRegressorGrove grove) {
+		try {
+			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
+					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
+				setJdk(classBuilder);
+				implementFossilInterface(classBuilder, RegressionFossil.class);
+				createDefaultConstructor(classBuilder);
+				implementLinearRegressorPredictMethod(classBuilder, grove);
+			});
+
+			final Class<?> clazz = lookup.defineClass(fossilBytes);
+			final RegressionFossil fossil = (RegressionFossil) clazz.getDeclaredConstructor().newInstance();
+			return fossil;
+		} catch (final Exception e) {
+			throw new UnexpectedCometImpact(e);
+		}
+	}
+
+	protected void implementLinearRegressorPredictMethod(final ClassBuilder classBuilder, final LinearRegressorGrove grove) {
+		classBuilder.withMethodBody(RegressionFossil.predict,
+				MethodTypeDesc.of(ConstantDescs.CD_float, ConstantDescs.CD_float.arrayType()), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					final int nFeatures = grove.getNFeatures();
+					final float[] coefficients = grove.getCoefficients();
+					final float intercept = grove.getIntercepts()[0];
+
+					// Start accumulating: score = intercept
+					codeBuilder.ldc(intercept);
+
+					// Accumulate: score += features[f] * coefficients[f]
+					for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
+						final float coefficient = coefficients[featureIdx];
+						if (coefficient != 0.0f) {
+							codeBuilder.aload(SLOT_FEATURES);
+							codeBuilder.ldc(featureIdx);
+							codeBuilder.faload();
+							codeBuilder.ldc(coefficient);
+							codeBuilder.fmul();
+							codeBuilder.fadd();
+						}
+					}
+					// Raw score is now on the stack
+
+					// Prep and invoke regressionFossil.aggregate(score, postTransform)
+					codeBuilder.aload(SLOT_THIS);
+					codeBuilder.swap();
+					codeBuilder.ldc((int) grove.getPostTransform());
+					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
+							RegressionFossil.aggregate, MethodTypeDesc.of(ConstantDescs.CD_float, ConstantDescs.CD_float, ConstantDescs.CD_byte));
+
+					codeBuilder.freturn();
+				});
 	}
 
 	protected void implementLinearClassifierPredictMethod(final ClassBuilder classBuilder, final LinearClassifierGrove grove) {

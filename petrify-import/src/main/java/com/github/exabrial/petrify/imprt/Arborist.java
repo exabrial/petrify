@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.LinearClassifierGrove;
+import com.github.exabrial.petrify.compiler.model.LinearRegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.MismatchedTreeSpecies;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
@@ -21,7 +22,7 @@ import onnx.OnnxMl.NodeProto;
 
 public class Arborist implements PetrifyConstants {
 	protected Set<String> ML_OP_TYPES = Set.of(OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE, OP_TREE_ENSEMBLE_REGRESSOR,
-			OP_LINEAR_CLASSIFIER);
+			OP_LINEAR_CLASSIFIER, OP_LINEAR_REGRESSOR);
 	protected Set<String> PASSTHROUGH_OP_TYPES = Set.of(OP_CAST, OP_ZIP_MAP, OP_NORMALIZER, OP_IDENTITY);
 
 	@SuppressWarnings("unchecked")
@@ -53,6 +54,14 @@ public class Arborist implements PetrifyConstants {
 					throw new MismatchedTreeSpecies("ONNX contains " + opType + " but requested: " + groveType.getSimpleName());
 				} else {
 					yield mapToLinearClassifierGrove(mlNode);
+				}
+			}
+
+			case OP_LINEAR_REGRESSOR -> {
+				if (groveType != LinearRegressorGrove.class) {
+					throw new MismatchedTreeSpecies("ONNX contains " + opType + " but requested: " + groveType.getSimpleName());
+				} else {
+					yield mapToLinearRegressorGrove(mlNode);
 				}
 			}
 
@@ -169,6 +178,28 @@ public class Arborist implements PetrifyConstants {
 		final int nClasses = grove.getIntercepts().length;
 		final int nFeatures = grove.getCoefficients().length / nClasses;
 		grove.setNClasses(nClasses);
+		grove.setNFeatures(nFeatures);
+		return grove;
+	}
+
+	protected LinearRegressorGrove mapToLinearRegressorGrove(final NodeProto mlNode) {
+		final LinearRegressorGrove grove = new LinearRegressorGrove();
+		grove.setNTargets(1);
+		grove.setPostTransform(POST_TRANSFORM_NONE);
+		for (final AttributeProto attr : mlNode.getAttributeList()) {
+			final String name = attr.getName();
+			switch (name) {
+				case "coefficients" -> grove.setCoefficients(toFloatArray(attr.getFloatsList()));
+				case "intercepts" -> grove.setIntercepts(toFloatArray(attr.getFloatsList()));
+				case "targets" -> grove.setNTargets((int) attr.getI());
+				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
+				default -> {
+					throw new UnexpectedPreservative("Unknown ONNX LinearRegressor attribute: " + name);
+				}
+			}
+		}
+		final int nTargets = grove.getNTargets();
+		final int nFeatures = grove.getCoefficients().length / nTargets;
 		grove.setNFeatures(nFeatures);
 		return grove;
 	}
