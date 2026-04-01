@@ -20,6 +20,8 @@ public interface PetrifyConstants {
 	byte MODE_BRANCH_LT = 2;
 	byte MODE_BRANCH_GEQ = 3;
 	byte MODE_BRANCH_GT = 4;
+	byte MODE_BRANCH_EQ = 5;
+	byte MODE_BRANCH_NEQ = 6;
 
 	// Aggregate functions (TreeEnsembleRegressor)
 	byte AGGREGATE_SUM = 0;

@@ -172,8 +172,10 @@ public class Arborist implements PetrifyConstants {
 			case "LEAF" -> MODE_LEAF;
 			case "BRANCH_LEQ" -> MODE_BRANCH_LEQ;
 			case "BRANCH_LT" -> MODE_BRANCH_LT;
-			case "BRANCH_GEQ" -> MODE_BRANCH_GEQ;
+			case "BRANCH_GEQ", "BRANCH_GTE" -> MODE_BRANCH_GEQ;
 			case "BRANCH_GT" -> MODE_BRANCH_GT;
+			case "BRANCH_EQ" -> MODE_BRANCH_EQ;
+			case "BRANCH_NEQ" -> MODE_BRANCH_NEQ;
 			default -> throw new UnexpectedCometImpact("Unknown node mode: " + mode);
 		};
 	}

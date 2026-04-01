@@ -102,7 +102,7 @@ public class Petrify {
 					// Apply per-class bias before post-transform
 					emitBaseValues(codeBuilder, stratum.grove.getBaseValues());
 
-					// Prep and call fossil.classify(scores, postTransform, isBinarySingleScore)
+					// Prep and invoke classifierFossil.classify(..)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.aload(SLOT_SCORES);
 					codeBuilder.ldc((int) stratum.grove.getPostTransform());
@@ -146,6 +146,7 @@ public class Petrify {
 					codeBuilder.faload();
 					// score is now on the stack
 
+					// Prep and invoke regressionFossil.aggregate(..)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.swap();
 					codeBuilder.ldc((int) stratum.grove.getPostTransform());
@@ -244,6 +245,7 @@ public class Petrify {
 				ConstantDescs.CD_float.arrayType());
 		for (final int treeId : stratum.grove.getTreeRootIds()) {
 			final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
+			// Emit a tree as a private method: tree_N(float[] features, float[] scores) -> void
 			emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
 		}
 	}
@@ -251,6 +253,7 @@ public class Petrify {
 	protected void emitTreeInvocations(final CodeBuilder codeBuilder, final Stratum stratum, final ClassDesc thisClass,
 			final MethodTypeDesc treeMethodDesc) {
 		for (final int treeId : stratum.grove.getTreeRootIds()) {
+			// invoke tree_x(..) methods
 			codeBuilder.aload(SLOT_THIS);
 			codeBuilder.aload(SLOT_FEATURES);
 			codeBuilder.aload(SLOT_SCORES);
@@ -260,8 +263,6 @@ public class Petrify {
 
 	protected void emitTreeMethod(final ClassBuilder classBuilder, final MethodTypeDesc treeMethodDesc, final Stratum stratum,
 			final int treeId, final int rootArrayIdx) {
-		// Emit a tree as a private method: tree_N(float[] features, float[] scores) -> void
-
 		// Slot layout matches predict(): this=0, features=1, scores=2
 		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_PRIVATE,
 				(final CodeBuilder codeBuilder) -> {
@@ -274,7 +275,7 @@ public class Petrify {
 		final byte mode = stratum.grove.getNodesModes()[arrayIdx];
 		switch (mode) {
 
-			case PetrifyConstants.MODE_BRANCH_LEQ, PetrifyConstants.MODE_BRANCH_LT, PetrifyConstants.MODE_BRANCH_GEQ, PetrifyConstants.MODE_BRANCH_GT -> {
+			case PetrifyConstants.MODE_BRANCH_LEQ, PetrifyConstants.MODE_BRANCH_LT, PetrifyConstants.MODE_BRANCH_GEQ, PetrifyConstants.MODE_BRANCH_GT, PetrifyConstants.MODE_BRANCH_EQ, PetrifyConstants.MODE_BRANCH_NEQ -> {
 				emitBranch(codeBuilder, stratum, treeId, arrayIdx);
 			}
 
@@ -299,70 +300,96 @@ public class Petrify {
 	}
 
 	protected void emitBranch(final CodeBuilder codeBuilder, final Stratum stratum, final int treeId, final int arrayIdx) {
-		final int featureId = stratum.grove.getNodesFeatureIds()[arrayIdx];
-		final float threshold = stratum.grove.getNodesValues()[arrayIdx];
-
-		// Load features[featureId] onto stack
-		codeBuilder.aload(SLOT_FEATURES);
-		codeBuilder.ldc(featureId);
-
-		// Load threshold onto stack
-		codeBuilder.faload();
-		codeBuilder.ldc(threshold);
-
-		// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy.
 		final byte mode = stratum.grove.getNodesModes()[arrayIdx];
 		final int missingTracksTrue = stratum.grove.getNodesMissingValueTracksTrue()[arrayIdx];
-		final boolean invertNanPolarity = mode == PetrifyConstants.MODE_BRANCH_GT || mode == PetrifyConstants.MODE_BRANCH_GEQ;
-		if (missingTracksTrue == 0 != invertNanPolarity) {
-			codeBuilder.fcmpg();
+
+		// Equality modes cannot honor non-default missingValueTracksTrue via fcmpg/fcmpl alone.
+		if (mode == PetrifyConstants.MODE_BRANCH_EQ && missingTracksTrue == 1) {
+			// BRANCH_EQ: NaN always routes false; missingValueTracksTrue=1 would require an explicit isNaN check.
+			final int nodeId = stratum.grove.getNodesNodeIds()[arrayIdx];
+			throw new UnexpectedTreeBranch(
+					"BRANCH_EQ with missingValueTracksTrue=1 is not supported. treeId:" + treeId + " nodeId:" + nodeId);
+		} else if (mode == PetrifyConstants.MODE_BRANCH_NEQ && missingTracksTrue == 0) {
+			// BRANCH_NEQ: NaN always routes true; missingValueTracksTrue=0 would require an explicit isNaN check.
+			final int nodeId = stratum.grove.getNodesNodeIds()[arrayIdx];
+			throw new UnexpectedTreeBranch(
+					"BRANCH_NEQ with missingValueTracksTrue=0 is not supported. treeId:" + treeId + " nodeId:" + nodeId);
 		} else {
-			codeBuilder.fcmpl();
+			final int featureId = stratum.grove.getNodesFeatureIds()[arrayIdx];
+			final float threshold = stratum.grove.getNodesValues()[arrayIdx];
+
+			// Load features[featureId] onto stack
+			codeBuilder.aload(SLOT_FEATURES);
+			codeBuilder.ldc(featureId);
+
+			// Load threshold onto stack
+			codeBuilder.faload();
+			codeBuilder.ldc(threshold);
+
+			// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy.
+			final boolean invertNanPolarity = mode == PetrifyConstants.MODE_BRANCH_GT || mode == PetrifyConstants.MODE_BRANCH_GEQ;
+			if (missingTracksTrue == 0 != invertNanPolarity) {
+				codeBuilder.fcmpg();
+			} else {
+				codeBuilder.fcmpl();
+			}
+			// We now have one of {-1, 0, 1} on the stack
+
+			// Compute the correct opcode for the upcoming ifThenElse
+			final Opcode branchOpcode = switch (mode) {
+				// feature <= threshold: true when stack is -1 or 0, false when 1
+				case PetrifyConstants.MODE_BRANCH_LEQ -> {
+					// IFGT jumps when stack > 0 (stack is 1), which is the false branch
+					yield Opcode.IFGT;
+				}
+
+				// feature < threshold: true when stack is -1, false when 0 or 1
+				case PetrifyConstants.MODE_BRANCH_LT -> {
+					// IFGE jumps when stack >= 0 (stack is 0 or 1), which is the false branch
+					yield Opcode.IFGE;
+				}
+
+				// feature >= threshold: true when stack is 0 or 1, false when -1
+				case PetrifyConstants.MODE_BRANCH_GEQ -> {
+					// IFLT jumps when stack < 0 (stack is -1), which is the false branch
+					yield Opcode.IFLT;
+				}
+
+				// feature > threshold: true when stack is 1, false when -1 or 0
+				case PetrifyConstants.MODE_BRANCH_GT -> {
+					// IFLE jumps when stack <= 0 (stack is -1 or 0), which is the false branch
+					yield Opcode.IFLE;
+				}
+
+				// feature == threshold: true when stack is 0, false when -1 or 1
+				case PetrifyConstants.MODE_BRANCH_EQ -> {
+					// IFNE jumps when stack != 0 (stack is -1 or 1), which is the false branch
+					yield Opcode.IFNE;
+				}
+
+				// feature != threshold: true when stack is -1 or 1, false when 0
+				case PetrifyConstants.MODE_BRANCH_NEQ -> {
+					// IFEQ jumps when stack == 0, which is the false branch
+					yield Opcode.IFEQ;
+				}
+
+				default -> {
+					throw new UnexpectedTreeBranch("Unknown branch mode: " + mode);
+				}
+			};
+
+			final int trueNodeId = stratum.grove.getNodesTrueNodeIds()[arrayIdx];
+			final int trueArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, trueNodeId));
+
+			final int falseNodeId = stratum.grove.getNodesFalseNodeIds()[arrayIdx];
+			final int falseArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, falseNodeId));
+
+			codeBuilder.ifThenElse(branchOpcode, (final BlockCodeBuilder falseBlock) -> {
+				emitTree(falseBlock, stratum, treeId, falseArrayIdx);
+			}, (final BlockCodeBuilder trueBlock) -> {
+				emitTree(trueBlock, stratum, treeId, trueArrayIdx);
+			});
 		}
-		// We now have one of {-1, 0, 1} on the stack
-
-		// Compute the correct opcode for the upcoming ifThenElse
-		final Opcode branchOpcode = switch (mode) {
-			// feature <= threshold: true when stack is -1 or 0, false when 1
-			case PetrifyConstants.MODE_BRANCH_LEQ -> {
-				// IFGT jumps when stack > 0 (stack is 1), which is the false branch
-				yield Opcode.IFGT;
-			}
-
-			// feature < threshold: true when stack is -1, false when 0 or 1
-			case PetrifyConstants.MODE_BRANCH_LT -> {
-				// IFGE jumps when stack >= 0 (stack is 0 or 1), which is the false branch
-				yield Opcode.IFGE;
-			}
-
-			// feature >= threshold: true when stack is 0 or 1, false when -1
-			case PetrifyConstants.MODE_BRANCH_GEQ -> {
-				// IFLT jumps when stack < 0 (stack is -1), which is the false branch
-				yield Opcode.IFLT;
-			}
-
-			// feature > threshold: true when stack is 1, false when -1 or 0
-			case PetrifyConstants.MODE_BRANCH_GT -> {
-				// IFLE jumps when stack <= 0 (stack is -1 or 0), which is the false branch
-				yield Opcode.IFLE;
-			}
-
-			default -> {
-				throw new UnexpectedTreeBranch("Unknown branch mode: " + mode);
-			}
-		};
-
-		final int trueNodeId = stratum.grove.getNodesTrueNodeIds()[arrayIdx];
-		final int trueArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, trueNodeId));
-
-		final int falseNodeId = stratum.grove.getNodesFalseNodeIds()[arrayIdx];
-		final int falseArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, falseNodeId));
-
-		codeBuilder.ifThenElse(branchOpcode, (final BlockCodeBuilder falseBlock) -> {
-			emitTree(falseBlock, stratum, treeId, falseArrayIdx);
-		}, (final BlockCodeBuilder trueBlock) -> {
-			emitTree(trueBlock, stratum, treeId, trueArrayIdx);
-		});
 	}
 
 	protected void emitBaseValues(final CodeBuilder codeBuilder, final float[] baseValues) {
@@ -375,7 +402,6 @@ public class Petrify {
 					codeBuilder.aload(SLOT_SCORES);
 					codeBuilder.ldc(classIdx);
 					codeBuilder.dup2();
-
 					codeBuilder.faload();
 					codeBuilder.ldc(baseValues[classIdx]);
 					codeBuilder.fadd();

@@ -25,3 +25,9 @@
 **Operand stack**: The JVM's per-method scratch pad. Bytecode instructions pop inputs from the top, do work, and push results back. Local variable slots (parameters, locals) persist across instructions; the operand stack is transient.
 
 **`ldc`**: JVM bytecode instruction meaning "load constant." Pushes a value from the class file's constant pool onto the operand stack. Used for thresholds, weights, and any literal that doesn't have a dedicated single-byte opcode.
+
+**`BRANCH_EQ`**: ONNX split mode meaning "if `features[featureId] == threshold`, follow the true child; otherwise follow the false child." Represented as byte `5` in `nodesModes`. Used by some frameworks for categorical splits encoded as equality checks. NaN always routes to the false branch (NaN != anything under IEEE 754); `missingValueTracksTrue` cannot redirect NaN for equality modes without an explicit `isNaN` check.
+
+**`BRANCH_NEQ`**: ONNX split mode meaning "if `features[featureId] != threshold`, follow the true child; otherwise follow the false child." Represented as byte `6` in `nodesModes`. NaN always routes to the true branch (NaN != anything is always true under IEEE 754); `missingValueTracksTrue=0` cannot redirect NaN to the false branch for inequality modes without an explicit `isNaN` check.
+
+**`BRANCH_GTE`**: An alias for `BRANCH_GEQ` (`>=`). Some ONNX exporters emit the string `"BRANCH_GTE"` instead of `"BRANCH_GEQ"`. `Arborist.toModeByte()` maps both strings to `MODE_BRANCH_GEQ` (byte `3`).
