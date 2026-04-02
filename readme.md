@@ -35,15 +35,17 @@ Once your ONNX models are compiled, the only runtime dependency is the `Fossil` 
 
 ### Supported ONNX Operators
 
+
 | ONNX Operator | Task | Status |
 |---|---|---|
 | `TreeEnsembleClassifier` | Classification (binary & multiclass) | ✅ Supported |
 | `TreeEnsembleRegressor` | Regression | ✅ Supported |
 | `TreeEnsemble` | Classification / Regression | ✅ Supported |
 | `LinearClassifier` | Classification (binary & multiclass) | ✅ Supported |
-| `LinearRegressor` | Regression | Planned |
+| `LinearRegressor` | Regression | ✅ Supported |
 | `SVMClassifier` | Classification | Planned |
 | `SVMRegressor` | Regression | Planned |
+
 
 Tree node modes supported:
 
@@ -86,6 +88,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 | scikit-learn | `ExtraTreesRegressor` | Regression | |
 | scikit-learn | `HistGradientBoostingClassifier` | Classification | |
 | scikit-learn | `HistGradientBoostingRegressor` | Regression | |
+
 ## Usage
 
 ### Maven Lib Coordinates
