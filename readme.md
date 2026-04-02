@@ -19,10 +19,10 @@ final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove)
 final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 
 // Do something with your prediction:
-if (prediction == SPANISH_INQUISITION) {
- throw new UnexpectedInquistionException();
+if (prediction != SPANISH_INQUISITION) {
+  // Profits!
 } else {
- // Profits!
+  throw new UnexpectedInquistionException();
 }
 ```
 
@@ -81,7 +81,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 | scikit-learn | `GradientBoostingClassifier` | Multiclass classification | ✅ |
 | scikit-learn | `LogisticRegression` | Multiclass classification | ✅ |
 | scikit-learn | `LinearRegression` | Regression | ✅ |
-| XGBoost | `XGBRegressor` | Regression | |
+| XGBoost | `XGBRegressor` | Regression | ✅ |
 | LightGBM | `LGBMRegressor` | Regression | |
 | CatBoost | `CatBoostRegressor` | Regression | |
 | scikit-learn | `RandomForestRegressor` | Regression | |
