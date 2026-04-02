@@ -33,7 +33,7 @@ class RandomForestRegressorHousingTest {
 	@BeforeAll
 	void beforeAll() {
 		final Arborist arborist = new Arborist();
-		final RegressorGrove grove = arborist.toGrove(RegressorGrove.class, ONNX);
+		final RegressorGrove grove = arborist.toGrove(ONNX);
 
 		final Petrify petrify = new Petrify();
 		fossil = petrify.fossilize(MethodHandles.lookup(), grove);

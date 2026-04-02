@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.exabrial.petrify.Petrify;
-import com.github.exabrial.petrify.compiler.model.LinearRegressorGrove;
-import com.github.exabrial.petrify.imprt.Arborist;
+import com.github.exabrial.petrify.compiler.model.RegressorVine;
+import com.github.exabrial.petrify.imprt.Vintner;
 import com.github.exabrial.petrify.model.RegressionFossil;
 
 /**
@@ -31,11 +31,11 @@ class LinearRegressorHousingTest {
 
 	@BeforeAll
 	void beforeAll() {
-		final Arborist arborist = new Arborist();
-		final LinearRegressorGrove grove = arborist.toGrove(LinearRegressorGrove.class, ONNX);
+		final Vintner vintner = new Vintner();
+		final RegressorVine vine = vintner.toVine(ONNX);
 
 		final Petrify petrify = new Petrify();
-		fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+		fossil = petrify.fossilize(MethodHandles.lookup(), vine);
 	}
 
 	@BeforeEach

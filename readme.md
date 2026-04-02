@@ -6,11 +6,11 @@ ONNX ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come o
 
 ### Theory of operation
 
-Petrify reads a model representation (a `Grove`) and emits a compiled class (a `Fossil`):
+Petrify reads a model representation (a `Grove` or `Vine`) and emits a compiled class (a `Fossil`):
 
 ```java
 // Load a grove; 
-final Grove = arborist.toGrove(..., "/path/to/model.onnx");
+final Grove = arborist.toGrove("/path/to/model.onnx");
 
 // Compile your model as bytecode:
 final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);

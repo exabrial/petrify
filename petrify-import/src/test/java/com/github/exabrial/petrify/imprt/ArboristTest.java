@@ -16,6 +16,7 @@ import com.google.protobuf.ByteString;
 
 import onnx.OnnxMl.AttributeProto;
 import onnx.OnnxMl.GraphProto;
+import onnx.OnnxMl.ModelProto;
 import onnx.OnnxMl.NodeProto;
 
 class ArboristTest {
@@ -24,6 +25,19 @@ class ArboristTest {
 	@BeforeEach
 	void setUp() {
 		arborist = new Arborist();
+	}
+
+	@Test
+	void testToGroveFromModelProto() {
+		final NodeProto treeNode = buildTreeEnsembleNode();
+		final GraphProto graph = GraphProto.newBuilder().addNode(treeNode).build();
+		final ModelProto model = ModelProto.newBuilder().setGraph(graph).build();
+
+		final ClassifierGrove grove = arborist.toGrove(model);
+
+		assertNotNull(grove);
+		assertArrayEquals(new int[] { 0, 0, 0 }, grove.getNodesTreeIds());
+		assertArrayEquals(new long[] { 0L, 1L }, grove.getClassLabelsInt64s());
 	}
 
 	@Test
@@ -54,20 +68,27 @@ class ArboristTest {
 		final NodeProto treeNode = buildTreeEnsembleNode();
 		final GraphProto graph = GraphProto.newBuilder().addNode(treeNode).build();
 
-		final NodeProto found = arborist.findMLNode(graph);
+		final NodeProto found = OnnxImportUtil.findMLNode(graph, Arborist.ML_OP_TYPES);
 		assertEquals("TreeEnsembleClassifier", found.getOpType());
 	}
 
 	@Test
-	void testFindTreeEnsembleNodeThrowsWhenNotFound() {
+	void testFindMLNodeThrowsOnUnsupportedOperator() {
 		final GraphProto graph = GraphProto.newBuilder().addNode(NodeProto.newBuilder().setOpType("Conv").build()).build();
 
-		assertThrows(UnexpectedPreservative.class, () -> arborist.findMLNode(graph));
+		assertThrows(UnexpectedPreservative.class, () -> OnnxImportUtil.findMLNode(graph, Arborist.ML_OP_TYPES));
+	}
+
+	@Test
+	void testFindMLNodeThrowsWhenNoMLNodeFound() {
+		final GraphProto graph = GraphProto.newBuilder().addNode(NodeProto.newBuilder().setOpType("Cast").build()).build();
+
+		assertThrows(UnexpectedCometImpact.class, () -> OnnxImportUtil.findMLNode(graph, Arborist.ML_OP_TYPES));
 	}
 
 	@Test
 	void testLoadModelThrowsOnMissingResource() {
-		assertThrows(MissingSpecimen.class, () -> arborist.loadModel("nonexistent.onnx"));
+		assertThrows(MissingSpecimen.class, () -> OnnxImportUtil.loadModel(ArboristTest.class, "nonexistent.onnx"));
 	}
 
 	@Test

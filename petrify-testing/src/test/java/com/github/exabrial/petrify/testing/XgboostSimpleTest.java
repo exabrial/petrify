@@ -31,7 +31,7 @@ class XgboostSimpleTest {
 	@BeforeAll
 	void beforeAll() {
 		final Arborist arborist = new Arborist();
-		final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, ONNX);
+		final ClassifierGrove grove = arborist.toGrove(ONNX);
 
 		final Petrify petrify = new Petrify();
 		fossil = petrify.fossilize(MethodHandles.lookup(), grove);

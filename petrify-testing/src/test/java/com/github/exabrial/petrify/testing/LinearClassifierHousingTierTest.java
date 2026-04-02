@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.exabrial.petrify.Petrify;
-import com.github.exabrial.petrify.compiler.model.LinearClassifierGrove;
-import com.github.exabrial.petrify.imprt.Arborist;
+import com.github.exabrial.petrify.compiler.model.ClassifierVine;
+import com.github.exabrial.petrify.imprt.Vintner;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 
 /**
@@ -34,11 +34,11 @@ class LinearClassifierHousingTierTest {
 
 	@BeforeAll
 	void beforeAll() {
-		final Arborist arborist = new Arborist();
-		final LinearClassifierGrove grove = arborist.toGrove(LinearClassifierGrove.class, ONNX);
+		final Vintner vintner = new Vintner();
+		final ClassifierVine vine = vintner.toVine(ONNX);
 
 		final Petrify petrify = new Petrify();
-		fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+		fossil = petrify.fossilize(MethodHandles.lookup(), vine);
 	}
 
 	@BeforeEach

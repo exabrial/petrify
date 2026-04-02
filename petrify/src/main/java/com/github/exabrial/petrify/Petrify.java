@@ -16,11 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
+import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import com.github.exabrial.petrify.compiler.model.LeafTargetEntry;
-import com.github.exabrial.petrify.compiler.model.LinearClassifierGrove;
-import com.github.exabrial.petrify.compiler.model.LinearRegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
+import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.internal.model.ClassifierStratum;
@@ -86,7 +86,7 @@ public class Petrify {
 		}
 	}
 
-	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final LinearClassifierGrove grove) {
+	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final ClassifierVine grove) {
 		try {
 			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
 					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
@@ -105,7 +105,7 @@ public class Petrify {
 		}
 	}
 
-	public RegressionFossil fossilize(final MethodHandles.Lookup lookup, final LinearRegressorGrove grove) {
+	public RegressionFossil fossilize(final MethodHandles.Lookup lookup, final RegressorVine grove) {
 		try {
 			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
 					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
@@ -124,7 +124,7 @@ public class Petrify {
 		}
 	}
 
-	protected void implementLinearRegressorPredictMethod(final ClassBuilder classBuilder, final LinearRegressorGrove grove) {
+	protected void implementLinearRegressorPredictMethod(final ClassBuilder classBuilder, final RegressorVine grove) {
 		classBuilder.withMethodBody(RegressionFossil.predict,
 				MethodTypeDesc.of(ConstantDescs.CD_float, ConstantDescs.CD_float.arrayType()), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
@@ -160,7 +160,7 @@ public class Petrify {
 				});
 	}
 
-	protected void implementLinearClassifierPredictMethod(final ClassBuilder classBuilder, final LinearClassifierGrove grove) {
+	protected void implementLinearClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierVine grove) {
 		classBuilder.withMethodBody(ClassifierFossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, ConstantDescs.CD_float.arrayType()),
 				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
 					final int nClasses = grove.getNClasses();
