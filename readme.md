@@ -85,7 +85,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 | LightGBM | `LGBMRegressor` | Regression | ✅ |
 | CatBoost | `CatBoostRegressor` | Regression | ✅ |
 | scikit-learn | `RandomForestRegressor` | Regression | ✅ |
-| scikit-learn | `ExtraTreesRegressor` | Regression | |
+| scikit-learn | `ExtraTreesRegressor` | Regression | ✅ |
 | scikit-learn | `HistGradientBoostingClassifier` | Classification | |
 | scikit-learn | `HistGradientBoostingRegressor` | Regression | |
 
