@@ -82,7 +82,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 | scikit-learn | `LogisticRegression` | Multiclass classification | ✅ |
 | scikit-learn | `LinearRegression` | Regression | ✅ |
 | XGBoost | `XGBRegressor` | Regression | ✅ |
-| LightGBM | `LGBMRegressor` | Regression | |
+| LightGBM | `LGBMRegressor` | Regression | ✅ |
 | CatBoost | `CatBoostRegressor` | Regression | |
 | scikit-learn | `RandomForestRegressor` | Regression | |
 | scikit-learn | `ExtraTreesRegressor` | Regression | |
