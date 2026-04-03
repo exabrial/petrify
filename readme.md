@@ -91,48 +91,88 @@ Any framework that exports to a supported ONNX operator should work. The table b
 
 ## Usage
 
-### Maven Lib Coordinates
+### Maven Coordinates
 
-- coming soon
+```xml
+<!-- Fossil interfaces (ASL2 licensed) -->
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify-model</artifactId>
+  <version>0.1.0</version>
+  <scope>compile</scope>
+</dependency>
+
+<!-- Compiler and libs -->
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify</artifactId>
+  <version>0.1.0</version>
+  <scope>compile</scope>
+</dependency>
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify-compiler-model</artifactId>
+  <version>0.1.0</version>
+  <scope>compile</scope>
+</dependency>
+
+<!-- ONNX importer and libs -->
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify-import</artifactId>
+  <version>0.1.0</version>
+  <scope>compile</scope>
+</dependency>
+```
 
 ### Compiling a model at runtime
 
-1. Use `Arborist` to load your ONNX model into a grove
-2. Call `petrify.fossilize(MethodHandles.lookup(), grove)` to compile it to bytecode
-3. Invoke your model with `fossil.predict(features)`
+Tree ensemble models (XGBoost, LightGBM, CatBoost, scikit-learn trees) use `Arborist` to produce a `Grove`. Linear models (LogisticRegression, LinearRegression) use `Vintner` to produce a `Vine`. Both are then compiled to bytecode with `Petrify.fossilize()`.
 
-#### Tree ensemble (XGBoost, LightGBM, CatBoost, scikit-learn trees)
+#### Grove classifier (tree ensemble)
 
 ```java
 final Arborist arborist = new Arborist();
-final ClassifierGrove grove = arborist.toGrove(ClassifierGrove.class, "/models/xgboostSimple.onnx");
+final ClassifierGrove grove = arborist.toGrove("/models/xgboostClassifier.onnx");
 
 final Petrify petrify = new Petrify();
 final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 
-assertEquals(1, fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
+final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f });
 ```
 
-#### Linear classifier (scikit-learn LogisticRegression)
+#### Grove regressor (tree ensemble)
 
 ```java
 final Arborist arborist = new Arborist();
-final LinearClassifierGrove grove = arborist.toGrove(LinearClassifierGrove.class, "/models/logistic.onnx");
-
-final Petrify petrify = new Petrify();
-final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
-
-assertEquals(0, fossil.predict(new float[] { 1.6812f, 25.0f, 4.1922f, 1.0223f, 1392.0f, 3.8774f, 36.06f, -119.01f }));
-```
-
-#### Tree regression
-
-```java
-final Arborist arborist = new Arborist();
-final RegressorGrove grove = arborist.toGrove(RegressorGrove.class, "/models/regression.onnx");
+final RegressorGrove grove = arborist.toGrove("/models/xgboostRegressor.onnx");
 
 final Petrify petrify = new Petrify();
 final RegressionFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+
+final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1.0238f, 322.0f, 2.5556f, 37.88f, -122.23f });
+```
+
+#### Vine classifier (linear model)
+
+```java
+final Vintner vintner = new Vintner();
+final ClassifierVine vine = vintner.toVine("/models/logisticRegression.onnx");
+
+final Petrify petrify = new Petrify();
+final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), vine);
+
+final int prediction = fossil.predict(new float[] { 1.6812f, 25.0f, 4.1922f, 1.0223f, 1392.0f, 3.8774f, 36.06f, -119.01f });
+```
+
+#### Vine regressor (linear model)
+
+```java
+final Vintner vintner = new Vintner();
+final RegressorVine vine = vintner.toVine("/models/linearRegression.onnx");
+
+final Petrify petrify = new Petrify();
+final RegressionFossil fossil = petrify.fossilize(MethodHandles.lookup(), vine);
 
 final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1.0238f, 322.0f, 2.5556f, 37.88f, -122.23f });
 ```
