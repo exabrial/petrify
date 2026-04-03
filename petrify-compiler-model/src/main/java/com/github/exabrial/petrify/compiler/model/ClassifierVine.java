@@ -1,18 +1,18 @@
 package com.github.exabrial.petrify.compiler.model;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-@Data
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ClassifierVine extends Vine {
 	private static final long serialVersionUID = 1L;
 
-	private long[] classlabelsInts;
-	private int multiClass;
-	private int nClasses;
+	public long[] classlabelsInts;
+	public int multiClass;
+	public int nClasses;
 
-	public boolean toIsBinarySingleScore() {
+	public boolean isBinarySingleScore() {
 		if (classlabelsInts.length != 2) {
 			return false;
 		} else {

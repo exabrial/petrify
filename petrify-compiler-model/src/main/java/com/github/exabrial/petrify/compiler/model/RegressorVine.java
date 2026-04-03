@@ -1,12 +1,12 @@
 package com.github.exabrial.petrify.compiler.model;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-@Data
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class RegressorVine extends Vine {
 	private static final long serialVersionUID = 1L;
 
-	private int nTargets;
+	public int nTargets;
 }

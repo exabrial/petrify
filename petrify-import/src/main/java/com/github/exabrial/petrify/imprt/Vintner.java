@@ -51,42 +51,42 @@ public class Vintner implements PetrifyConstants {
 		for (final AttributeProto attr : mlNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
-				case "coefficients" -> vine.setCoefficients(toFloatArray(attr.getFloatsList()));
-				case "intercepts" -> vine.setIntercepts(toFloatArray(attr.getFloatsList()));
-				case "classlabels_ints" -> vine.setClasslabelsInts(toLongArray(attr.getIntsList()));
-				case "multi_class" -> vine.setMultiClass((int) attr.getI());
-				case "post_transform" -> vine.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
+				case "coefficients" -> vine.coefficients = toFloatArray(attr.getFloatsList());
+				case "intercepts" -> vine.intercepts = toFloatArray(attr.getFloatsList());
+				case "classlabels_ints" -> vine.classlabelsInts = toLongArray(attr.getIntsList());
+				case "multi_class" -> vine.multiClass = (int) attr.getI();
+				case "post_transform" -> vine.postTransform = toPostTransform(attr.getS().toStringUtf8());
 				default -> {
 					throw new UnexpectedPreservative("Unknown ONNX LinearClassifier attribute: " + name);
 				}
 			}
 		}
-		final int nClasses = vine.getIntercepts().length;
-		final int nFeatures = vine.getCoefficients().length / nClasses;
-		vine.setNClasses(nClasses);
-		vine.setNFeatures(nFeatures);
+		final int nClasses = vine.intercepts.length;
+		final int nFeatures = vine.coefficients.length / nClasses;
+		vine.nClasses = nClasses;
+		vine.nFeatures = nFeatures;
 		return vine;
 	}
 
 	protected RegressorVine mapToRegressorVine(final NodeProto mlNode) {
 		final RegressorVine vine = new RegressorVine();
-		vine.setNTargets(1);
-		vine.setPostTransform(POST_TRANSFORM_NONE);
+		vine.nTargets = 1;
+		vine.postTransform = POST_TRANSFORM_NONE;
 		for (final AttributeProto attr : mlNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
-				case "coefficients" -> vine.setCoefficients(toFloatArray(attr.getFloatsList()));
-				case "intercepts" -> vine.setIntercepts(toFloatArray(attr.getFloatsList()));
-				case "targets" -> vine.setNTargets((int) attr.getI());
-				case "post_transform" -> vine.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
+				case "coefficients" -> vine.coefficients = toFloatArray(attr.getFloatsList());
+				case "intercepts" -> vine.intercepts = toFloatArray(attr.getFloatsList());
+				case "targets" -> vine.nTargets = (int) attr.getI();
+				case "post_transform" -> vine.postTransform = toPostTransform(attr.getS().toStringUtf8());
 				default -> {
 					throw new UnexpectedPreservative("Unknown ONNX LinearRegressor attribute: " + name);
 				}
 			}
 		}
-		final int nTargets = vine.getNTargets();
-		final int nFeatures = vine.getCoefficients().length / nTargets;
-		vine.setNFeatures(nFeatures);
+		final int nTargets = vine.nTargets;
+		final int nFeatures = vine.coefficients.length / nTargets;
+		vine.nFeatures = nFeatures;
 		return vine;
 	}
 }

@@ -36,8 +36,8 @@ class ArboristTest {
 		final ClassifierGrove grove = arborist.toGrove(model);
 
 		assertNotNull(grove);
-		assertArrayEquals(new int[] { 0, 0, 0 }, grove.getNodesTreeIds());
-		assertArrayEquals(new long[] { 0L, 1L }, grove.getClassLabelsInt64s());
+		assertArrayEquals(new int[] { 0, 0, 0 }, grove.nodesTreeIds);
+		assertArrayEquals(new long[] { 0L, 1L }, grove.classLabelsInt64s);
 	}
 
 	@Test
@@ -46,21 +46,21 @@ class ArboristTest {
 		final ClassifierGrove grove = arborist.mapToClassifierGrove(treeNode);
 
 		assertNotNull(grove);
-		assertArrayEquals(new int[] { 0, 0, 0 }, grove.getNodesTreeIds());
-		assertArrayEquals(new int[] { 0, 1, 2 }, grove.getNodesNodeIds());
-		assertArrayEquals(new byte[] { 1, 0, 0 }, grove.getNodesModes());
-		assertArrayEquals(new int[] { 0, 0, 0 }, grove.getNodesFeatureIds());
-		assertArrayEquals(new float[] { 4.0f, 0.0f, 0.0f }, grove.getNodesValues());
-		assertArrayEquals(new int[] { 1, 0, 0 }, grove.getNodesTrueNodeIds());
-		assertArrayEquals(new int[] { 2, 0, 0 }, grove.getNodesFalseNodeIds());
-		assertArrayEquals(new float[] { 1.0f, 1.0f, 1.0f }, grove.getNodesHitRates());
-		assertArrayEquals(new int[] { 0, 0, 0 }, grove.getNodesMissingValueTracksTrue());
-		assertArrayEquals(new int[] { 0, 0 }, grove.getClassTreeIds());
-		assertArrayEquals(new int[] { 1, 2 }, grove.getClassNodeIds());
-		assertArrayEquals(new int[] { 0, 1 }, grove.getClassIds());
-		assertArrayEquals(new float[] { 1.0f, 1.0f }, grove.getClassWeights());
-		assertArrayEquals(new long[] { 0L, 1L }, grove.getClassLabelsInt64s());
-		assertEquals((byte) 0, grove.getPostTransform());
+		assertArrayEquals(new int[] { 0, 0, 0 }, grove.nodesTreeIds);
+		assertArrayEquals(new int[] { 0, 1, 2 }, grove.nodesNodeIds);
+		assertArrayEquals(new byte[] { 1, 0, 0 }, grove.nodesModes);
+		assertArrayEquals(new int[] { 0, 0, 0 }, grove.nodesFeatureIds);
+		assertArrayEquals(new float[] { 4.0f, 0.0f, 0.0f }, grove.nodesValues);
+		assertArrayEquals(new int[] { 1, 0, 0 }, grove.nodesTrueNodeIds);
+		assertArrayEquals(new int[] { 2, 0, 0 }, grove.nodesFalseNodeIds);
+		assertArrayEquals(new float[] { 1.0f, 1.0f, 1.0f }, grove.nodesHitRates);
+		assertArrayEquals(new int[] { 0, 0, 0 }, grove.nodesMissingValueTracksTrue);
+		assertArrayEquals(new int[] { 0, 0 }, grove.classTreeIds);
+		assertArrayEquals(new int[] { 1, 2 }, grove.classNodeIds);
+		assertArrayEquals(new int[] { 0, 1 }, grove.classIds);
+		assertArrayEquals(new float[] { 1.0f, 1.0f }, grove.classWeights);
+		assertArrayEquals(new long[] { 0L, 1L }, grove.classLabelsInt64s);
+		assertEquals((byte) 0, grove.postTransform);
 	}
 
 	@Test

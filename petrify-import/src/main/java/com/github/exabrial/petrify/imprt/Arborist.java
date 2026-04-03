@@ -54,22 +54,22 @@ public class Arborist implements PetrifyConstants {
 		for (final AttributeProto attr : treeNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
-				case "nodes_treeids" -> grove.setNodesTreeIds(toIntArray(attr.getIntsList()));
-				case "nodes_nodeids" -> grove.setNodesNodeIds(toIntArray(attr.getIntsList()));
-				case "nodes_modes" -> grove.setNodesModes(toModeBytes(attr.getStringsList()));
-				case "nodes_featureids" -> grove.setNodesFeatureIds(toIntArray(attr.getIntsList()));
-				case "nodes_values" -> grove.setNodesValues(toFloatArray(attr.getFloatsList()));
-				case "nodes_truenodeids" -> grove.setNodesTrueNodeIds(toIntArray(attr.getIntsList()));
-				case "nodes_falsenodeids" -> grove.setNodesFalseNodeIds(toIntArray(attr.getIntsList()));
-				case "nodes_hitrates" -> grove.setNodesHitRates(toFloatArray(attr.getFloatsList()));
-				case "nodes_missing_value_tracks_true" -> grove.setNodesMissingValueTracksTrue(toIntArray(attr.getIntsList()));
-				case "class_treeids" -> grove.setClassTreeIds(toIntArray(attr.getIntsList()));
-				case "class_nodeids" -> grove.setClassNodeIds(toIntArray(attr.getIntsList()));
-				case "class_ids" -> grove.setClassIds(toIntArray(attr.getIntsList()));
-				case "class_weights" -> grove.setClassWeights(toFloatArray(attr.getFloatsList()));
-				case "classlabels_int64s" -> grove.setClassLabelsInt64s(toLongArray(attr.getIntsList()));
-				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
-				case "base_values" -> grove.setBaseValues(toFloatArray(attr.getFloatsList()));
+				case "nodes_treeids" -> grove.nodesTreeIds = toIntArray(attr.getIntsList());
+				case "nodes_nodeids" -> grove.nodesNodeIds = toIntArray(attr.getIntsList());
+				case "nodes_modes" -> grove.nodesModes = toModeBytes(attr.getStringsList());
+				case "nodes_featureids" -> grove.nodesFeatureIds = toIntArray(attr.getIntsList());
+				case "nodes_values" -> grove.nodesValues = toFloatArray(attr.getFloatsList());
+				case "nodes_truenodeids" -> grove.nodesTrueNodeIds = toIntArray(attr.getIntsList());
+				case "nodes_falsenodeids" -> grove.nodesFalseNodeIds = toIntArray(attr.getIntsList());
+				case "nodes_hitrates" -> grove.nodesHitRates = toFloatArray(attr.getFloatsList());
+				case "nodes_missing_value_tracks_true" -> grove.nodesMissingValueTracksTrue = toIntArray(attr.getIntsList());
+				case "class_treeids" -> grove.classTreeIds = toIntArray(attr.getIntsList());
+				case "class_nodeids" -> grove.classNodeIds = toIntArray(attr.getIntsList());
+				case "class_ids" -> grove.classIds = toIntArray(attr.getIntsList());
+				case "class_weights" -> grove.classWeights = toFloatArray(attr.getFloatsList());
+				case "classlabels_int64s" -> grove.classLabelsInt64s = toLongArray(attr.getIntsList());
+				case "post_transform" -> grove.postTransform = toPostTransform(attr.getS().toStringUtf8());
+				case "base_values" -> grove.baseValues = toFloatArray(attr.getFloatsList());
 				default -> {
 					throw new UnexpectedPreservative("Unknown ONNX TreeEnsembleClassifier attribute: " + name);
 				}
@@ -83,23 +83,23 @@ public class Arborist implements PetrifyConstants {
 		for (final AttributeProto attr : treeNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
-				case "nodes_treeids" -> grove.setNodesTreeIds(toIntArray(attr.getIntsList()));
-				case "nodes_nodeids" -> grove.setNodesNodeIds(toIntArray(attr.getIntsList()));
-				case "nodes_modes" -> grove.setNodesModes(toModeBytes(attr.getStringsList()));
-				case "nodes_featureids" -> grove.setNodesFeatureIds(toIntArray(attr.getIntsList()));
-				case "nodes_values" -> grove.setNodesValues(toFloatArray(attr.getFloatsList()));
-				case "nodes_truenodeids" -> grove.setNodesTrueNodeIds(toIntArray(attr.getIntsList()));
-				case "nodes_falsenodeids" -> grove.setNodesFalseNodeIds(toIntArray(attr.getIntsList()));
-				case "nodes_hitrates" -> grove.setNodesHitRates(toFloatArray(attr.getFloatsList()));
-				case "nodes_missing_value_tracks_true" -> grove.setNodesMissingValueTracksTrue(toIntArray(attr.getIntsList()));
-				case "target_treeids" -> grove.setTargetTreeIds(toIntArray(attr.getIntsList()));
-				case "target_nodeids" -> grove.setTargetNodeIds(toIntArray(attr.getIntsList()));
-				case "target_ids" -> grove.setTargetIds(toIntArray(attr.getIntsList()));
-				case "target_weights" -> grove.setTargetWeights(toFloatArray(attr.getFloatsList()));
-				case "n_targets" -> grove.setNTargets((int) attr.getI());
-				case "post_transform" -> grove.setPostTransform(toPostTransform(attr.getS().toStringUtf8()));
-				case "base_values" -> grove.setBaseValues(toFloatArray(attr.getFloatsList()));
-				case "aggregate_function" -> grove.setAggregateFunction(toAggregateFunction(attr.getS().toStringUtf8()));
+				case "nodes_treeids" -> grove.nodesTreeIds = toIntArray(attr.getIntsList());
+				case "nodes_nodeids" -> grove.nodesNodeIds = toIntArray(attr.getIntsList());
+				case "nodes_modes" -> grove.nodesModes = toModeBytes(attr.getStringsList());
+				case "nodes_featureids" -> grove.nodesFeatureIds = toIntArray(attr.getIntsList());
+				case "nodes_values" -> grove.nodesValues = toFloatArray(attr.getFloatsList());
+				case "nodes_truenodeids" -> grove.nodesTrueNodeIds = toIntArray(attr.getIntsList());
+				case "nodes_falsenodeids" -> grove.nodesFalseNodeIds = toIntArray(attr.getIntsList());
+				case "nodes_hitrates" -> grove.nodesHitRates = toFloatArray(attr.getFloatsList());
+				case "nodes_missing_value_tracks_true" -> grove.nodesMissingValueTracksTrue = toIntArray(attr.getIntsList());
+				case "target_treeids" -> grove.targetTreeIds = toIntArray(attr.getIntsList());
+				case "target_nodeids" -> grove.targetNodeIds = toIntArray(attr.getIntsList());
+				case "target_ids" -> grove.targetIds = toIntArray(attr.getIntsList());
+				case "target_weights" -> grove.targetWeights = toFloatArray(attr.getFloatsList());
+				case "n_targets" -> grove.nTargets = (int) attr.getI();
+				case "post_transform" -> grove.postTransform = toPostTransform(attr.getS().toStringUtf8());
+				case "base_values" -> grove.baseValues = toFloatArray(attr.getFloatsList());
+				case "aggregate_function" -> grove.aggregateFunction = toAggregateFunction(attr.getS().toStringUtf8());
 				default -> {
 					throw new UnexpectedPreservative("Unknown ONNX TreeEnsembleRegressor attribute: " + name);
 				}

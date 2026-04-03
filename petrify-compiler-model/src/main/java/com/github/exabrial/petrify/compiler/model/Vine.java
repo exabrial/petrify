@@ -2,14 +2,16 @@ package com.github.exabrial.petrify.compiler.model;
 
 import java.io.Serializable;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-@Data
+@ToString
+@EqualsAndHashCode
 public abstract class Vine implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	protected float[] coefficients;
-	protected float[] intercepts;
-	protected byte postTransform;
-	protected int nFeatures;
+	public float[] coefficients;
+	public float[] intercepts;
+	public byte postTransform;
+	public int nFeatures;
 }

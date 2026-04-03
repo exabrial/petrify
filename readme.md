@@ -194,3 +194,19 @@ Petrify takes a different approach: compile the tree ensemble directly to JVM by
     - However: Note that if you modify/extend Petrify, distribute it, and/or offer online access to apps through a modified/extended Petrify, it is required by law that the source code for your Petrify changeset be made available _first_, before offering said access to your app or distribution.
     - Again, this does not include your proprietary application source code, just the changeset to Petrify.
 - ONNX, XGBoost, LightGBM, scikit-learn, and other names are trademarks; this project is not endorsed by nor affiliated with them.
+
+### Verifying artifacts
+
+All release artifacts are signed with GPG. You can verify them using the following public key:
+
+```
+Fingerprint: 871638A21A7F2C38066471420306A354336B4F0D
+```
+
+To import the key and verify artifacts in your local Maven repository:
+
+```bash
+gpg --keyserver keyserver.ubuntu.com --recv-keys 871638A21A7F2C38066471420306A354336B4F0D
+
+find ~/.m2/repository/com/github/exabrial/petrify* -name '*.asc' -exec gpg --verify {} \;
+```
