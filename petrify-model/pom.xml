@@ -8,7 +8,9 @@
 		<version>0.1.0</version>
 	</parent>
 	<artifactId>petrify-model</artifactId>
+	<name>${project.artifactId}</name>
 	<packaging>jar</packaging>
+
 	<licenses>
 		<license>
 			<name>Apache-2.0</name>
