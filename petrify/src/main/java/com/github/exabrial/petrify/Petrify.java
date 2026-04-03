@@ -561,7 +561,10 @@ public class Petrify {
 
 	protected void createSerialVersionUid(final ClassBuilder classBuilder) {
 		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long,
-				ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL);
+				(final java.lang.classfile.FieldBuilder fieldBuilder) -> {
+					fieldBuilder.withFlags(ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL);
+					fieldBuilder.with(java.lang.classfile.attribute.ConstantValueAttribute.of(1L));
+				});
 	}
 
 	protected void createDefaultConstructor(final ClassBuilder classBuilder) {
