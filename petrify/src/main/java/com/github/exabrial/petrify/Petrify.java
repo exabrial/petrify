@@ -559,20 +559,17 @@ public class Petrify {
 		classBuilder.withInterfaceSymbols(ClassDesc.of(fossilType.getPackageName(), fossilType.getSimpleName()));
 	}
 
+	protected void createSerialVersionUid(final ClassBuilder classBuilder) {
+		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long,
+				ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL);
+	}
+
 	protected void createDefaultConstructor(final ClassBuilder classBuilder) {
 		classBuilder.withMethodBody(ConstantDescs.INIT_NAME, ConstantDescs.MTD_void, ClassFile.ACC_PUBLIC,
 				(final CodeBuilder initCodeBuilder) -> {
 					initCodeBuilder.aload(0);
 					initCodeBuilder.invokespecial(ConstantDescs.CD_Object, ConstantDescs.INIT_NAME, ConstantDescs.MTD_void);
 					initCodeBuilder.return_();
-				});
-	}
-
-	protected void createSerialVersionUid(final ClassBuilder classBuilder) {
-		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long,
-				ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL,
-				(final java.lang.classfile.FieldBuilder fieldBuilder) -> {
-					fieldBuilder.with(java.lang.classfile.attribute.ConstantValueAttribute.of(1L));
 				});
 	}
 }

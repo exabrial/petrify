@@ -187,6 +187,12 @@ final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1
 
 ## Bootnotes
 
+### Why the Geology theme?
+
+A tribute to my father; a Geologist. Although I never studied his area of science, growing up around it I learned a ton through osmosis.
+
+And... like every other good project name is taken.
+
 ### Motivation (Why compile to native?)
 
 We needed fast, lightweight tree ensemble inference on the JVM without dragging in a heavyweight runtime or relying on interpretation. The java source code route is also really messy, triggers many source code alarms, and is a sharp point in builds.
