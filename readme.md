@@ -6,7 +6,11 @@ ONNX ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come o
 
 ### Theory of operation
 
-Petrify reads a model representation (a `Grove` or `Vine`) and emits a compiled class (a `Fossil`):
+Petrify is a fully JVM native model compiler. It reads your model from an ONNX file, walks the Trees or Linear models, and emits equivalent JVM bytecode as a stateless class you can invoke.
+
+This differs from every other ONNX Runtime that I know of, which are essentially interpreters.
+
+A `Grove` or a `Vine` is the IR (intermediate representation) of your model. The resulting `Fossil` is the compiled equivelant of your model.
 
 ```java
 // Load a grove; 

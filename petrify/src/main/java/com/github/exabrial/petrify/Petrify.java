@@ -54,6 +54,7 @@ public class Petrify {
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
+				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				createMethodPerEnsemble(classBuilder, stratum);
 				implementClassifierPredictMethod(classBuilder, stratum, thisClass);
@@ -76,6 +77,7 @@ public class Petrify {
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
+				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				createMethodPerEnsemble(classBuilder, stratum);
 				implementRegressorPredictMethod(classBuilder, stratum, thisClass);
@@ -96,6 +98,7 @@ public class Petrify {
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
+				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				implementLinearClassifierPredictMethod(classBuilder, vine);
 			});
@@ -115,6 +118,7 @@ public class Petrify {
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
+				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				implementLinearRegressorPredictMethod(classBuilder, vine);
 			});
@@ -561,6 +565,14 @@ public class Petrify {
 					initCodeBuilder.aload(0);
 					initCodeBuilder.invokespecial(ConstantDescs.CD_Object, ConstantDescs.INIT_NAME, ConstantDescs.MTD_void);
 					initCodeBuilder.return_();
+				});
+	}
+
+	protected void createSerialVersionUid(final ClassBuilder classBuilder) {
+		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long,
+				ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL,
+				(final java.lang.classfile.FieldBuilder fieldBuilder) -> {
+					fieldBuilder.with(java.lang.classfile.attribute.ConstantValueAttribute.of(1L));
 				});
 	}
 }
