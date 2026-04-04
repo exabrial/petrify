@@ -26,7 +26,7 @@ import com.github.exabrial.petrify.model.RegressionFossil;
  * randomly rather than optimally, producing characteristically odd threshold values and generally shallower effective trees.
  */
 @TestInstance(Lifecycle.PER_CLASS)
-class ExtraTreesRegressorHousingTest {
+class ExtraTreesRegressorHousingTest implements TestConstants {
 	private static final String ONNX = "/test-models/extraTreesRegressorHousing.onnx";
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private RegressionFossil fossil;
@@ -49,83 +49,83 @@ class ExtraTreesRegressorHousingTest {
 	void testPredict_0() {
 		final float actual = fossil.predict(new float[] { 2.8208000659942627f, 33.0f, 4.051020622253418f, 1.15816330909729f, 739.0f,
 				1.8852040767669678f, 34.16999816894531f, -118.37999725341797f });
-		assertEquals(1.868302583694458f, actual, 0.01f);
+		assertEquals(1.868302583694458f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_1() {
 		final float actual = fossil.predict(new float[] { 4.361100196838379f, 11.0f, 5.419753074645996f, 0.9629629850387573f, 655.0f,
 				2.6954731941223145f, 35.060001373291016f, -120.5199966430664f });
-		assertEquals(2.014594554901123f, actual, 0.01f);
+		assertEquals(2.014594554901123f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_2() {
 		final float actual = fossil.predict(new float[] { 4.348199844360352f, 9.0f, 5.792452812194824f, 1.103773593902588f, 409.0f,
 				1.9292452335357666f, 35.36000061035156f, -119.05999755859375f });
-		assertEquals(1.9834033250808716f, actual, 0.01f);
+		assertEquals(1.9834033250808716f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_3() {
 		final float actual = fossil.predict(new float[] { 4.578700065612793f, 20.0f, 6.117371082305908f, 0.9953051805496216f, 1361.0f,
 				3.194835662841797f, 36.849998474121094f, -121.6500015258789f });
-		assertEquals(2.2113196849823f, actual, 0.01f);
+		assertEquals(2.2113196849823f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_4() {
 		final float actual = fossil.predict(new float[] { 2.5f, 19.0f, 6.153152942657471f, 1.252252221107483f, 302.0f, 2.7207207679748535f,
 				40.279998779296875f, -120.95999908447266f });
-		assertEquals(1.1643047332763672f, actual, 0.01f);
+		assertEquals(1.1643047332763672f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_5() {
 		final float actual = fossil.predict(new float[] { 5.641300201416016f, 35.0f, 5.361701965332031f, 0.9281914830207825f, 1023.0f,
 				2.7207446098327637f, 37.439998626708984f, -122.11000061035156f });
-		assertEquals(2.821617364883423f, actual, 0.01f);
+		assertEquals(2.821617364883423f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_6() {
 		final float actual = fossil.predict(new float[] { 6.053100109100342f, 25.0f, 5.833333492279053f, 1.0021096467971802f, 1666.0f,
 				3.51476788520813f, 33.79999923706055f, -117.80999755859375f });
-		assertEquals(2.8490145206451416f, actual, 0.01f);
+		assertEquals(2.8490145206451416f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_7() {
 		final float actual = fossil.predict(new float[] { 3.6944000720977783f, 29.0f, 4.0487446784973145f, 0.985228955745697f, 2449.0f,
 				3.617429733276367f, 34.08000183105469f, -118.0199966430664f });
-		assertEquals(1.9483474493026733f, actual, 0.01f);
+		assertEquals(1.9483474493026733f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_8() {
 		final float actual = fossil.predict(new float[] { 12.32919979095459f, 29.0f, 7.916666507720947f, 1.0555555820465088f, 244.0f,
 				3.3888888359069824f, 37.380001068115234f, -121.80999755859375f });
-		assertEquals(4.688943862915039f, actual, 0.01f);
+		assertEquals(4.688943862915039f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_9() {
 		final float actual = fossil.predict(new float[] { 2.2030999660491943f, 36.0f, 4.170068264007568f, 1.1292517185211182f, 425.0f,
 				2.8911564350128174f, 38.56999969482422f, -121.51000213623047f });
-		assertEquals(1.2697547674179077f, actual, 0.01f);
+		assertEquals(1.2697547674179077f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_10() {
 		final float actual = fossil.predict(new float[] { 4.07889986038208f, 35.0f, 5.640198707580566f, 1.0173697471618652f, 1431.0f,
 				3.550868511199951f, 34.20000076293945f, -118.55999755859375f });
-		assertEquals(2.1233396530151367f, actual, 0.01f);
+		assertEquals(2.1233396530151367f, actual, PREDICTION_PRECISION);
 	}
 
 	@Test
 	void testPredict_11() {
 		final float actual = fossil.predict(new float[] { 1.4012000560760498f, 52.0f, 3.1057143211364746f, 1.059999942779541f, 3337.0f,
 				9.534285545349121f, 37.869998931884766f, -122.26000213623047f });
-		assertEquals(1.5314114093780518f, actual, 0.01f);
+		assertEquals(1.5314114093780518f, actual, PREDICTION_PRECISION);
 	}
 }

@@ -8,20 +8,21 @@ Before you leave :) Leave a star! Thanks!
 
 ### Theory of operation
 
-Petrify is a fully JVM native model compiler. It reads your model from an ONNX file, walks the Trees or Linear models, and emits equivalent JVM bytecode as a stateless class you can invoke.
+Petrify is a fully JVM native model compiler. It reads your model from an ONNX file, walks the Trees or Linear models, and encodes the model as equivalent JVM bytecode as a stateless class you can invoke.
 
 This differs from every other ONNX Runtime that I know of, which are essentially interpreters.
 
 A `Grove` or a `Vine` is the IR (intermediate representation) of your model. The resulting `Fossil` is the compiled equivelant of your model.
 
 ```java
-// Load a grove; 
-final Grove = arborist.toGrove("/path/to/model.onnx");
+// Load a grove:
+final Grove = arborist.toGrove("/class/path/to/model.onnx");
+// Or you can load ONNX from a byte[]
 
 // Compile your model as bytecode:
 final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(), grove);
 
-// Now make as many predictions as you like
+// Now make as many predictions as you like:
 final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 
 // Do something with your prediction:
@@ -187,6 +188,11 @@ final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1
 
 - coming soon
 
+### Known Limitations
+
+- **String class labels are not supported.** ONNX classifiers can store labels as either `classlabels_ints` or `classlabels_strings`. Petrify only supports integer labels at this time. Models trained on string targets (e.g., `["cat", "dog", "fish"]`) must be label-encoded to `integer`s before export.
+- **No `float64` (`double`) Support** ONNX stores everything as 32bit Floats. Scikit-Learn and others often use Double precision 64bit Floats. In order to support this, I'd need to parse the exports from Scikit-Learn directly somehow and so your workflow could skip the ONNX step. The bytecode generation would also be different, as the JVM has different opCodes for `double` than `float`.
+
 ## Bootnotes
 
 ### Why the Geology theme?
@@ -249,7 +255,7 @@ Petrify takes a different approach: compile the tree ensemble directly to JVM by
 
 ### Verifying artifacts
 
-All release artifacts are signed with GPG. You can verify them using the following public key:
+All release artifacts are signed with my GPG key. You can verify signatures using the following public key:
 
 ```
 Fingerprint: 871638A21A7F2C38066471420306A354336B4F0D
