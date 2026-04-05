@@ -39,13 +39,13 @@ class DecisionTreeSimpleTest {
 	}
 
 	@Test
-	void testPredict_0_0() {
+	void testPredict_0() {
 		final int actual = fossil.predict(new float[] { 4.0f });
 		assertEquals(0, actual);
 	}
 
 	@Test
-	void testPredict_1_0() {
+	void testPredict_1() {
 		final int actual = fossil.predict(new float[] { 4.1f });
 		assertEquals(1, actual);
 	}

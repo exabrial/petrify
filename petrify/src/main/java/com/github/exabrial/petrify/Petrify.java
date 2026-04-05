@@ -424,9 +424,11 @@ public class Petrify {
 					case final ClassifierStratum classifierStratum -> {
 						emitClassifierLeaf(codeBuilder, classifierStratum, treeId, arrayIdx);
 					}
+
 					case final RegressorStratum regressorStratum -> {
 						emitRegressorLeaf(codeBuilder, regressorStratum, treeId, arrayIdx);
 					}
+
 					default -> {
 						throw new UnexpectedTreeBranch("Unknown stratum type: " + stratum.getClass().getName());
 					}
@@ -560,11 +562,10 @@ public class Petrify {
 	}
 
 	protected void createSerialVersionUid(final ClassBuilder classBuilder) {
-		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long,
-				(final java.lang.classfile.FieldBuilder fieldBuilder) -> {
-					fieldBuilder.withFlags(ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL);
-					fieldBuilder.with(java.lang.classfile.attribute.ConstantValueAttribute.of(1L));
-				});
+		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long, (final java.lang.classfile.FieldBuilder fieldBuilder) -> {
+			fieldBuilder.withFlags(ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL);
+			fieldBuilder.with(java.lang.classfile.attribute.ConstantValueAttribute.of(1L));
+		});
 	}
 
 	protected void createDefaultConstructor(final ClassBuilder classBuilder) {

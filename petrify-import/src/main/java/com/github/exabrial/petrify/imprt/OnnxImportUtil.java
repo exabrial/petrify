@@ -8,6 +8,7 @@ import java.util.Set;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 
 import onnx.OnnxMl.GraphProto;
@@ -51,7 +52,7 @@ public final class OnnxImportUtil implements PetrifyConstants {
 			}
 		}
 		if (mlNode == null) {
-			throw new UnexpectedCometImpact("No supported ML operator node found in ONNX graph");
+			throw new UnexpectedTreeBranch("No supported ML operator node found in ONNX graph");
 		} else {
 			return mlNode;
 		}
@@ -64,7 +65,7 @@ public final class OnnxImportUtil implements PetrifyConstants {
 			case "LOGISTIC" -> POST_TRANSFORM_LOGISTIC;
 			case "SOFTMAX_ZERO" -> POST_TRANSFORM_SOFTMAX_ZERO;
 			case "PROBIT" -> POST_TRANSFORM_PROBIT;
-			default -> throw new UnexpectedCometImpact("Unknown post_transform: " + transform);
+			default -> throw new UnexpectedTreeBranch("Unknown post_transform: " + transform);
 		};
 	}
 

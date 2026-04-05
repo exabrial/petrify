@@ -13,8 +13,8 @@ import java.util.Set;
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.Grove;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
-import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 
 import onnx.OnnxMl.AttributeProto;
@@ -117,7 +117,7 @@ public class Arborist implements PetrifyConstants {
 			case "BRANCH_GT" -> MODE_BRANCH_GT;
 			case "BRANCH_EQ" -> MODE_BRANCH_EQ;
 			case "BRANCH_NEQ" -> MODE_BRANCH_NEQ;
-			default -> throw new UnexpectedCometImpact("Unknown node mode: " + mode);
+			default -> throw new UnexpectedTreeBranch("Unknown node mode: " + mode);
 		};
 	}
 
@@ -127,7 +127,7 @@ public class Arborist implements PetrifyConstants {
 			case "AVERAGE" -> PetrifyConstants.AGGREGATE_AVERAGE;
 			case "MIN" -> PetrifyConstants.AGGREGATE_MIN;
 			case "MAX" -> PetrifyConstants.AGGREGATE_MAX;
-			default -> throw new UnexpectedCometImpact("Unknown aggregate_function: " + function);
+			default -> throw new UnexpectedTreeBranch("Unknown aggregate_function: " + function);
 		};
 	}
 

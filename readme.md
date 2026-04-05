@@ -1,6 +1,6 @@
-# Petrify
+# 🪨 Petrify 
 
-ONNX ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out.
+🪵 -> 🪨 ONNX ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
 
 Before you leave :) Leave a star! Thanks!
 

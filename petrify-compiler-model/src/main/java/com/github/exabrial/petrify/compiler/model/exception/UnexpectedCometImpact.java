@@ -6,8 +6,4 @@ public class UnexpectedCometImpact extends PetrifyException {
 	public UnexpectedCometImpact(final Exception e) {
 		super(e);
 	}
-
-	public UnexpectedCometImpact(final String string) {
-		super(string);
-	}
 }
