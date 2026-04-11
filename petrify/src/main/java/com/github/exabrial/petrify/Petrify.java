@@ -146,9 +146,12 @@ public class Petrify {
 					for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
 						final float coefficient = coefficients[featureIdx];
 						if (coefficient != 0.0f) {
+							// Load features[featureIdx] onto stack
 							codeBuilder.aload(SLOT_FEATURES);
 							codeBuilder.ldc(featureIdx);
 							codeBuilder.faload();
+
+							// Multiply by coefficient and accumulate into running score
 							codeBuilder.ldc(coefficient);
 							codeBuilder.fmul();
 							codeBuilder.fadd();
@@ -159,7 +162,10 @@ public class Petrify {
 					// Prep and invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.swap();
+					// Stack: this, float_score
 					codeBuilder.ldc((int) vine.postTransform);
+
+					// Invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
 							RegressionFossil.aggregate, MethodTypeDesc.of(ConstantDescs.CD_float, ConstantDescs.CD_float, ConstantDescs.CD_byte));
 
@@ -183,25 +189,32 @@ public class Petrify {
 					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
 					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
 						// scores[classIdx] = intercepts[classIdx]
+						// Push scores array ref and index for eventual fastore, then seed the accumulator with the intercept
 						codeBuilder.aload(SLOT_SCORES);
 						codeBuilder.ldc(classIdx);
 						codeBuilder.ldc(intercepts[classIdx]);
+						// Stack: scores_ref, classIdx, float_intercept
 
 						// Accumulate: += features[f] * coefficients[c * nFeatures + f]
 						for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
 							final float coefficient = coefficients[classIdx * nFeatures + featureIdx];
 							// Don't bother emitting bytecode for 0
 							if (coefficient != 0.0f) {
+								// Load features[featureIdx] onto stack
 								codeBuilder.aload(SLOT_FEATURES);
 								codeBuilder.ldc(featureIdx);
 								codeBuilder.faload();
+
+								// Multiply by coefficient and accumulate into running score
 								codeBuilder.ldc(coefficient);
 								codeBuilder.fmul();
 								codeBuilder.fadd();
 							}
 						}
+						// Stack: scores_ref, classIdx, float_accumulated_score
 
 						// Store the accumulated score
+						// Store the accumulated score into float[] scores
 						codeBuilder.fastore();
 					}
 
@@ -289,7 +302,10 @@ public class Petrify {
 					// Prep and invoke regressionFossil.aggregate(..)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.swap();
+					// Stack: this, float_score
 					codeBuilder.ldc((int) stratum.grove.postTransform);
+
+					// Invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
 							RegressionFossil.aggregate, MethodTypeDesc.of(ConstantDescs.CD_float, ConstantDescs.CD_float, ConstantDescs.CD_byte));
 
@@ -463,10 +479,11 @@ public class Petrify {
 			// Load features[featureId] onto stack
 			codeBuilder.aload(SLOT_FEATURES);
 			codeBuilder.ldc(featureId);
+			codeBuilder.faload();
 
 			// Load threshold onto stack
-			codeBuilder.faload();
 			codeBuilder.ldc(threshold);
+			// Stack: float_feature, float_threshold
 
 			// Actually compare the feature to the threshold; BUT if something is missing/NaN, follow the "missing" policy.
 			final boolean invertNanPolarity = mode == PetrifyConstants.MODE_BRANCH_GT || mode == PetrifyConstants.MODE_BRANCH_GEQ;
@@ -541,12 +558,19 @@ public class Petrify {
 			for (int classIdx = 0; classIdx < baseValues.length; classIdx++) {
 				if (baseValues[classIdx] != 0.0f) {
 					// scores[idx] += baseValue
+
+					// Load scores array ref and index
 					codeBuilder.aload(SLOT_SCORES);
 					codeBuilder.ldc(classIdx);
+					// Duplicate scores ref and index for the final fastore
 					codeBuilder.dup2();
+
+					// Read the current value at scores[idx]
 					codeBuilder.faload();
+					// Add the base value to the current value
 					codeBuilder.ldc(baseValues[classIdx]);
 					codeBuilder.fadd();
+					// Store the add result back into the array
 					codeBuilder.fastore();
 				}
 			}
