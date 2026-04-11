@@ -162,7 +162,6 @@ public class Petrify {
 					// Prep and invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.swap();
-					// Stack: this, float_score
 					codeBuilder.ldc((int) vine.postTransform);
 
 					// Invoke regressionFossil.aggregate(score, postTransform)
@@ -302,7 +301,6 @@ public class Petrify {
 					// Prep and invoke regressionFossil.aggregate(..)
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.swap();
-					// Stack: this, float_score
 					codeBuilder.ldc((int) stratum.grove.postTransform);
 
 					// Invoke regressionFossil.aggregate(score, postTransform)
@@ -333,6 +331,8 @@ public class Petrify {
 			codeBuilder.ldc(entry.weight());
 			// Add the leaf weight to the current value
 			codeBuilder.fadd();
+			// Stack: scores_ref, classId, float_new_value
+
 			// Store the add result back into the array
 			codeBuilder.fastore();
 		}
@@ -391,6 +391,8 @@ public class Petrify {
 			codeBuilder.ldc(entry.weight());
 			// Add the leaf weight to the current value
 			codeBuilder.fadd();
+			// Stack: scores_ref, targetId, float_new_value
+
 			// Store the add result back into the array
 			codeBuilder.fastore();
 		}
@@ -570,6 +572,8 @@ public class Petrify {
 					// Add the base value to the current value
 					codeBuilder.ldc(baseValues[classIdx]);
 					codeBuilder.fadd();
+					// Stack: scores_ref, classIdx, float_new_value
+
 					// Store the add result back into the array
 					codeBuilder.fastore();
 				}
