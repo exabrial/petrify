@@ -9,6 +9,7 @@ import static com.github.exabrial.petrify.imprt.onnx.OnnxImportUtil.toPostTransf
 import java.util.Set;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
+import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.Vine;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
@@ -41,11 +42,13 @@ public class OnnxVintner implements PetrifyConstants, Vintner {
 		final NodeProto mlNode = findMLNode(model.getGraph(), ML_OP_TYPES);
 		final String opType = mlNode.getOpType();
 
-		final Object vine = switch (opType) {
+		final Vine vine = switch (opType) {
 			case OP_LINEAR_CLASSIFIER -> mapToClassifierVine(mlNode);
 			case OP_LINEAR_REGRESSOR -> mapToRegressorVine(mlNode);
 			default -> throw new UnexpectedPreservative("No mapping for ML operator: " + opType);
 		};
+
+		vine.precisionMode = PrecisionMode.F32;
 		return (T) vine;
 	}
 

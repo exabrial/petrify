@@ -2,13 +2,13 @@
 
 🪵 -> 🪨 ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
 
-Before you leave :) Leave a star! Thanks!
+Before you leave, leave a star! Thanks! :)
 
 ## Overview
 
 ### Theory of operation
 
-Petrify is a fully JVM native model compiler. It reads your model from an ONNX or other native model format, walks the Trees or Linear models, and encodes the model as equivalent JVM bytecode as a stateless class you can invoke.
+Petrify is a machine learning model compiler for the the JVM. It reads your model from an ONNX or other model format, walks the Trees or Linear models, and encodes the model in equivalent JVM bytecode as a stateless class you can invoke.
 
 This differs from every other ONNX Runtime that I know of, which are essentially interpreters.
 
@@ -33,7 +33,7 @@ if (prediction != SPANISH_INQUISITION) {
 }
 ```
 
-No interpretation, no array traversal, no pointer chasing; just raw comparisons, conditional jumps, and arithmetic baked into bytecode. Your model executes as native JVM instructions.
+No interpretation, no JNI, no giant runtime, no massive list of dependencies, no array traversal, no pointer chasing; just raw comparisons, conditional jumps, and arithmetic petrified as bytecode. Your model executes as native JVM instructions.
 
 Once your ONNX models are compiled, the only runtime dependency is the `Fossil` interface from the `petrify-model` submodule (ASL2-licensed, safe for business). This interface provides the entry point into your model. Once your model is compiled, no execution runtime is needed, making Petrify the ultimate lightweight champ to run your models.
 

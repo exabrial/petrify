@@ -12,6 +12,7 @@ import java.util.Set;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
@@ -44,11 +45,13 @@ public class OnnxArborist implements PetrifyConstants, Arborist {
 		final NodeProto mlNode = findMLNode(model.getGraph(), ML_OP_TYPES);
 		final String opType = mlNode.getOpType();
 
-		final Object grove = switch (opType) {
+		final Grove grove = switch (opType) {
 			case OP_TREE_ENSEMBLE_CLASSIFIER, OP_TREE_ENSEMBLE -> mapToClassifierGrove(mlNode);
 			case OP_TREE_ENSEMBLE_REGRESSOR -> mapToRegressorGrove(mlNode);
 			default -> throw new UnexpectedPreservative("No mapping for ML operator: " + opType);
 		};
+
+		grove.precisionMode = PrecisionMode.F32;
 		return (T) grove;
 	}
 
