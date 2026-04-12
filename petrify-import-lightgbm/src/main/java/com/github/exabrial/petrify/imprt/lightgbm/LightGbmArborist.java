@@ -55,7 +55,11 @@ public class LightGbmArborist implements Arborist {
 		protected static final String MARKER_PARAMETERS = "parameters:";
 		protected static final String MARKER_END_OF_PARAMETERS = "end of parameters";
 
-		private static final String VALUE_V4 = "v4";
+		protected static final String KEY_VERSION = "version";
+		protected static final String KEY_NUM_TREE_PER_ITERATION = "num_tree_per_iteration";
+		protected static final String KEY_OBJECTIVE = "objective";
+
+		protected static final String VALUE_V4 = "v4";
 
 		private ParseState state = ParseState.MAGIC;
 		private String[] split;
@@ -114,10 +118,11 @@ public class LightGbmArborist implements Arborist {
 		protected void headerLine(final String line) {
 			split = split(line);
 			switch (split[0]) {
-				case "version" -> {
-					headerVersion(split[1]);
+				case KEY_VERSION -> headerVersion(split[1]);
+				case KEY_NUM_TREE_PER_ITERATION -> headerNumTreePerIteration(split[1]);
+				case KEY_OBJECTIVE -> headerObjective(split[1]);
+				default -> {
 				}
-
 			}
 		}
 
@@ -156,6 +161,16 @@ public class LightGbmArborist implements Arborist {
 			if (!header.equals(VALUE_V4)) {
 				throw new UnexpectedTreeBranch("Unexpected LightGBM model version only v4 supported, got: " + header);
 			}
+		}
+
+		protected void headerObjective(final String string) {
+			// TODO Auto-generated method stub
+
+		}
+
+		protected void headerNumTreePerIteration(final String string) {
+			// TODO Auto-generated method stub
+
 		}
 	}
 }
