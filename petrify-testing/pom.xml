@@ -19,7 +19,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.exabrial</groupId>
-			<artifactId>petrify-import</artifactId>
+			<artifactId>petrify-onnx-import</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
