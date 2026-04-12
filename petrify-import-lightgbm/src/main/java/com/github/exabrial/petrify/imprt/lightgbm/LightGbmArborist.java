@@ -215,8 +215,8 @@ public class LightGbmArborist implements Arborist {
 			}
 		}
 
-		protected void headerNumTreePerIteration(final String string) {
-			// TODO Auto-generated method stub
+		protected void headerNumTreePerIteration(final String value) {
+			numTreePerIteration = Integer.parseInt(value);
 		}
 	}
 }
