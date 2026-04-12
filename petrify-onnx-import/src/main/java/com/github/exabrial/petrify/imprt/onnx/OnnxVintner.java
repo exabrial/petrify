@@ -12,14 +12,14 @@ import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.Vine;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
-import com.github.exabrial.petrify.imprt.Vinter;
+import com.github.exabrial.petrify.imprt.Vintner;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 
 import onnx.OnnxMl.AttributeProto;
 import onnx.OnnxMl.ModelProto;
 import onnx.OnnxMl.NodeProto;
 
-public class OnnxVintner implements PetrifyConstants, Vinter {
+public class OnnxVintner implements PetrifyConstants, Vintner {
 	protected static final Set<String> ML_OP_TYPES = Set.of(OP_LINEAR_CLASSIFIER, OP_LINEAR_REGRESSOR);
 
 	@Override

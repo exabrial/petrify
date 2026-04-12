@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.exabrial.petrify.Petrify;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
-import com.github.exabrial.petrify.imprt.Vinter;
+import com.github.exabrial.petrify.imprt.Vintner;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 
@@ -35,7 +35,7 @@ class LinearClassifierHousingTierTest {
 
 	@BeforeAll
 	void beforeAll() {
-		final Vinter vintner = new OnnxVintner();
+		final Vintner vintner = new OnnxVintner();
 		final ClassifierVine vine = vintner.toVine(ONNX);
 
 		final Petrify petrify = new Petrify();

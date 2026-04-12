@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.exabrial.petrify.Petrify;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
-import com.github.exabrial.petrify.imprt.Vinter;
+import com.github.exabrial.petrify.imprt.Vintner;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
 import com.github.exabrial.petrify.model.RegressionFossil;
 
@@ -32,7 +32,7 @@ class LinearRegressorHousingTest implements TestConstants {
 
 	@BeforeAll
 	void beforeAll() {
-		final Vinter vintner = new OnnxVintner();
+		final Vintner vintner = new OnnxVintner();
 		final RegressorVine vine = vintner.toVine(ONNX);
 
 		final Petrify petrify = new Petrify();

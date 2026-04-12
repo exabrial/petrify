@@ -2,7 +2,7 @@ package com.github.exabrial.petrify.imprt;
 
 import com.github.exabrial.petrify.compiler.model.Vine;
 
-public interface Vinter {
+public interface Vintner {
 	<T extends Vine> T toVine(String classpathLocation);
 
 	<T extends Vine> T toVine(byte[] bytes);
