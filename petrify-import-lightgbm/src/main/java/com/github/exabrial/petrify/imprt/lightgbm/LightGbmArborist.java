@@ -72,7 +72,6 @@ public class LightGbmArborist implements Arborist {
 		protected static final String KEY_LEFT_CHILD = "left_child";
 		protected static final String KEY_RIGHT_CHILD = "right_child";
 		protected static final String KEY_LEAF_VALUE = "leaf_value";
-		protected static final String KEY_SHRINKAGE = "shrinkage";
 
 		protected static final String VALUE_V4 = "v4";
 
@@ -188,7 +187,6 @@ public class LightGbmArborist implements Arborist {
 				case KEY_LEFT_CHILD -> currentTree.leftChild = parseIntArray(split[1]);
 				case KEY_RIGHT_CHILD -> currentTree.rightChild = parseIntArray(split[1]);
 				case KEY_LEAF_VALUE -> currentTree.leafValue = parseDoubleArray(split[1]);
-				case KEY_SHRINKAGE -> currentTree.shrinkage = parseDouble(split[1]);
 				default -> {
 				}
 			}
@@ -260,7 +258,7 @@ public class LightGbmArborist implements Arborist {
 					leafTreeIds[leafOffset + leafIdx] = treeIdx;
 					leafNodeIds[leafOffset + leafIdx] = leafBaseNodeId + leafIdx;
 					leafIds[leafOffset + leafIdx] = regressor ? 0 : treeIdx % numTreePerIteration;
-					leafWeights[leafOffset + leafIdx] = tree.leafValue[leafIdx] * tree.shrinkage;
+					leafWeights[leafOffset + leafIdx] = tree.leafValue[leafIdx];
 				}
 
 				nodeOffset += numInternalNodes + tree.numLeaves;
@@ -371,7 +369,8 @@ public class LightGbmArborist implements Arborist {
 		}
 
 		protected void headerObjective(final String objective) {
-			switch (objective) {
+			final String objectiveName = objective.split(" ")[0];
+			switch (objectiveName) {
 				case OBJECTIVE_REGRESSION, OBJECTIVE_REGRESSION_L2, OBJECTIVE_MSE, OBJECTIVE_MSE_SHORT, //
 						OBJECTIVE_RMSE, OBJECTIVE_RMSE_SHORT, OBJECTIVE_REGRESSION_L1, OBJECTIVE_MAE, OBJECTIVE_MAE_SHORT, //
 						OBJECTIVE_HUBER, OBJECTIVE_FAIR, OBJECTIVE_POISSON, OBJECTIVE_QUANTILE, OBJECTIVE_MAPE, //
@@ -404,7 +403,6 @@ public class LightGbmArborist implements Arborist {
 			int[] leftChild;
 			int[] rightChild;
 			double[] leafValue;
-			double shrinkage;
 		}
 	}
 }
