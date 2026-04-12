@@ -1,10 +1,10 @@
-package com.github.exabrial.petrify.imprt;
+package com.github.exabrial.petrify.imprt.onnx;
 
-import static com.github.exabrial.petrify.imprt.OnnxImportUtil.findMLNode;
-import static com.github.exabrial.petrify.imprt.OnnxImportUtil.loadModel;
-import static com.github.exabrial.petrify.imprt.OnnxImportUtil.toFloatArray;
-import static com.github.exabrial.petrify.imprt.OnnxImportUtil.toLongArray;
-import static com.github.exabrial.petrify.imprt.OnnxImportUtil.toPostTransform;
+import static com.github.exabrial.petrify.imprt.onnx.OnnxImportUtil.findMLNode;
+import static com.github.exabrial.petrify.imprt.onnx.OnnxImportUtil.loadModel;
+import static com.github.exabrial.petrify.imprt.onnx.OnnxImportUtil.toDoubleArray;
+import static com.github.exabrial.petrify.imprt.onnx.OnnxImportUtil.toLongArray;
+import static com.github.exabrial.petrify.imprt.onnx.OnnxImportUtil.toPostTransform;
 
 import java.util.Set;
 
@@ -12,21 +12,24 @@ import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.Vine;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
+import com.github.exabrial.petrify.imprt.Vinter;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 
 import onnx.OnnxMl.AttributeProto;
 import onnx.OnnxMl.ModelProto;
 import onnx.OnnxMl.NodeProto;
 
-public class Vintner implements PetrifyConstants {
+public class OnnxVintner implements PetrifyConstants, Vinter {
 	protected static final Set<String> ML_OP_TYPES = Set.of(OP_LINEAR_CLASSIFIER, OP_LINEAR_REGRESSOR);
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends Vine> T toVine(final String classpathLocation) {
 		final ModelProto model = loadModel(getClass(), classpathLocation);
 		return (T) toVine(model);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends Vine> T toVine(final byte[] onnxBytes) {
 		final ModelProto model = loadModel(onnxBytes);
@@ -51,8 +54,8 @@ public class Vintner implements PetrifyConstants {
 		for (final AttributeProto attr : mlNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
-				case "coefficients" -> vine.coefficients = toFloatArray(attr.getFloatsList());
-				case "intercepts" -> vine.intercepts = toFloatArray(attr.getFloatsList());
+				case "coefficients" -> vine.coefficients = toDoubleArray(attr.getFloatsList());
+				case "intercepts" -> vine.intercepts = toDoubleArray(attr.getFloatsList());
 				case "classlabels_ints" -> vine.classlabelsInts = toLongArray(attr.getIntsList());
 				case "multi_class" -> vine.multiClass = (int) attr.getI();
 				case "post_transform" -> vine.postTransform = toPostTransform(attr.getS().toStringUtf8());
@@ -75,8 +78,8 @@ public class Vintner implements PetrifyConstants {
 		for (final AttributeProto attr : mlNode.getAttributeList()) {
 			final String name = attr.getName();
 			switch (name) {
-				case "coefficients" -> vine.coefficients = toFloatArray(attr.getFloatsList());
-				case "intercepts" -> vine.intercepts = toFloatArray(attr.getFloatsList());
+				case "coefficients" -> vine.coefficients = toDoubleArray(attr.getFloatsList());
+				case "intercepts" -> vine.intercepts = toDoubleArray(attr.getFloatsList());
 				case "targets" -> vine.nTargets = (int) attr.getI();
 				case "post_transform" -> vine.postTransform = toPostTransform(attr.getS().toStringUtf8());
 				default -> {

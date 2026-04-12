@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.testing;
+package com.github.exabrial.petrify.testing.onnx;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -16,17 +16,18 @@ import org.slf4j.LoggerFactory;
 import com.github.exabrial.petrify.Petrify;
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.imprt.Arborist;
+import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 
 @TestInstance(Lifecycle.PER_CLASS)
-class DecisionTreeSimpleTest {
-	private static final String ONNX = "/test-models/decisionTreeSimple.onnx";
+class DecisionTreeSimpleSklearnTest {
+	private static final String ONNX = "/test-models/decisionTreeSimpleSklearn.onnx";
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private ClassifierFossil fossil;
 
 	@BeforeAll
 	void beforeAll() {
-		final Arborist arborist = new Arborist();
+		final Arborist arborist = new OnnxArborist();
 		final ClassifierGrove grove = arborist.toGrove(ONNX);
 
 		final Petrify petrify = new Petrify();
@@ -39,14 +40,14 @@ class DecisionTreeSimpleTest {
 	}
 
 	@Test
-	void testPredict_0() {
-		final int actual = fossil.predict(new float[] { 4.0f });
+	void testPredict_0_0() {
+		final int actual = fossil.predict(new float[] { 1.0f });
 		assertEquals(0, actual);
 	}
 
 	@Test
-	void testPredict_1() {
-		final int actual = fossil.predict(new float[] { 4.1f });
+	void testPredict_1_0() {
+		final int actual = fossil.predict(new float[] { 9.0f });
 		assertEquals(1, actual);
 	}
 }

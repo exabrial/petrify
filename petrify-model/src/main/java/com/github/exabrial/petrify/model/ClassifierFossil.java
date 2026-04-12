@@ -60,4 +60,54 @@ public interface ClassifierFossil extends Fossil {
 		}
 		return bestIdx;
 	}
+
+	/**
+	 * Applies the post_transform to the scores array in place, then returns the index of the class with the highest score (argmax).
+	 */
+	default int classify(final double[] scores, final byte postTransform, final boolean isBinarySingleScore) {
+		switch (postTransform) {
+			case PetrifyConstants.POST_TRANSFORM_NONE -> {
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_LOGISTIC -> {
+				for (int i = 0; i < scores.length; i++) {
+					scores[i] = logistic(scores[i]);
+				}
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_SOFTMAX, PetrifyConstants.POST_TRANSFORM_SOFTMAX_ZERO -> {
+				double sumExp = 0.0;
+				for (final double score : scores) {
+					sumExp += Math.exp(score);
+				}
+				for (int i = 0; i < scores.length; i++) {
+					scores[i] = softmax(scores[i], sumExp);
+				}
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_PROBIT -> {
+				for (int i = 0; i < scores.length; i++) {
+					scores[i] = probit(scores[i]);
+				}
+			}
+
+			default -> {
+				throw new IllegalArgumentException("Unknown post_transform: " + postTransform);
+			}
+		}
+
+		if (isBinarySingleScore) {
+			scores[1] = scores[0];
+			scores[0] = 1.0d - scores[1];
+		}
+
+		// Argmax: find the index of the highest score
+		int bestIdx = 0;
+		for (int idx = 1; idx < scores.length; idx++) {
+			if (scores[idx] > scores[bestIdx]) {
+				bestIdx = idx;
+			}
+		}
+		return bestIdx;
+	}
 }

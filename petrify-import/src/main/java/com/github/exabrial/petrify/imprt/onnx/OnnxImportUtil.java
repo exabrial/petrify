@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.imprt;
+package com.github.exabrial.petrify.imprt.onnx;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,8 +85,8 @@ public final class OnnxImportUtil implements PetrifyConstants {
 		return result;
 	}
 
-	public static float[] toFloatArray(final List<Float> floats) {
-		final float[] result = new float[floats.size()];
+	public static double[] toDoubleArray(final List<Float> floats) {
+		final double[] result = new double[floats.size()];
 		for (int i = 0; i < floats.size(); i++) {
 			result[i] = floats.get(i);
 		}

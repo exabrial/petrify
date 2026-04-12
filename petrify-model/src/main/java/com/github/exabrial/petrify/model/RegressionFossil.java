@@ -35,4 +35,29 @@ public interface RegressionFossil extends Fossil {
 		}
 		return result;
 	}
+
+	/**
+	 * Applies the post_transform to the accumulated score and returns the result.
+	 */
+	default double aggregate(final double score, final byte postTransform) {
+		final double result;
+		switch (postTransform) {
+			case PetrifyConstants.POST_TRANSFORM_NONE -> {
+				result = score;
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_LOGISTIC -> {
+				result = logistic(score);
+			}
+
+			case PetrifyConstants.POST_TRANSFORM_PROBIT -> {
+				result = probit(score);
+			}
+
+			default -> {
+				throw new IllegalArgumentException("Unknown post_transform: " + postTransform);
+			}
+		}
+		return result;
+	}
 }

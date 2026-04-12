@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.testing;
+package com.github.exabrial.petrify.testing.onnx;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.github.exabrial.petrify.Petrify;
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.imprt.Arborist;
+import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 
 /**
@@ -33,7 +34,7 @@ class XgboostMulticlassTest {
 
 	@BeforeAll
 	void beforeAll() {
-		final Arborist arborist = new Arborist();
+		final Arborist arborist = new OnnxArborist();
 		final ClassifierGrove grove = arborist.toGrove(ONNX);
 
 		final Petrify petrify = new Petrify();

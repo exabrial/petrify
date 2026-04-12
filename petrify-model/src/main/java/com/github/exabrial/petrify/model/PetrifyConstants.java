@@ -39,6 +39,9 @@ public interface PetrifyConstants {
 	byte POST_TRANSFORM_SOFTMAX_ZERO = 3;
 	byte POST_TRANSFORM_PROBIT = 4;
 
+	// Math constants
+	double INVERSE_SQRT_2 = 0.7071067811865476;
+
 	/**
 	 * Pack to integers into a single long. Useful for making composite indexes.
 	 *

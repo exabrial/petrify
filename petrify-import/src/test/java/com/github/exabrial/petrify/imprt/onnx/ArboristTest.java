@@ -1,4 +1,4 @@
-package com.github.exabrial.petrify.imprt;
+package com.github.exabrial.petrify.imprt.onnx;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
-import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedPreservative;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.google.protobuf.ByteString;
 
 import onnx.OnnxMl.AttributeProto;
@@ -20,11 +20,11 @@ import onnx.OnnxMl.ModelProto;
 import onnx.OnnxMl.NodeProto;
 
 class ArboristTest {
-	private Arborist arborist;
+	private OnnxArborist arborist;
 
 	@BeforeEach
 	void setUp() {
-		arborist = new Arborist();
+		arborist = new OnnxArborist();
 	}
 
 	@Test
@@ -50,15 +50,15 @@ class ArboristTest {
 		assertArrayEquals(new int[] { 0, 1, 2 }, grove.nodesNodeIds);
 		assertArrayEquals(new byte[] { 1, 0, 0 }, grove.nodesModes);
 		assertArrayEquals(new int[] { 0, 0, 0 }, grove.nodesFeatureIds);
-		assertArrayEquals(new float[] { 4.0f, 0.0f, 0.0f }, grove.nodesValues);
+		assertArrayEquals(new double[] { 4.0f, 0.0f, 0.0f }, grove.nodesValues);
 		assertArrayEquals(new int[] { 1, 0, 0 }, grove.nodesTrueNodeIds);
 		assertArrayEquals(new int[] { 2, 0, 0 }, grove.nodesFalseNodeIds);
-		assertArrayEquals(new float[] { 1.0f, 1.0f, 1.0f }, grove.nodesHitRates);
+		assertArrayEquals(new double[] { 1.0f, 1.0f, 1.0f }, grove.nodesHitRates);
 		assertArrayEquals(new int[] { 0, 0, 0 }, grove.nodesMissingValueTracksTrue);
 		assertArrayEquals(new int[] { 0, 0 }, grove.classTreeIds);
 		assertArrayEquals(new int[] { 1, 2 }, grove.classNodeIds);
 		assertArrayEquals(new int[] { 0, 1 }, grove.classIds);
-		assertArrayEquals(new float[] { 1.0f, 1.0f }, grove.classWeights);
+		assertArrayEquals(new double[] { 1.0f, 1.0f }, grove.classWeights);
 		assertArrayEquals(new long[] { 0L, 1L }, grove.classLabelsInt64s);
 		assertEquals((byte) 0, grove.postTransform);
 	}
@@ -68,7 +68,7 @@ class ArboristTest {
 		final NodeProto treeNode = buildTreeEnsembleNode();
 		final GraphProto graph = GraphProto.newBuilder().addNode(treeNode).build();
 
-		final NodeProto found = OnnxImportUtil.findMLNode(graph, Arborist.ML_OP_TYPES);
+		final NodeProto found = OnnxImportUtil.findMLNode(graph, OnnxArborist.ML_OP_TYPES);
 		assertEquals("TreeEnsembleClassifier", found.getOpType());
 	}
 
@@ -76,14 +76,14 @@ class ArboristTest {
 	void testFindMLNodeThrowsOnUnsupportedOperator() {
 		final GraphProto graph = GraphProto.newBuilder().addNode(NodeProto.newBuilder().setOpType("Conv").build()).build();
 
-		assertThrows(UnexpectedPreservative.class, () -> OnnxImportUtil.findMLNode(graph, Arborist.ML_OP_TYPES));
+		assertThrows(UnexpectedPreservative.class, () -> OnnxImportUtil.findMLNode(graph, OnnxArborist.ML_OP_TYPES));
 	}
 
 	@Test
 	void testFindMLNodeThrowsWhenNoMLNodeFound() {
 		final GraphProto graph = GraphProto.newBuilder().addNode(NodeProto.newBuilder().setOpType("Cast").build()).build();
 
-		assertThrows(UnexpectedCometImpact.class, () -> OnnxImportUtil.findMLNode(graph, Arborist.ML_OP_TYPES));
+		assertThrows(UnexpectedTreeBranch.class, () -> OnnxImportUtil.findMLNode(graph, OnnxArborist.ML_OP_TYPES));
 	}
 
 	@Test
@@ -93,7 +93,7 @@ class ArboristTest {
 
 	@Test
 	void testUnknownModeThrows() {
-		assertThrows(UnexpectedCometImpact.class, () -> arborist.toModeByte("UNKNOWN_MODE"));
+		assertThrows(UnexpectedTreeBranch.class, () -> arborist.toModeByte("UNKNOWN_MODE"));
 	}
 
 	private NodeProto buildTreeEnsembleNode() {
