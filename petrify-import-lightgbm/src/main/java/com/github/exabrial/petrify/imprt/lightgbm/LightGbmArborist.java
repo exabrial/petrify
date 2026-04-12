@@ -11,6 +11,7 @@ import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.imprt.Arborist;
+import com.github.exabrial.petrify.model.PetrifyConstants;
 
 public class LightGbmArborist implements Arborist {
 	@Override
@@ -61,8 +62,37 @@ public class LightGbmArborist implements Arborist {
 
 		protected static final String VALUE_V4 = "v4";
 
+		protected static final String OBJECTIVE_REGRESSION = "regression";
+		protected static final String OBJECTIVE_REGRESSION_L2 = "regression_l2";
+		protected static final String OBJECTIVE_MSE = "mean_squared_error";
+		protected static final String OBJECTIVE_MSE_SHORT = "mse";
+		protected static final String OBJECTIVE_RMSE = "l2_root_mean_squared_error";
+		protected static final String OBJECTIVE_RMSE_SHORT = "rmse";
+		protected static final String OBJECTIVE_REGRESSION_L1 = "regression_l1";
+		protected static final String OBJECTIVE_MAE = "mean_absolute_error";
+		protected static final String OBJECTIVE_MAE_SHORT = "mae";
+		protected static final String OBJECTIVE_HUBER = "huber";
+		protected static final String OBJECTIVE_FAIR = "fair";
+		protected static final String OBJECTIVE_POISSON = "poisson";
+		protected static final String OBJECTIVE_QUANTILE = "quantile";
+		protected static final String OBJECTIVE_MAPE = "mape";
+		protected static final String OBJECTIVE_GAMMA = "gamma";
+		protected static final String OBJECTIVE_TWEEDIE = "tweedie";
+		protected static final String OBJECTIVE_BINARY = "binary";
+		protected static final String OBJECTIVE_CROSS_ENTROPY = "cross_entropy";
+		protected static final String OBJECTIVE_CROSS_ENTROPY_LAMBDA = "cross_entropy_lambda";
+		protected static final String OBJECTIVE_MULTICLASS = "multiclass";
+		protected static final String OBJECTIVE_SOFTMAX = "softmax";
+		protected static final String OBJECTIVE_MULTICLASSOVA = "multiclassova";
+		protected static final String OBJECTIVE_MULTICLASS_OVA = "multiclass_ova";
+		protected static final String OBJECTIVE_OVA = "ova";
+		protected static final String OBJECTIVE_OVR = "ovr";
+
 		private ParseState state = ParseState.MAGIC;
 		private String[] split;
+		private boolean regressor;
+		private byte postTransform;
+		private int numTreePerIteration;
 
 		enum ParseState {
 			MAGIC, HEADER, TREE, FEATURE_IMPORTANCES, PARAMETERS, DONE
@@ -159,18 +189,34 @@ public class LightGbmArborist implements Arborist {
 
 		protected void headerVersion(final String header) {
 			if (!header.equals(VALUE_V4)) {
-				throw new UnexpectedTreeBranch("Unexpected LightGBM model version only v4 supported, got: " + header);
+				throw new UnexpectedTreeBranch("Unexpected LightGBM 'version'; only v4 supported, got: " + header);
 			}
 		}
 
-		protected void headerObjective(final String string) {
-			// TODO Auto-generated method stub
-
+		protected void headerObjective(final String objective) {
+			switch (objective) {
+				case OBJECTIVE_REGRESSION, OBJECTIVE_REGRESSION_L2, OBJECTIVE_MSE, OBJECTIVE_MSE_SHORT, //
+						OBJECTIVE_RMSE, OBJECTIVE_RMSE_SHORT, OBJECTIVE_REGRESSION_L1, OBJECTIVE_MAE, OBJECTIVE_MAE_SHORT, //
+						OBJECTIVE_HUBER, OBJECTIVE_FAIR, OBJECTIVE_POISSON, OBJECTIVE_QUANTILE, OBJECTIVE_MAPE, //
+						OBJECTIVE_GAMMA, OBJECTIVE_TWEEDIE -> {
+					regressor = true;
+					postTransform = PetrifyConstants.POST_TRANSFORM_NONE;
+				}
+				case OBJECTIVE_BINARY, OBJECTIVE_CROSS_ENTROPY, OBJECTIVE_CROSS_ENTROPY_LAMBDA -> {
+					regressor = false;
+					postTransform = PetrifyConstants.POST_TRANSFORM_LOGISTIC;
+				}
+				case OBJECTIVE_MULTICLASS, OBJECTIVE_SOFTMAX, OBJECTIVE_MULTICLASSOVA, //
+						OBJECTIVE_MULTICLASS_OVA, OBJECTIVE_OVA, OBJECTIVE_OVR -> {
+					regressor = false;
+					postTransform = PetrifyConstants.POST_TRANSFORM_SOFTMAX;
+				}
+				default -> throw new UnexpectedTreeBranch("Unsupported LightGBM 'objective': " + objective);
+			}
 		}
 
 		protected void headerNumTreePerIteration(final String string) {
 			// TODO Auto-generated method stub
-
 		}
 	}
 }
