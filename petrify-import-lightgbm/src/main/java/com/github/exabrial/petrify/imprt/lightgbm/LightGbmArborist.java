@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import com.github.exabrial.petrify.compiler.model.Grove;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
+import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.imprt.Arborist;
 
 public class LightGbmArborist implements Arborist {
@@ -47,16 +48,20 @@ public class LightGbmArborist implements Arborist {
 	}
 
 	protected class ParseMachine {
+		protected static final String MARKER_MAGIC = "tree";
 		protected static final String MARKER_TREE_PREFIX = "Tree=";
 		protected static final String MARKER_END_OF_TREES = "end of trees";
 		protected static final String MARKER_FEATURE_IMPORTANCES = "feature_importances:";
 		protected static final String MARKER_PARAMETERS = "parameters:";
 		protected static final String MARKER_END_OF_PARAMETERS = "end of parameters";
 
-		private ParseState state = ParseState.HEADER;
+		private static final String VALUE_V4 = "v4";
+
+		private ParseState state = ParseState.MAGIC;
+		private String[] split;
 
 		enum ParseState {
-			HEADER, TREE, FEATURE_IMPORTANCES, PARAMETERS, DONE
+			MAGIC, HEADER, TREE, FEATURE_IMPORTANCES, PARAMETERS, DONE
 		}
 
 		protected void feedLine(final String line) {
@@ -92,6 +97,7 @@ public class LightGbmArborist implements Arborist {
 
 		protected void dispatch(final String line) {
 			switch (state) {
+				case MAGIC -> magic(line);
 				case HEADER -> headerLine(line);
 				case TREE -> treeLine(line);
 				case FEATURE_IMPORTANCES -> featureImportanceLine(line);
@@ -106,7 +112,13 @@ public class LightGbmArborist implements Arborist {
 		}
 
 		protected void headerLine(final String line) {
-			// TODO
+			split = split(line);
+			switch (split[0]) {
+				case "version" -> {
+					headerVersion(split[1]);
+				}
+
+			}
 		}
 
 		protected void treeLine(final String line) {
@@ -124,6 +136,26 @@ public class LightGbmArborist implements Arborist {
 		protected <T extends Grove> T buildGrove() {
 			// TODO Auto-generated method stub
 			return null;
+		}
+
+		protected String[] split(final String line) {
+			return line.split("=");
+		}
+
+		// line handling methods
+
+		protected void magic(final String line) {
+			if (line.equals(MARKER_MAGIC)) {
+				state = ParseState.HEADER;
+			} else {
+				throw new UnexpectedTreeBranch("Expected LightGBM model magic 'tree', got: " + line);
+			}
+		}
+
+		protected void headerVersion(final String header) {
+			if (!header.equals(VALUE_V4)) {
+				throw new UnexpectedTreeBranch("Unexpected LightGBM model version only v4 supported, got: " + header);
+			}
 		}
 	}
 }
