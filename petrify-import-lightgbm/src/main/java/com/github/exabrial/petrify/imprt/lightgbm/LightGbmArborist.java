@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 import com.github.exabrial.petrify.compiler.model.Grove;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
@@ -93,6 +94,8 @@ public class LightGbmArborist implements Arborist {
 		private boolean regressor;
 		private byte postTransform;
 		private int numTreePerIteration;
+		private final ArrayList<Tree> trees = new ArrayList<>();
+		private Tree currentTree;
 
 		enum ParseState {
 			MAGIC, HEADER, TREE, FEATURE_IMPORTANCES, PARAMETERS, DONE
@@ -115,6 +118,12 @@ public class LightGbmArborist implements Arborist {
 		protected ParseState detectTransition(final String line) {
 			final ParseState result;
 			if (line.startsWith(MARKER_TREE_PREFIX)) {
+				final int treeIndex = Integer.parseInt(line.substring(MARKER_TREE_PREFIX.length()));
+				while (trees.size() <= treeIndex) {
+					trees.add(null);
+				}
+				currentTree = new Tree();
+				trees.set(treeIndex, currentTree);
 				result = ParseState.TREE;
 			} else {
 				result = switch (line) {
@@ -217,6 +226,17 @@ public class LightGbmArborist implements Arborist {
 
 		protected void headerNumTreePerIteration(final String value) {
 			numTreePerIteration = Integer.parseInt(value);
+		}
+
+		protected static class Tree {
+			int numLeaves;
+			int[] splitFeature;
+			double[] threshold;
+			int[] decisionType;
+			int[] leftChild;
+			int[] rightChild;
+			double[] leafValue;
+			double shrinkage;
 		}
 	}
 }
