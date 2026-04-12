@@ -7,6 +7,7 @@ import java.lang.invoke.MethodHandles;
 import org.junit.jupiter.api.Test;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
+import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 
 class PetrifyTest {
@@ -40,6 +41,7 @@ class PetrifyTest {
 
 		grove.classLabelsInt64s = new long[] { 0L, 1L };
 		grove.postTransform = (byte) 0;
+		grove.precisionMode = PrecisionMode.F64;
 		return grove;
 	}
 }

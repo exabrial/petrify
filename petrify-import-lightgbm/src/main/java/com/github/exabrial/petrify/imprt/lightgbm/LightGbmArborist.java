@@ -6,8 +6,12 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 
+import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.PrecisionMode;
+import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
@@ -60,6 +64,15 @@ public class LightGbmArborist implements Arborist {
 		protected static final String KEY_VERSION = "version";
 		protected static final String KEY_NUM_TREE_PER_ITERATION = "num_tree_per_iteration";
 		protected static final String KEY_OBJECTIVE = "objective";
+
+		protected static final String KEY_NUM_LEAVES = "num_leaves";
+		protected static final String KEY_SPLIT_FEATURE = "split_feature";
+		protected static final String KEY_THRESHOLD = "threshold";
+		protected static final String KEY_DECISION_TYPE = "decision_type";
+		protected static final String KEY_LEFT_CHILD = "left_child";
+		protected static final String KEY_RIGHT_CHILD = "right_child";
+		protected static final String KEY_LEAF_VALUE = "leaf_value";
+		protected static final String KEY_SHRINKAGE = "shrinkage";
 
 		protected static final String VALUE_V4 = "v4";
 
@@ -166,24 +179,167 @@ public class LightGbmArborist implements Arborist {
 		}
 
 		protected void treeLine(final String line) {
-			// TODO
+			split = split(line);
+			switch (split[0]) {
+				case KEY_NUM_LEAVES -> currentTree.numLeaves = Integer.parseInt(split[1]);
+				case KEY_SPLIT_FEATURE -> currentTree.splitFeature = parseIntArray(split[1]);
+				case KEY_THRESHOLD -> currentTree.threshold = parseDoubleArray(split[1]);
+				case KEY_DECISION_TYPE -> currentTree.decisionType = parseIntArray(split[1]);
+				case KEY_LEFT_CHILD -> currentTree.leftChild = parseIntArray(split[1]);
+				case KEY_RIGHT_CHILD -> currentTree.rightChild = parseIntArray(split[1]);
+				case KEY_LEAF_VALUE -> currentTree.leafValue = parseDoubleArray(split[1]);
+				case KEY_SHRINKAGE -> currentTree.shrinkage = Double.parseDouble(split[1]);
+				default -> {
+				}
+			}
 		}
 
 		protected void featureImportanceLine(final String line) {
-			// TODO
 		}
 
 		protected void parameterLine(final String line) {
-			// TODO
 		}
 
+		@SuppressWarnings("unchecked")
 		protected <T extends Grove> T buildGrove() {
-			// TODO Auto-generated method stub
-			return null;
+			int totalNodes = 0;
+			int totalLeaves = 0;
+			for (final Tree tree : trees) {
+				final int numInternalNodes = tree.numLeaves - 1;
+				totalNodes += numInternalNodes + tree.numLeaves;
+				totalLeaves += tree.numLeaves;
+			}
+
+			final int[] nodesTreeIds = new int[totalNodes];
+			final int[] nodesNodeIds = new int[totalNodes];
+			final byte[] nodesModes = new byte[totalNodes];
+			final int[] nodesFeatureIds = new int[totalNodes];
+			final double[] nodesValues = new double[totalNodes];
+			final int[] nodesTrueNodeIds = new int[totalNodes];
+			final int[] nodesFalseNodeIds = new int[totalNodes];
+			final int[] nodesMissingValueTracksTrue = new int[totalNodes];
+			final double[] nodesHitRates = new double[totalNodes];
+			Arrays.fill(nodesHitRates, 1.0d);
+
+			final int[] leafTreeIds = new int[totalLeaves];
+			final int[] leafNodeIds = new int[totalLeaves];
+			final int[] leafIds = new int[totalLeaves];
+			final double[] leafWeights = new double[totalLeaves];
+
+			int nodeOffset = 0;
+			int leafOffset = 0;
+
+			for (int treeIdx = 0; treeIdx < trees.size(); treeIdx++) {
+				final Tree tree = trees.get(treeIdx);
+				final int numInternalNodes = tree.numLeaves - 1;
+				final int leafBaseNodeId = numInternalNodes;
+
+				for (int internalNodeIdx = 0; internalNodeIdx < numInternalNodes; internalNodeIdx++) {
+					final int flatIdx = nodeOffset + internalNodeIdx;
+					nodesTreeIds[flatIdx] = treeIdx;
+					nodesNodeIds[flatIdx] = internalNodeIdx;
+					nodesModes[flatIdx] = PetrifyConstants.MODE_BRANCH_LEQ;
+					nodesFeatureIds[flatIdx] = tree.splitFeature[internalNodeIdx];
+					nodesValues[flatIdx] = tree.threshold[internalNodeIdx];
+					nodesTrueNodeIds[flatIdx] = remapChild(tree.leftChild[internalNodeIdx], leafBaseNodeId);
+					nodesFalseNodeIds[flatIdx] = remapChild(tree.rightChild[internalNodeIdx], leafBaseNodeId);
+					nodesMissingValueTracksTrue[flatIdx] = (tree.decisionType[internalNodeIdx] & 0x2) != 0 ? 1 : 0;
+				}
+
+				for (int leafIdx = 0; leafIdx < tree.numLeaves; leafIdx++) {
+					final int flatIdx = nodeOffset + leafBaseNodeId + leafIdx;
+					nodesTreeIds[flatIdx] = treeIdx;
+					nodesNodeIds[flatIdx] = leafBaseNodeId + leafIdx;
+					nodesModes[flatIdx] = PetrifyConstants.MODE_LEAF;
+					nodesFeatureIds[flatIdx] = 0;
+					nodesValues[flatIdx] = 0.0d;
+					nodesTrueNodeIds[flatIdx] = 0;
+					nodesFalseNodeIds[flatIdx] = 0;
+					nodesMissingValueTracksTrue[flatIdx] = 0;
+
+					leafTreeIds[leafOffset + leafIdx] = treeIdx;
+					leafNodeIds[leafOffset + leafIdx] = leafBaseNodeId + leafIdx;
+					leafIds[leafOffset + leafIdx] = regressor ? 0 : treeIdx % numTreePerIteration;
+					leafWeights[leafOffset + leafIdx] = tree.leafValue[leafIdx] * tree.shrinkage;
+				}
+
+				nodeOffset += numInternalNodes + tree.numLeaves;
+				leafOffset += tree.numLeaves;
+			}
+
+			final Grove grove;
+			if (regressor) {
+				final RegressorGrove regressorGrove = new RegressorGrove();
+				regressorGrove.targetTreeIds = leafTreeIds;
+				regressorGrove.targetNodeIds = leafNodeIds;
+				regressorGrove.targetIds = leafIds;
+				regressorGrove.targetWeights = leafWeights;
+				regressorGrove.nTargets = 1;
+				regressorGrove.aggregateFunction = PetrifyConstants.AGGREGATE_SUM;
+				grove = regressorGrove;
+			} else {
+				final ClassifierGrove classifierGrove = new ClassifierGrove();
+				classifierGrove.classTreeIds = leafTreeIds;
+				classifierGrove.classNodeIds = leafNodeIds;
+				classifierGrove.classIds = leafIds;
+				classifierGrove.classWeights = leafWeights;
+				classifierGrove.classLabelsInt64s = buildClassLabels();
+				grove = classifierGrove;
+			}
+
+			grove.nodesTreeIds = nodesTreeIds;
+			grove.nodesNodeIds = nodesNodeIds;
+			grove.nodesModes = nodesModes;
+			grove.nodesFeatureIds = nodesFeatureIds;
+			grove.nodesValues = nodesValues;
+			grove.nodesTrueNodeIds = nodesTrueNodeIds;
+			grove.nodesFalseNodeIds = nodesFalseNodeIds;
+			grove.nodesHitRates = nodesHitRates;
+			grove.nodesMissingValueTracksTrue = nodesMissingValueTracksTrue;
+			grove.postTransform = postTransform;
+			grove.baseValues = new double[] { 0.0d };
+			grove.precisionMode = PrecisionMode.F64;
+			return (T) grove;
+		}
+
+		protected int remapChild(final int childValue, final int leafBaseNodeId) {
+			final int result;
+			if (childValue >= 0) {
+				result = childValue;
+			} else {
+				result = leafBaseNodeId + -childValue - 1;
+			}
+			return result;
+		}
+
+		protected long[] buildClassLabels() {
+			final long[] labels = new long[numTreePerIteration];
+			for (int labelIdx = 0; labelIdx < numTreePerIteration; labelIdx++) {
+				labels[labelIdx] = labelIdx;
+			}
+			return labels;
 		}
 
 		protected String[] split(final String line) {
-			return line.split("=");
+			return line.split("=", 2);
+		}
+
+		protected int[] parseIntArray(final String value) {
+			final String[] parts = value.split(" ");
+			final int[] result = new int[parts.length];
+			for (int partIdx = 0; partIdx < parts.length; partIdx++) {
+				result[partIdx] = Integer.parseInt(parts[partIdx]);
+			}
+			return result;
+		}
+
+		protected double[] parseDoubleArray(final String value) {
+			final String[] parts = value.split(" ");
+			final double[] result = new double[parts.length];
+			for (int partIdx = 0; partIdx < parts.length; partIdx++) {
+				result[partIdx] = Double.parseDouble(parts[partIdx]);
+			}
+			return result;
 		}
 
 		// line handling methods
