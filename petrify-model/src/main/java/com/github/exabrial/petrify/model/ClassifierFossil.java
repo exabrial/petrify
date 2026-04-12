@@ -9,7 +9,19 @@ public interface ClassifierFossil extends Fossil {
 	String classify = "classify";
 	String predict = "predict";
 
-	int predict(float[] features);
+	// One of these two must be implemented to avoid stack overflow
+
+	default int predict(final double[] features) {
+		final float[] narrowed = narrow(features);
+		final int prediction = predict(narrowed);
+		return prediction;
+	}
+
+	default int predict(final float[] features) {
+		final double[] widened = widen(features);
+		final int prediction = predict(widened);
+		return prediction;
+	}
 
 	/**
 	 * Applies the post_transform to the scores array in place, then returns the index of the class with the highest score (argmax).

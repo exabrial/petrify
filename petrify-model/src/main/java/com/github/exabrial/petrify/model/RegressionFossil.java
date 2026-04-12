@@ -9,7 +9,19 @@ public interface RegressionFossil extends Fossil {
 	String aggregate = "aggregate";
 	String predict = "predict";
 
-	float predict(float[] features);
+	// One of these two must be implemented to avoid stack overflow
+
+	default double predict(final double[] features) {
+		final float[] narrowed = narrow(features);
+		final double prediction = predict(narrowed);
+		return prediction;
+	}
+
+	default float predict(final float[] features) {
+		final double[] widened = widen(features);
+		final double prediction = predict(widened);
+		return (float) prediction;
+	}
 
 	/**
 	 * Applies the post_transform to the accumulated score and returns the result.

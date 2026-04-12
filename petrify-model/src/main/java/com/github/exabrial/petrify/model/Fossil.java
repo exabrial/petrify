@@ -40,4 +40,12 @@ public interface Fossil extends Serializable {
 		}
 		return widened;
 	}
+
+	default float[] narrow(final double[] wide) {
+		final float[] narrowed = new float[wide.length];
+		for (int i = 0; i < wide.length; i++) {
+			narrowed[i] = (float) wide[i];
+		}
+		return narrowed;
+	}
 }
