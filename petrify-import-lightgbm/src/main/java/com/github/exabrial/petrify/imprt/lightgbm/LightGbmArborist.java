@@ -188,7 +188,7 @@ public class LightGbmArborist implements Arborist {
 				case KEY_LEFT_CHILD -> currentTree.leftChild = parseIntArray(split[1]);
 				case KEY_RIGHT_CHILD -> currentTree.rightChild = parseIntArray(split[1]);
 				case KEY_LEAF_VALUE -> currentTree.leafValue = parseDoubleArray(split[1]);
-				case KEY_SHRINKAGE -> currentTree.shrinkage = Double.parseDouble(split[1]);
+				case KEY_SHRINKAGE -> currentTree.shrinkage = parseDouble(split[1]);
 				default -> {
 				}
 			}
@@ -333,11 +333,23 @@ public class LightGbmArborist implements Arborist {
 			return result;
 		}
 
+		protected double parseDouble(final String value) {
+			final double result;
+			if (value.equals("inf")) {
+				result = Double.POSITIVE_INFINITY;
+			} else if (value.equals("-inf")) {
+				result = Double.NEGATIVE_INFINITY;
+			} else {
+				result = Double.parseDouble(value);
+			}
+			return result;
+		}
+
 		protected double[] parseDoubleArray(final String value) {
 			final String[] parts = value.split(" ");
 			final double[] result = new double[parts.length];
 			for (int partIdx = 0; partIdx < parts.length; partIdx++) {
-				result[partIdx] = Double.parseDouble(parts[partIdx]);
+				result[partIdx] = parseDouble(parts[partIdx]);
 			}
 			return result;
 		}
