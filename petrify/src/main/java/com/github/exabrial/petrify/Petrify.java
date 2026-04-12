@@ -292,7 +292,7 @@ public class Petrify {
 					// Apply base values bias
 					emitBaseValues(codeBuilder, stratum.grove.baseValues);
 
-					// Load scores[0] and call fossil.aggregate(score, postTransform)
+					// Load scores[0]
 					codeBuilder.aload(SLOT_SCORES);
 					codeBuilder.ldc(0);
 					codeBuilder.faload();
