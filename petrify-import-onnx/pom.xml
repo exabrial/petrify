@@ -7,7 +7,7 @@
 		<artifactId>petrify-parent</artifactId>
 		<version>0.2.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>petrify-onnx-import</artifactId>
+	<artifactId>petrify-import-onnx</artifactId>
 	<name>${project.artifactId}</name>
 	<packaging>jar</packaging>
 
