@@ -2,6 +2,8 @@ package com.github.exabrial.petrify.compiler.model;
 
 import java.io.Serializable;
 
+import com.github.exabrial.petrify.model.PetrifyConstants;
+
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
@@ -22,4 +24,20 @@ public abstract class Grove implements Serializable {
 	public int[] nodesMissingValueTracksTrue;
 	public byte postTransform;
 	public double[] baseValues;
+
+	public GroveSummary summary() {
+		final int totalNodes = nodesTreeIds.length;
+		int treeCount = 0;
+		int leafCount = 0;
+		for (int nodeIdx = 0; nodeIdx < totalNodes; nodeIdx++) {
+			if (nodesTreeIds[nodeIdx] >= treeCount) {
+				treeCount = nodesTreeIds[nodeIdx] + 1;
+			}
+			if (nodesModes[nodeIdx] == PetrifyConstants.MODE_LEAF) {
+				leafCount++;
+			}
+		}
+		final int branchCount = totalNodes - leafCount;
+		return new GroveSummary(treeCount, branchCount, leafCount);
+	}
 }

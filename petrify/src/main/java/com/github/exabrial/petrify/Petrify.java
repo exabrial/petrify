@@ -14,6 +14,9 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
@@ -35,6 +38,8 @@ import lombok.ToString;
 
 @ToString
 public class Petrify {
+	private static final Logger log = LoggerFactory.getLogger(Petrify.class);
+
 	public static final String PETRIFIED_FOSSIL = "PetrifiedFossil$Petrify0x";
 	public static final int JDK_17 = 61;
 
@@ -46,6 +51,9 @@ public class Petrify {
 	protected static int counter = 0;
 
 	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final ClassifierGrove grove) {
+		log.info("fossilize() compiling ClassifierGrove summary:{} classes:{} precisionMode:{}", grove.summary(),
+				grove.classLabelsInt64s.length, grove.precisionMode);
+		log.trace("fossilize() grove:{}", grove);
 		try {
 			final ClassifierStratum stratum = new ClassifierStratum(grove);
 
@@ -69,6 +77,9 @@ public class Petrify {
 	}
 
 	public RegressionFossil fossilize(final MethodHandles.Lookup lookup, final RegressorGrove grove) {
+		log.info("fossilize() compiling RegressorGrove summary:{} targets:{} precisionMode:{}", grove.summary(), grove.nTargets,
+				grove.precisionMode);
+		log.trace("fossilize() grove:{}", grove);
 		try {
 			final RegressorStratum stratum = new RegressorStratum(grove);
 
@@ -92,6 +103,9 @@ public class Petrify {
 	}
 
 	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final ClassifierVine vine) {
+		log.info("fossilize() compiling ClassifierVine classes:{} features:{} precisionMode:{}", vine.nClasses, vine.nFeatures,
+				vine.precisionMode);
+		log.trace("fossilize() vine:{}", vine);
 		try {
 			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
 					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
@@ -112,6 +126,9 @@ public class Petrify {
 	}
 
 	public RegressionFossil fossilize(final MethodHandles.Lookup lookup, final RegressorVine vine) {
+		log.info("fossilize() compiling RegressorVine targets:{} features:{} precisionMode:{}", vine.nTargets, vine.nFeatures,
+				vine.precisionMode);
+		log.trace("fossilize() vine:{}", vine);
 		try {
 			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
 					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
@@ -133,8 +150,7 @@ public class Petrify {
 
 	protected void implementLinearRegressorPredictMethod(final ClassBuilder classBuilder, final RegressorVine vine) {
 		final PrecisionMode mode = vine.precisionMode;
-		classBuilder.withMethodBody(RegressionFossil.predict,
-				MethodTypeDesc.of(mode.scalarDesc(), mode.arrayDesc()), ClassFile.ACC_PUBLIC,
+		classBuilder.withMethodBody(RegressionFossil.predict, MethodTypeDesc.of(mode.scalarDesc(), mode.arrayDesc()), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
 					final int nFeatures = vine.nFeatures;
 					final double[] coefficients = vine.coefficients;
@@ -167,8 +183,7 @@ public class Petrify {
 
 					// Invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
-							RegressionFossil.aggregate,
-							MethodTypeDesc.of(mode.scalarDesc(), mode.scalarDesc(), ConstantDescs.CD_byte));
+							RegressionFossil.aggregate, MethodTypeDesc.of(mode.scalarDesc(), mode.scalarDesc(), ConstantDescs.CD_byte));
 
 					mode.return_(codeBuilder);
 				});
@@ -224,8 +239,8 @@ public class Petrify {
 					codeBuilder.ldc((int) vine.postTransform);
 					codeBuilder.ldc(isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
-							ClassifierFossil.classify, MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc(),
-									ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
+							ClassifierFossil.classify,
+							MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc(), ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
 
 					// Lookup the class array index in the classLabels
 					final long[] classLabels = vine.classlabelsInts;
@@ -260,8 +275,8 @@ public class Petrify {
 					codeBuilder.ldc((int) stratum.grove.postTransform);
 					codeBuilder.ldc(stratum.isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
-							ClassifierFossil.classify, MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc(),
-									ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
+							ClassifierFossil.classify,
+							MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc(), ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
 					// Winning class array index is now on the stack
 
 					// Lookup the class array index in the classLabels
@@ -278,8 +293,7 @@ public class Petrify {
 		final PrecisionMode mode = stratum.grove.precisionMode;
 		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, mode.arrayDesc(), mode.arrayDesc());
 
-		classBuilder.withMethodBody(RegressionFossil.predict,
-				MethodTypeDesc.of(mode.scalarDesc(), mode.arrayDesc()), ClassFile.ACC_PUBLIC,
+		classBuilder.withMethodBody(RegressionFossil.predict, MethodTypeDesc.of(mode.scalarDesc(), mode.arrayDesc()), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
 					// Create single-element score accumulator (single-target regression)
 					codeBuilder.ldc(stratum.regressorGrove.nTargets);
@@ -303,8 +317,7 @@ public class Petrify {
 
 					// Invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
-							RegressionFossil.aggregate,
-							MethodTypeDesc.of(mode.scalarDesc(), mode.scalarDesc(), ConstantDescs.CD_byte));
+							RegressionFossil.aggregate, MethodTypeDesc.of(mode.scalarDesc(), mode.scalarDesc(), ConstantDescs.CD_byte));
 
 					mode.return_(codeBuilder);
 				});
