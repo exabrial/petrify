@@ -27,7 +27,7 @@ final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 
 // Do something with your prediction:
 if (prediction != SPANISH_INQUISITION) {
-  // ruthless efficiency
+  // proceed with ruthless efficiency and almost fanatical dedication
 } else {
   throw new UnexpectedInquistionException();
 }
