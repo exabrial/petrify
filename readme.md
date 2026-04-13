@@ -8,7 +8,7 @@ Before you leave, ⭐ leave a star! ⭐ Thanks! :)
 
 ### Theory of operation
 
-Petrify is a machine learning model compiler for the the JVM. It reads your model from an ONNX or other model format, walks the Trees or Linear models, and encodes the model in equivalent JVM bytecode as a stateless class you can invoke.
+Petrify is a machine learning model compiler for the the JVM. It reads your model from an ONNX, LightGBM native, or scikit-learn JSON format, walks the Trees or Linear models, and encodes the model in equivalent JVM bytecode as a stateless class you can invoke.
 
 This differs from every other ONNX Runtime that I know of, which are essentially interpreters.
 
@@ -39,6 +39,14 @@ Once your ONNX models are compiled, the only runtime dependency is the `Fossil` 
 
 
 ## Model Coverage
+
+### Importers
+
+| Module | Format | Precision | Model Types |
+|---|---|---|---|
+| `petrify-import-onnx` | ONNX (`.onnx`) | F32 | Tree ensembles, linear models |
+| `petrify-import-lightgbm` | LightGBM native text (`.txt`) | F64 | LightGBM tree ensembles |
+| `petrify-import-scikit` | scikit-learn JSON (`.json`) | F64 | Linear/logistic regression |
 
 ### Supported ONNX Operators
 
@@ -75,26 +83,26 @@ Passthrough operators (safely ignored during import):
 
 Any framework that exports to a supported ONNX operator should work. The table below lists known-compatible frameworks and model types.
 
-| Framework | Model Type | Task | Test Included |
-|-----------|-----------|------|--------|
-| XGBoost | `XGBClassifier` | Binary classification | ✅ |
-| XGBoost | `XGBClassifier` | Multiclass classification | ✅ |
-| LightGBM | `LGBMClassifier` | Multiclass classification | ✅ |
-| CatBoost | `CatBoostClassifier` | Multiclass classification | ✅ |
-| scikit-learn | `DecisionTreeClassifier` | Binary classification | ✅ |
-| scikit-learn | `RandomForestClassifier` | Multiclass classification | ✅ |
-| scikit-learn | `ExtraTreesClassifier` | Multiclass classification | ✅ |
-| scikit-learn | `GradientBoostingRegressor` | Regression | ✅ |
-| scikit-learn | `GradientBoostingClassifier` | Multiclass classification | ✅ |
-| scikit-learn | `LogisticRegression` | Multiclass classification | ✅ |
-| scikit-learn | `LinearRegression` | Regression | ✅ |
-| XGBoost | `XGBRegressor` | Regression | ✅ |
-| LightGBM | `LGBMRegressor` | Regression | ✅ |
-| CatBoost | `CatBoostRegressor` | Regression | ✅ |
-| scikit-learn | `RandomForestRegressor` | Regression | ✅ |
-| scikit-learn | `ExtraTreesRegressor` | Regression | ✅ |
-| scikit-learn | `HistGradientBoostingClassifier` | Classification | |
-| scikit-learn | `HistGradientBoostingRegressor` | Regression | |
+| Framework | Model Type | Task | Importer | Test Included |
+|-----------|-----------|------|----------|--------|
+| XGBoost | `XGBClassifier` | Binary classification | ONNX | ✅ |
+| XGBoost | `XGBClassifier` | Multiclass classification | ONNX | ✅ |
+| LightGBM | `LGBMClassifier` | Multiclass classification | ONNX, Native | ✅ |
+| LightGBM | `LGBMRegressor` | Regression | ONNX, Native | ✅ |
+| CatBoost | `CatBoostClassifier` | Multiclass classification | ONNX | ✅ |
+| CatBoost | `CatBoostRegressor` | Regression | ONNX | ✅ |
+| scikit-learn | `DecisionTreeClassifier` | Binary classification | ONNX | ✅ |
+| scikit-learn | `RandomForestClassifier` | Multiclass classification | ONNX | ✅ |
+| scikit-learn | `RandomForestRegressor` | Regression | ONNX | ✅ |
+| scikit-learn | `ExtraTreesClassifier` | Multiclass classification | ONNX | ✅ |
+| scikit-learn | `ExtraTreesRegressor` | Regression | ONNX | ✅ |
+| scikit-learn | `GradientBoostingClassifier` | Multiclass classification | ONNX | ✅ |
+| scikit-learn | `GradientBoostingRegressor` | Regression | ONNX | ✅ |
+| scikit-learn | `LogisticRegression` | Multiclass classification | ONNX, JSON | ✅ |
+| scikit-learn | `LinearRegression` | Regression | ONNX, JSON | ✅ |
+| XGBoost | `XGBRegressor` | Regression | ONNX | ✅ |
+| scikit-learn | `HistGradientBoostingClassifier` | Classification | ONNX | |
+| scikit-learn | `HistGradientBoostingRegressor` | Regression | ONNX | |
 
 ## Usage
 
@@ -105,7 +113,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-model</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -113,21 +121,37 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <scope>compile</scope>
 </dependency>
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-compiler-model</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <scope>compile</scope>
 </dependency>
 
-<!-- ONNX importer and libs -->
+<!-- ONNX importer (f32 "float" precision) -->
 <dependency>
   <groupId>com.github.exabrial</groupId>
-  <artifactId>petrify-onnx-import</artifactId>
-  <version>0.1.0</version>
+  <artifactId>petrify-import-onnx</artifactId>
+  <version>1.0.0</version>
+  <scope>compile</scope>
+</dependency>
+
+<!-- LightGBM native text importer (f64 "double" precision) -->
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify-import-lightgbm</artifactId>
+  <version>1.0.0</version>
+  <scope>compile</scope>
+</dependency>
+
+<!-- scikit-learn JSON importer (f64 "double" precision) -->
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify-import-scikit</artifactId>
+  <version>1.0.0</version>
   <scope>compile</scope>
 </dependency>
 ```
