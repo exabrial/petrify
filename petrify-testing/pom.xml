@@ -29,6 +29,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.exabrial</groupId>
+			<artifactId>petrify-import-scikit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.exabrial</groupId>
 			<artifactId>petrify-model</artifactId>
 			<scope>test</scope>
 		</dependency>
