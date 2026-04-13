@@ -40,7 +40,7 @@ public class ScikitVintner implements Vintner {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "try"})
 	@Override
 	public <T extends Vine> T toVine(final byte[] bytes) {
 		final String json = new String(bytes, StandardCharsets.UTF_8);
@@ -59,6 +59,8 @@ public class ScikitVintner implements Vintner {
 			}
 			vine.precisionMode = PrecisionMode.F64;
 			return (T) vine;
+		} catch (final UnexpectedTreeBranch | UnexpectedCometImpact pe) {
+			throw pe;
 		} catch (final Exception exception) {
 			throw new UnexpectedCometImpact(exception);
 		}

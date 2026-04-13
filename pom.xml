@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.github.exabrial</groupId>
@@ -241,6 +242,7 @@
 				</executions>
 				<configuration>
 					<attach>true</attach>
+					<doclint>none</doclint>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -290,6 +292,7 @@
 		<module>petrify-import-lightgbm</module>
 		<module>petrify-import-onnx</module>
 		<module>petrify-import-scikit</module>
+		<module>petrify-maven-plugin</module>
 		<module>petrify-model</module>
 		<module>petrify-onnx-proto</module>
 		<module>petrify-testing</module>
