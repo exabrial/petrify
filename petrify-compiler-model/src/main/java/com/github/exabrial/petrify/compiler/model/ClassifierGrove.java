@@ -11,6 +11,6 @@ public class ClassifierGrove extends Grove {
 	public int[] classTreeIds;
 	public int[] classNodeIds;
 	public int[] classIds;
-	public float[] classWeights;
+	public double[] classWeights;
 	public long[] classLabelsInt64s;
 }

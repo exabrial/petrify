@@ -11,7 +11,7 @@ public class RegressorGrove extends Grove {
 	public int[] targetTreeIds;
 	public int[] targetNodeIds;
 	public int[] targetIds;
-	public float[] targetWeights;
+	public double[] targetWeights;
 	public int nTargets;
 	public byte aggregateFunction;
 }

@@ -10,15 +10,16 @@ import lombok.ToString;
 public abstract class Grove implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+	public PrecisionMode precisionMode;
 	public int[] nodesTreeIds;
 	public int[] nodesNodeIds;
 	public byte[] nodesModes;
 	public int[] nodesFeatureIds;
-	public float[] nodesValues;
+	public double[] nodesValues;
 	public int[] nodesTrueNodeIds;
 	public int[] nodesFalseNodeIds;
-	public float[] nodesHitRates;
+	public double[] nodesHitRates;
 	public int[] nodesMissingValueTracksTrue;
 	public byte postTransform;
-	public float[] baseValues;
+	public double[] baseValues;
 }

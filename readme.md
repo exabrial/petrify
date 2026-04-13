@@ -1,14 +1,14 @@
 # 🪨 Petrify 
 
-🪵 -> 🪨 ONNX ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
+🪵 -> 🪨 ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
 
-Before you leave :) Leave a star! Thanks!
+Before you leave, leave a star! Thanks! :)
 
 ## Overview
 
 ### Theory of operation
 
-Petrify is a fully JVM native model compiler. It reads your model from an ONNX file, walks the Trees or Linear models, and encodes the model as equivalent JVM bytecode as a stateless class you can invoke.
+Petrify is a machine learning model compiler for the the JVM. It reads your model from an ONNX or other model format, walks the Trees or Linear models, and encodes the model in equivalent JVM bytecode as a stateless class you can invoke.
 
 This differs from every other ONNX Runtime that I know of, which are essentially interpreters.
 
@@ -27,13 +27,13 @@ final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f }));
 
 // Do something with your prediction:
 if (prediction != SPANISH_INQUISITION) {
-  // Profits!
+  // ruthless efficiency
 } else {
   throw new UnexpectedInquistionException();
 }
 ```
 
-No interpretation, no array traversal, no pointer chasing; just raw comparisons, conditional jumps, and arithmetic baked into bytecode. Your model executes as native JVM instructions.
+No interpretation, no JNI, no giant runtime, no massive list of dependencies, no array traversal, no pointer chasing; just raw comparisons, conditional jumps, and arithmetic petrified as bytecode. Your model executes as native JVM instructions.
 
 Once your ONNX models are compiled, the only runtime dependency is the `Fossil` interface from the `petrify-model` submodule (ASL2-licensed, safe for business). This interface provides the entry point into your model. Once your model is compiled, no execution runtime is needed, making Petrify the ultimate lightweight champ to run your models.
 
@@ -126,7 +126,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <!-- ONNX importer and libs -->
 <dependency>
   <groupId>com.github.exabrial</groupId>
-  <artifactId>petrify-import</artifactId>
+  <artifactId>petrify-onnx-import</artifactId>
   <version>0.1.0</version>
   <scope>compile</scope>
 </dependency>
@@ -134,12 +134,14 @@ Any framework that exports to a supported ONNX operator should work. The table b
 
 ### Compiling a model at runtime
 
-Tree ensemble models (XGBoost, LightGBM, CatBoost, scikit-learn trees) use `Arborist` to produce a `Grove`. Linear models (LogisticRegression, LinearRegression) use `Vintner` to produce a `Vine`. Both are then compiled to bytecode with `Petrify.fossilize()`.
+Tree ensemble models (XGBoost, LightGBM, CatBoost, scikit-learn trees) use `OnnxArborist` to produce a `Grove`. Linear models (LogisticRegression, LinearRegression) use `OnnxVintner` to produce a `Vine`. Both are then compiled to bytecode with `Petrify.fossilize()`.
+
+Each `Grove` and `Vine` carries a `PrecisionMode` (`F32` or `F64`) that controls whether the compiled bytecode performs arithmetic in 32-bit float or 64-bit double precision. ONNX imports always default to `F32` to match the ONNX specification. If your model was imported from a format that supports double precision, you can set `grove.precisionMode = PrecisionMode.F64` before fossilizing to get full double-precision arithmetic. Both `predict(float[])` and `predict(double[])` overloads are available on the compiled fossil regardless of precision mode.
 
 #### Grove classifier (tree ensemble)
 
 ```java
-final Arborist arborist = new Arborist();
+final Arborist arborist = new OnnxArborist();
 final ClassifierGrove grove = arborist.toGrove("/models/xgboostClassifier.onnx");
 
 final Petrify petrify = new Petrify();
@@ -151,7 +153,7 @@ final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f });
 #### Grove regressor (tree ensemble)
 
 ```java
-final Arborist arborist = new Arborist();
+final Arborist arborist = new OnnxArborist();
 final RegressorGrove grove = arborist.toGrove("/models/xgboostRegressor.onnx");
 
 final Petrify petrify = new Petrify();
@@ -163,7 +165,7 @@ final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1
 #### Vine classifier (linear model)
 
 ```java
-final Vintner vintner = new Vintner();
+final Vintner vintner = new OnnxVintner();
 final ClassifierVine vine = vintner.toVine("/models/logisticRegression.onnx");
 
 final Petrify petrify = new Petrify();
@@ -175,7 +177,7 @@ final int prediction = fossil.predict(new float[] { 1.6812f, 25.0f, 4.1922f, 1.0
 #### Vine regressor (linear model)
 
 ```java
-final Vintner vintner = new Vintner();
+final Vintner vintner = new OnnxVintner();
 final RegressorVine vine = vintner.toVine("/models/linearRegression.onnx");
 
 final Petrify petrify = new Petrify();
@@ -191,7 +193,6 @@ final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1
 ### Known Limitations
 
 - **String class labels are not supported.** ONNX classifiers can store labels as either `classlabels_ints` or `classlabels_strings`. Petrify only supports integer labels at this time. Models trained on string targets (e.g., `["cat", "dog", "fish"]`) must be label-encoded to `integer`s before export.
-- **No `float64` (`double`) Support** ONNX stores everything as 32bit Floats. Scikit-Learn and others often use Double precision 64bit Floats. In order to support this, I'd need to parse the exports from Scikit-Learn directly somehow and so your workflow could skip the ONNX step. The bytecode generation would also be different, as the JVM has different opCodes for `double` than `float`.
 
 ## Bootnotes
 

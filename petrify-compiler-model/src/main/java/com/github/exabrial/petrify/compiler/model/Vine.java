@@ -10,8 +10,9 @@ import lombok.ToString;
 public abstract class Vine implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public float[] coefficients;
-	public float[] intercepts;
+	public PrecisionMode precisionMode;
+	public double[] coefficients;
+	public double[] intercepts;
 	public byte postTransform;
 	public int nFeatures;
 }
