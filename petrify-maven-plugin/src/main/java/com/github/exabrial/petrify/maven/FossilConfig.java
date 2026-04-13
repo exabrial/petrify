@@ -8,13 +8,13 @@ public class FossilConfig {
 	private String modelFile;
 	private String importer;
 	private String modelType;
-	private String packageName;
-	private String className;
+	private String targetPackageName;
+	private String targetClassName;
 
 	public String resolveClassName() {
 		final String result;
-		if (className != null && !className.isEmpty()) {
-			result = className + "Fossil";
+		if (targetClassName != null && !targetClassName.isEmpty()) {
+			result = targetClassName + "Fossil";
 		} else {
 			final int dotIdx = modelFile.lastIndexOf('.');
 			final String stem;

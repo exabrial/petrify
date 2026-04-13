@@ -59,7 +59,7 @@ public class FossilizeMojo extends AbstractMojo {
 		final String modelDirectory = resolveModelDirectory(fossil);
 		final Path modelPath = Path.of(modelDirectory, fossil.getModelFile());
 		final String resolvedClassName = fossil.resolveClassName();
-		final String packageName = fossil.getPackageName();
+		final String packageName = fossil.getTargetPackageName();
 
 		validate(fossil, modelPath, resolvedClassName);
 
@@ -85,8 +85,8 @@ public class FossilizeMojo extends AbstractMojo {
 			throw new MojoFailureException("importer is required for modelFile:" + fossil.getModelFile());
 		} else if (fossil.getModelType() == null || fossil.getModelType().isEmpty()) {
 			throw new MojoFailureException("modelType is required for modelFile:" + fossil.getModelFile());
-		} else if (fossil.getPackageName() == null || fossil.getPackageName().isEmpty()) {
-			throw new MojoFailureException("packageName is required for modelFile:" + fossil.getModelFile());
+		} else if (fossil.getTargetPackageName() == null || fossil.getTargetPackageName().isEmpty()) {
+			throw new MojoFailureException("targetPackageName is required for modelFile:" + fossil.getModelFile());
 		} else if (!Files.exists(modelPath)) {
 			throw new MojoFailureException("modelFile not found:" + modelPath);
 		} else if (resolvedClassName == null || resolvedClassName.isEmpty()) {

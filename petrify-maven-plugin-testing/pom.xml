@@ -50,8 +50,8 @@
 									<modelFile>decisionTreeSimple.onnx</modelFile>
 									<importer>onnx</importer>
 									<modelType>classifier</modelType>
-									<packageName>com.github.exabrial.petrify.testing.maven</packageName>
-									<className>DecisionTreeSimple</className>
+									<targetPackageName>com.github.exabrial.petrify.testing.maven</targetPackageName>
+									<targetClassName>DecisionTreeSimple</targetClassName>
 								</fossil>
 							</fossils>
 						</configuration>
