@@ -2,7 +2,7 @@
 
 🪵 -> 🪨 ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
 
-Before you leave, leave a star! Thanks! :)
+Before you leave, ⭐ leave a star! ⭐ Thanks! :)
 
 ## Overview
 
