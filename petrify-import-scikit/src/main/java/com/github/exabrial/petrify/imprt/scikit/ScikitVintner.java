@@ -18,13 +18,13 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 
 public class ScikitVintner implements Vintner {
-	private static final String TYPE_CLASSIFIER = "classifier";
-	private static final String TYPE_REGRESSOR = "regressor";
+	protected static final String TYPE_CLASSIFIER = "classifier";
+	protected static final String TYPE_REGRESSOR = "regressor";
 
-	private static final String POST_TRANSFORM_NONE = "none";
-	private static final String POST_TRANSFORM_SOFTMAX = "softmax";
-	private static final String POST_TRANSFORM_LOGISTIC = "logistic";
-	private static final String POST_TRANSFORM_PROBIT = "probit";
+	protected static final String POST_TRANSFORM_NONE = "none";
+	protected static final String POST_TRANSFORM_SOFTMAX = "softmax";
+	protected static final String POST_TRANSFORM_LOGISTIC = "logistic";
+	protected static final String POST_TRANSFORM_PROBIT = "probit";
 
 	@Override
 	public <T extends Vine> T toVine(final String classpathLocation) {
