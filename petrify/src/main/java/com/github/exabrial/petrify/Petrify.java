@@ -38,7 +38,8 @@ import lombok.ToString;
 
 @ToString
 public class Petrify {
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(Petrify.class);
+
 	public static final String PETRIFIED_FOSSIL = "PetrifiedFossil$Petrify0x";
 	public static final int JDK_17 = 61;
 
