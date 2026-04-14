@@ -2,16 +2,19 @@ package com.github.exabrial.petrify.maven;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
@@ -22,7 +25,7 @@ import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
 import com.github.exabrial.petrify.imprt.scikit.ScikitVintner;
 
-@Mojo(name = "fossilize", defaultPhase = LifecyclePhase.COMPILE)
+@Mojo(name = "fossilize", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class FossilizeMojo extends AbstractMojo {
 	private static final String IMPORTER_ONNX = "onnx";
 	private static final String IMPORTER_LIGHTGBM = "lightgbm";
@@ -30,6 +33,9 @@ public class FossilizeMojo extends AbstractMojo {
 
 	private static final String MODEL_TYPE_CLASSIFIER = "classifier";
 	private static final String MODEL_TYPE_REGRESSOR = "regressor";
+
+	@Component
+	private BuildContext buildContext;
 
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
 	private MavenProject project;
@@ -50,6 +56,8 @@ public class FossilizeMojo extends AbstractMojo {
 			return;
 		} else {
 			for (final FossilConfig fossil : fossils) {
+				final String modelDirectory = resolveModelDirectory(fossil);
+				project.addCompileSourceRoot(modelDirectory);
 				processFossil(fossil);
 			}
 		}
@@ -64,9 +72,9 @@ public class FossilizeMojo extends AbstractMojo {
 		validate(fossil, modelPath, resolvedClassName);
 
 		final Path outputClassFile = resolveOutputPath(packageName, resolvedClassName);
-		if (isUpToDate(modelPath, outputClassFile)) {
+		if (!buildContext.isIncremental() && isUpToDate(modelPath, outputClassFile)) {
 			getLog().info("processFossil() skipping up-to-date model:" + fossil.getModelFile() + " class:" + resolvedClassName);
-			return;
+			buildContext.refresh(outputClassFile.toFile());
 		} else {
 			getLog().info("processFossil() compiling model:" + fossil.getModelFile() + " class:" + packageName + "." + resolvedClassName
 					+ " importer:" + fossil.getImporter() + " modelType:" + fossil.getModelType());
@@ -244,8 +252,11 @@ public class FossilizeMojo extends AbstractMojo {
 	protected void writeClassFile(final Path outputClassFile, final byte[] classBytes) throws MojoExecutionException {
 		try {
 			Files.createDirectories(outputClassFile.getParent());
-			Files.write(outputClassFile, classBytes);
-			getLog().debug("writeClassFile() wrote " + classBytes.length + " bytes to:" + outputClassFile);
+			try (final OutputStream outputStream = buildContext.newFileOutputStream(outputClassFile.toFile())) {
+				outputStream.write(classBytes);
+			}
+			buildContext.refresh(outputClassFile.toFile());
+			getLog().info("writeClassFile() wrote " + classBytes.length + " bytes to:" + outputClassFile);
 		} catch (final IOException ioException) {
 			throw new MojoExecutionException("failed to write classFile:" + outputClassFile, ioException);
 		}

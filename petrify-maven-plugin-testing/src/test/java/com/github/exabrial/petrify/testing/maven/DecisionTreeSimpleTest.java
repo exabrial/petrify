@@ -20,8 +20,7 @@ class DecisionTreeSimpleTest {
 
 	@BeforeAll
 	void beforeAll() throws Exception {
-		final Class<?> clazz = Class.forName("com.github.exabrial.petrify.testing.maven.DecisionTreeSimpleFossil");
-		fossil = (ClassifierFossil) clazz.getDeclaredConstructor().newInstance();
+		fossil = new DecisionTreeSimpleFossil();
 	}
 
 	@BeforeEach
