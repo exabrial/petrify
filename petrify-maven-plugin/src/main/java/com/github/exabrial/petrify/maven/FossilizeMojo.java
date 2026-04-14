@@ -3,6 +3,7 @@ package com.github.exabrial.petrify.maven;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -27,12 +28,18 @@ import com.github.exabrial.petrify.imprt.scikit.ScikitVintner;
 
 @Mojo(name = "fossilize", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class FossilizeMojo extends AbstractMojo {
-	private static final String IMPORTER_ONNX = "onnx";
 	private static final String IMPORTER_LIGHTGBM = "lightgbm";
+	private static final String IMPORTER_ONNX = "onnx";
 	private static final String IMPORTER_SCIKIT = "scikit";
 
 	private static final String MODEL_TYPE_CLASSIFIER = "classifier";
 	private static final String MODEL_TYPE_REGRESSOR = "regressor";
+
+	private static final String PETRIFY_CLASSES_DIR = "petrify-classes";
+	private static final String PETRIFY_CLASSPATH_ENTRY = "<classpathentry exported=\"true\" kind=\"lib\" path=\"target/"
+			+ PETRIFY_CLASSES_DIR + "\"/>";
+	private static final String CLASSPATH_OUTPUT_ENTRY = "kind=\"output\"";
+	private static final String CLASSPATH_ENTRY_TAG = "<classpathentry";
 
 	@SuppressWarnings("deprecation")
 	@Component
@@ -50,16 +57,26 @@ public class FossilizeMojo extends AbstractMojo {
 	@Parameter(property = "petrify.skip", defaultValue = "false")
 	private boolean skip;
 
+	@Parameter(property = "petrify.disableEclipseIntegration", defaultValue = "false")
+	private boolean disableEclipseIntegration;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (skip) {
 			getLog().info("execute() petrify.skip is true, skipping");
-			return;
 		} else {
+			createOutputDirectories();
+			refreshOutputDirectories();
+
 			for (final FossilConfig fossil : fossils) {
 				final String modelDirectory = resolveModelDirectory(fossil);
 				project.addCompileSourceRoot(modelDirectory);
 				processFossil(fossil);
+			}
+			refreshOutputDirectories();
+
+			if (isEclipseIntegrationEnabled()) {
+				addPetrifyClasspathEntry();
 			}
 		}
 	}
@@ -69,19 +86,31 @@ public class FossilizeMojo extends AbstractMojo {
 		final Path modelPath = Path.of(modelDirectory, fossil.getModelFile());
 		final String resolvedClassName = fossil.resolveClassName();
 		final String packageName = fossil.getTargetPackageName();
+		final Path outputClassFile = resolveOutputPath(outputDirectory, packageName, resolvedClassName);
 
-		validate(fossil, modelPath, resolvedClassName);
-
-		final Path outputClassFile = resolveOutputPath(packageName, resolvedClassName);
-		if (isUpToDate(modelPath, outputClassFile)) {
-			getLog().info("processFossil() skipping up-to-date model:" + fossil.getModelFile() + " class:" + resolvedClassName);
+		if (!buildContext.isIncremental() && isUpToDate(modelPath, outputClassFile)) {
+			getLog().debug("processFossil() up-to-date, skipping modelFile:" + fossil.getModelFile() + " class:" + resolvedClassName);
 			buildContext.refresh(outputClassFile.toFile());
 		} else {
-			getLog().info("processFossil() compiling model:" + fossil.getModelFile() + " class:" + packageName + "." + resolvedClassName
+			deleteStaleClassFile(outputClassFile);
+			final Path eclipseClassFile;
+			if (isEclipseIntegrationEnabled()) {
+				eclipseClassFile = resolveEclipseOutputPath(packageName, resolvedClassName);
+				deleteStaleClassFile(eclipseClassFile);
+			} else {
+				eclipseClassFile = null;
+			}
+
+			validate(fossil, modelPath, resolvedClassName);
+
+			getLog().info("processFossil() compiling modelFile:" + fossil.getModelFile() + " class:" + packageName + "." + resolvedClassName
 					+ " importer:" + fossil.getImporter() + " modelType:" + fossil.getModelType());
 			final byte[] modelBytes = readModelFile(modelPath);
 			final byte[] classBytes = compile(fossil, modelBytes, packageName, resolvedClassName);
 			writeClassFile(outputClassFile, classBytes);
+			if (eclipseClassFile != null) {
+				writeClassFile(eclipseClassFile, classBytes);
+			}
 		}
 	}
 
@@ -101,7 +130,7 @@ public class FossilizeMojo extends AbstractMojo {
 			throw new MojoFailureException("className could not be resolved for modelFile:" + fossil.getModelFile());
 		} else {
 			switch (fossil.getImporter()) {
-				case IMPORTER_ONNX, IMPORTER_LIGHTGBM, IMPORTER_SCIKIT -> {
+				case IMPORTER_LIGHTGBM, IMPORTER_ONNX, IMPORTER_SCIKIT -> {
 				}
 				default -> throw new MojoFailureException(
 						"unknown importer:" + fossil.getImporter() + " for modelFile:" + fossil.getModelFile());
@@ -132,7 +161,7 @@ public class FossilizeMojo extends AbstractMojo {
 			case IMPORTER_SCIKIT -> {
 				compileScikit(petrify, modelBytes, modelType);
 			}
-			default -> throw new MojoExecutionException("unknown importer:" + importer);
+			default -> throw new MojoExecutionException("compile() unknown importer:" + importer);
 		}
 		return petrify.getFossilBytes();
 	}
@@ -210,6 +239,52 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
+	protected boolean isEclipseIntegrationEnabled() {
+		final String buildContextClassName = buildContext.getClass().getName();
+		return !disableEclipseIntegration && buildContextClassName.startsWith("org.eclipse.m2e");
+	}
+
+	protected String resolveEclipseBaseDirectory() {
+		return project.getBuild().getDirectory() + File.separator + PETRIFY_CLASSES_DIR;
+	}
+
+	protected Path resolveEclipseOutputPath(final String packageName, final String className) {
+		return resolveOutputPath(resolveEclipseBaseDirectory(), packageName, className);
+	}
+
+	protected void addPetrifyClasspathEntry() throws MojoExecutionException {
+		final Path classpathFile = project.getBasedir().toPath().resolve(".classpath");
+		if (!Files.exists(classpathFile)) {
+			getLog().debug("addPetrifyClasspathEntry() .classpath not found, skipping");
+		} else {
+			try {
+				Thread.sleep(100);
+				final String content = Files.readString(classpathFile, StandardCharsets.UTF_8);
+				if (content.contains(PETRIFY_CLASSES_DIR)) {
+					getLog().debug("addPetrifyClasspathEntry() .classpath already contains petrify-classes entry");
+				} else {
+					final int outputEntryIdx = content.indexOf(CLASSPATH_OUTPUT_ENTRY);
+					if (outputEntryIdx < 0) {
+						getLog().warn("addPetrifyClasspathEntry() could not find output entry in .classpath");
+					} else {
+						final int insertionPoint = content.lastIndexOf(CLASSPATH_ENTRY_TAG, outputEntryIdx);
+						if (insertionPoint < 0) {
+							getLog().warn("addPetrifyClasspathEntry() could not find insertion point in .classpath");
+						} else {
+							final String updatedContent = content.substring(0, insertionPoint) + PETRIFY_CLASSPATH_ENTRY + "\n\t"
+									+ content.substring(insertionPoint);
+							Files.writeString(classpathFile, updatedContent, StandardCharsets.UTF_8);
+							buildContext.refresh(classpathFile.toFile());
+							getLog().info("addPetrifyClasspathEntry() added petrify-classes library entry to .classpath");
+						}
+					}
+				}
+			} catch (final IOException | InterruptedException ioException) {
+				throw new MojoExecutionException("addPetrifyClasspathEntry() failed to update .classpath", ioException);
+			}
+		}
+	}
+
 	protected String resolveModelDirectory(final FossilConfig fossil) {
 		final String result;
 		if (fossil.getModelDirectory() != null && !fossil.getModelDirectory().isEmpty()) {
@@ -220,9 +295,9 @@ public class FossilizeMojo extends AbstractMojo {
 		return result;
 	}
 
-	protected Path resolveOutputPath(final String packageName, final String className) {
+	protected Path resolveOutputPath(final String baseDirectory, final String packageName, final String className) {
 		final String packageDir = packageName.replace('.', File.separatorChar);
-		return Path.of(outputDirectory, packageDir, className + ".class");
+		return Path.of(baseDirectory, packageDir, className + ".class");
 	}
 
 	protected boolean isUpToDate(final Path modelPath, final Path outputClassFile) {
@@ -241,24 +316,53 @@ public class FossilizeMojo extends AbstractMojo {
 		return result;
 	}
 
+	protected void deleteStaleClassFile(final Path classFile) {
+		if (Files.exists(classFile)) {
+			try {
+				Files.delete(classFile);
+				buildContext.refresh(classFile.toFile());
+				getLog().debug("deleteStaleClassFile() deleted classFile:" + classFile);
+			} catch (final IOException ioException) {
+				getLog().warn("deleteStaleClassFile() failed to delete classFile:" + classFile, ioException);
+			}
+		}
+	}
+
 	protected byte[] readModelFile(final Path modelPath) throws MojoExecutionException {
 		try {
 			return Files.readAllBytes(modelPath);
 		} catch (final IOException ioException) {
-			throw new MojoExecutionException("failed to read modelFile:" + modelPath, ioException);
+			throw new MojoExecutionException("readModelFile() failed to read modelFile:" + modelPath, ioException);
+		}
+	}
+
+	protected void createOutputDirectories() throws MojoExecutionException {
+		try {
+			Files.createDirectories(Path.of(outputDirectory));
+			if (isEclipseIntegrationEnabled()) {
+				Files.createDirectories(Path.of(resolveEclipseBaseDirectory()));
+			}
+		} catch (final IOException ioException) {
+			throw new MojoExecutionException("createOutputDirectories() failed to create output directories", ioException);
+		}
+	}
+
+	protected void refreshOutputDirectories() {
+		buildContext.refresh(new File(outputDirectory));
+		if (isEclipseIntegrationEnabled()) {
+			buildContext.refresh(new File(resolveEclipseBaseDirectory()));
 		}
 	}
 
 	protected void writeClassFile(final Path outputClassFile, final byte[] classBytes) throws MojoExecutionException {
 		try {
-			buildContext.refresh(Files.createDirectories(outputClassFile.getParent()).toFile());
+			Files.createDirectories(outputClassFile.getParent());
 			try (final OutputStream outputStream = buildContext.newFileOutputStream(outputClassFile.toFile())) {
 				outputStream.write(classBytes);
 			}
-			buildContext.refresh(outputClassFile.toFile());
-			getLog().info("writeClassFile() wrote " + classBytes.length + " bytes to:" + outputClassFile);
+			getLog().info("writeClassFile() wrote bytes:" + classBytes.length + " to:" + outputClassFile);
 		} catch (final IOException ioException) {
-			throw new MojoExecutionException("failed to write classFile:" + outputClassFile, ioException);
+			throw new MojoExecutionException("writeClassFile() failed to write classFile:" + outputClassFile, ioException);
 		}
 	}
 }
