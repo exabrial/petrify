@@ -362,7 +362,7 @@ Petrify takes a different approach: compile the tree ensemble directly to JVM by
 
 ### Verifying artifacts
 
-All release artifacts are signed with my GPG key. You can verify signatures using the following public key:
+All release artifacts are signed with Jonathan's GPG key (at this time; more committers would be awesome). You can verify signatures using the following public key:
 
 ```
 Fingerprint: 871638A21A7F2C38066471420306A354336B4F0D
