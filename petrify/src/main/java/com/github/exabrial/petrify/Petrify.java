@@ -28,8 +28,11 @@ import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
+import com.github.exabrial.petrify.internal.model.ByteCodeAdapter;
 import com.github.exabrial.petrify.internal.model.ClassifierStratum;
+import com.github.exabrial.petrify.internal.model.DoublePrecisionByteCodeAdapter;
 import com.github.exabrial.petrify.internal.model.RegressorStratum;
+import com.github.exabrial.petrify.internal.model.SinglePrecisionByteCodeAdapter;
 import com.github.exabrial.petrify.internal.model.Stratum;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 import com.github.exabrial.petrify.model.Fossil;
@@ -49,6 +52,9 @@ public class Petrify {
 	protected static final int SLOT_FEATURES = 1;
 	protected static final int SLOT_SCORES = 2;
 	protected static final String TREE_METHOD_PREFIX = "tree_";
+
+	private static final ByteCodeAdapter SINGLE_PRECISION_ADAPTER = new SinglePrecisionByteCodeAdapter();
+	private static final ByteCodeAdapter DOUBLE_PRECISION_ADAPTER = new DoublePrecisionByteCodeAdapter();
 
 	protected static int counter = 0;
 
@@ -143,9 +149,9 @@ public class Petrify {
 	}
 
 	protected void implementLinearRegressorPredictMethod(final ClassBuilder classBuilder, final RegressorVine vine) {
-		final PrecisionMode mode = vine.precisionMode;
-		classBuilder.withMethodBody(RegressionFossil.predict, MethodTypeDesc.of(mode.scalarDesc(), mode.arrayDesc()), ClassFile.ACC_PUBLIC,
-				(final CodeBuilder codeBuilder) -> {
+		final ByteCodeAdapter adapter = getByteCodeAdapter(vine.precisionMode);
+		classBuilder.withMethodBody(RegressionFossil.predict, MethodTypeDesc.of(adapter.scalarDesc(), adapter.arrayDesc()),
+				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
 					final int nFeatures = vine.nFeatures;
 					final double[] coefficients = vine.coefficients;
 					final double intercept = vine.intercepts[0];
@@ -154,7 +160,7 @@ public class Petrify {
 					codeBuilder.aload(SLOT_THIS);
 
 					// Start accumulating: score = intercept
-					mode.ldc(codeBuilder, intercept);
+					adapter.ldc(codeBuilder, intercept);
 
 					// Accumulate: score += features[f] * coefficients[f]
 					for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
@@ -163,12 +169,12 @@ public class Petrify {
 							// Load features[featureIdx] onto stack
 							codeBuilder.aload(SLOT_FEATURES);
 							codeBuilder.ldc(featureIdx);
-							mode.aload(codeBuilder);
+							adapter.aload(codeBuilder);
 
 							// Multiply by coefficient and accumulate into running score
-							mode.ldc(codeBuilder, coefficient);
-							mode.mul(codeBuilder);
-							mode.add(codeBuilder);
+							adapter.ldc(codeBuilder, coefficient);
+							adapter.mul(codeBuilder);
+							adapter.add(codeBuilder);
 						}
 					}
 					// Stack: this, score
@@ -177,15 +183,15 @@ public class Petrify {
 
 					// Invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
-							RegressionFossil.aggregate, MethodTypeDesc.of(mode.scalarDesc(), mode.scalarDesc(), ConstantDescs.CD_byte));
+							RegressionFossil.aggregate, MethodTypeDesc.of(adapter.scalarDesc(), adapter.scalarDesc(), ConstantDescs.CD_byte));
 
-					mode.return_(codeBuilder);
+					adapter.return_(codeBuilder);
 				});
 	}
 
 	protected void implementLinearClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierVine vine) {
-		final PrecisionMode mode = vine.precisionMode;
-		classBuilder.withMethodBody(ClassifierFossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc()),
+		final ByteCodeAdapter adapter = getByteCodeAdapter(vine.precisionMode);
+		classBuilder.withMethodBody(ClassifierFossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, adapter.arrayDesc()),
 				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
 					final int nClasses = vine.nClasses;
 					final int nFeatures = vine.nFeatures;
@@ -194,7 +200,7 @@ public class Petrify {
 
 					// Create per-class score accumulator array
 					codeBuilder.ldc(nClasses);
-					codeBuilder.newarray(mode.typeKind());
+					codeBuilder.newarray(adapter.typeKind());
 					codeBuilder.astore(SLOT_SCORES);
 
 					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
@@ -202,7 +208,7 @@ public class Petrify {
 						// Push scores array ref and index for eventual store, then seed the accumulator with the intercept
 						codeBuilder.aload(SLOT_SCORES);
 						codeBuilder.ldc(classIdx);
-						mode.ldc(codeBuilder, intercepts[classIdx]);
+						adapter.ldc(codeBuilder, intercepts[classIdx]);
 						// Stack: scores_ref, classIdx, intercept
 
 						// Accumulate: += features[f] * coefficients[c * nFeatures + f]
@@ -212,18 +218,18 @@ public class Petrify {
 								// Load features[featureIdx] onto stack
 								codeBuilder.aload(SLOT_FEATURES);
 								codeBuilder.ldc(featureIdx);
-								mode.aload(codeBuilder);
+								adapter.aload(codeBuilder);
 
 								// Multiply by coefficient and accumulate into running score
-								mode.ldc(codeBuilder, coefficient);
-								mode.mul(codeBuilder);
-								mode.add(codeBuilder);
+								adapter.ldc(codeBuilder, coefficient);
+								adapter.mul(codeBuilder);
+								adapter.add(codeBuilder);
 							}
 						}
 						// Stack: scores_ref, classIdx, accumulated_score
 
 						// Store the accumulated score into scores array
-						mode.astore(codeBuilder);
+						adapter.astore(codeBuilder);
 					}
 
 					// Prep and invoke fossil.classify(scores, postTransform, isBinarySingleScore)
@@ -234,7 +240,7 @@ public class Petrify {
 					codeBuilder.ldc(isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
 							ClassifierFossil.classify,
-							MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc(), ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
+							MethodTypeDesc.of(ConstantDescs.CD_int, adapter.arrayDesc(), ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
 
 					// Lookup the class array index in the classLabels
 					final long[] classLabels = vine.classlabelsInts;
@@ -247,21 +253,21 @@ public class Petrify {
 
 	protected void implementClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierStratum stratum,
 			final ClassDesc thisClass) {
-		final PrecisionMode mode = stratum.grove.precisionMode;
-		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, mode.arrayDesc(), mode.arrayDesc());
+		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
+		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
 
-		classBuilder.withMethodBody(ClassifierFossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc()),
+		classBuilder.withMethodBody(ClassifierFossil.predict, MethodTypeDesc.of(ConstantDescs.CD_int, adapter.arrayDesc()),
 				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
 					// Create per-class score accumulator array
 					codeBuilder.ldc(stratum.classifierGrove.classLabelsInt64s.length);
-					codeBuilder.newarray(mode.typeKind());
+					codeBuilder.newarray(adapter.typeKind());
 					codeBuilder.astore(SLOT_SCORES);
 
 					// Invoke each tree method: this.tree_N(features, scores)
 					emitTreeInvocations(codeBuilder, stratum, thisClass, treeMethodDesc);
 
 					// Apply per-class bias before post-transform
-					emitBaseValues(codeBuilder, stratum.grove.baseValues, mode);
+					emitBaseValues(codeBuilder, stratum.grove.baseValues, adapter);
 
 					// Prep and invoke classifierFossil.classify(..)
 					codeBuilder.aload(SLOT_THIS);
@@ -270,7 +276,7 @@ public class Petrify {
 					codeBuilder.ldc(stratum.isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
 							ClassifierFossil.classify,
-							MethodTypeDesc.of(ConstantDescs.CD_int, mode.arrayDesc(), ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
+							MethodTypeDesc.of(ConstantDescs.CD_int, adapter.arrayDesc(), ConstantDescs.CD_byte, ConstantDescs.CD_boolean));
 					// Winning class array index is now on the stack
 
 					// Lookup the class array index in the classLabels
@@ -284,42 +290,42 @@ public class Petrify {
 
 	protected void implementRegressorPredictMethod(final ClassBuilder classBuilder, final RegressorStratum stratum,
 			final ClassDesc thisClass) {
-		final PrecisionMode mode = stratum.grove.precisionMode;
-		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, mode.arrayDesc(), mode.arrayDesc());
+		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
+		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
 
-		classBuilder.withMethodBody(RegressionFossil.predict, MethodTypeDesc.of(mode.scalarDesc(), mode.arrayDesc()), ClassFile.ACC_PUBLIC,
-				(final CodeBuilder codeBuilder) -> {
+		classBuilder.withMethodBody(RegressionFossil.predict, MethodTypeDesc.of(adapter.scalarDesc(), adapter.arrayDesc()),
+				ClassFile.ACC_PUBLIC, (final CodeBuilder codeBuilder) -> {
 					// Create single-element score accumulator (single-target regression)
 					codeBuilder.ldc(stratum.regressorGrove.nTargets);
-					codeBuilder.newarray(mode.typeKind());
+					codeBuilder.newarray(adapter.typeKind());
 					codeBuilder.astore(SLOT_SCORES);
 
 					// Invoke each tree method: this.tree_N(features, scores)
 					emitTreeInvocations(codeBuilder, stratum, thisClass, treeMethodDesc);
 
 					// Apply base values bias
-					emitBaseValues(codeBuilder, stratum.grove.baseValues, mode);
+					emitBaseValues(codeBuilder, stratum.grove.baseValues, adapter);
 
 					// Push this first, then load scores[0] for the aggregate call
 					codeBuilder.aload(SLOT_THIS);
 					codeBuilder.aload(SLOT_SCORES);
 					codeBuilder.ldc(0);
-					mode.aload(codeBuilder);
+					adapter.aload(codeBuilder);
 					// Stack: this, score
 
 					codeBuilder.ldc((int) stratum.grove.postTransform);
 
 					// Invoke regressionFossil.aggregate(score, postTransform)
 					codeBuilder.invokeinterface(ClassDesc.of(RegressionFossil.class.getPackageName(), RegressionFossil.class.getSimpleName()),
-							RegressionFossil.aggregate, MethodTypeDesc.of(mode.scalarDesc(), mode.scalarDesc(), ConstantDescs.CD_byte));
+							RegressionFossil.aggregate, MethodTypeDesc.of(adapter.scalarDesc(), adapter.scalarDesc(), ConstantDescs.CD_byte));
 
-					mode.return_(codeBuilder);
+					adapter.return_(codeBuilder);
 				});
 	}
 
 	protected void emitClassifierLeaf(final CodeBuilder codeBuilder, final ClassifierStratum stratum, final int treeId,
 			final int arrayIdx) {
-		final PrecisionMode mode = stratum.grove.precisionMode;
+		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final int nodeId = stratum.grove.nodesNodeIds[arrayIdx];
 		final long key = PetrifyConstants.packLong(treeId, nodeId);
 		for (final LeafClassEntry entry : stratum.leafClassEntries.get(key)) {
@@ -333,17 +339,17 @@ public class Petrify {
 			// Stack: scores_ref, classId, scores_ref, classId
 
 			// Read the current value at scores[classId]
-			mode.aload(codeBuilder);
+			adapter.aload(codeBuilder);
 			// Stack: scores_ref, classId, current_value
 
 			// Grab the current leaf weight
-			mode.ldc(codeBuilder, entry.weight());
+			adapter.ldc(codeBuilder, entry.weight());
 			// Add the leaf weight to the current value
-			mode.add(codeBuilder);
+			adapter.add(codeBuilder);
 			// Stack: scores_ref, classId, new_value
 
 			// Store the add result back into the array
-			mode.astore(codeBuilder);
+			adapter.astore(codeBuilder);
 		}
 	}
 
@@ -383,7 +389,7 @@ public class Petrify {
 
 	protected void emitRegressorLeaf(final CodeBuilder codeBuilder, final RegressorStratum stratum, final int treeId,
 			final int arrayIdx) {
-		final PrecisionMode mode = stratum.grove.precisionMode;
+		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final int nodeId = stratum.grove.nodesNodeIds[arrayIdx];
 		final long key = PetrifyConstants.packLong(treeId, nodeId);
 		for (final LeafTargetEntry entry : stratum.leafTargetEntries.get(key)) {
@@ -397,23 +403,23 @@ public class Petrify {
 			// Stack: scores_ref, targetId, scores_ref, targetId
 
 			// Read the current value at scores[targetId]
-			mode.aload(codeBuilder);
+			adapter.aload(codeBuilder);
 			// Stack: scores_ref, targetId, current_value
 
 			// Grab the current leaf weight
-			mode.ldc(codeBuilder, entry.weight());
+			adapter.ldc(codeBuilder, entry.weight());
 			// Add the leaf weight to the current value
-			mode.add(codeBuilder);
+			adapter.add(codeBuilder);
 			// Stack: scores_ref, targetId, new_value
 
 			// Store the add result back into the array
-			mode.astore(codeBuilder);
+			adapter.astore(codeBuilder);
 		}
 	}
 
 	protected void createMethodPerEnsemble(final ClassBuilder classBuilder, final Stratum stratum) {
-		final PrecisionMode mode = stratum.grove.precisionMode;
-		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, mode.arrayDesc(), mode.arrayDesc());
+		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
+		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
 		for (final int treeId : stratum.treeRootIds) {
 			final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
 			emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
@@ -471,7 +477,7 @@ public class Petrify {
 	}
 
 	protected void emitBranch(final CodeBuilder codeBuilder, final Stratum stratum, final int treeId, final int arrayIdx) {
-		final PrecisionMode precisionMode = stratum.grove.precisionMode;
+		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final byte mode = stratum.grove.nodesModes[arrayIdx];
 		final int missingTracksTrue = stratum.grove.nodesMissingValueTracksTrue[arrayIdx];
 
@@ -493,18 +499,18 @@ public class Petrify {
 			// Load features[featureId] onto stack
 			codeBuilder.aload(SLOT_FEATURES);
 			codeBuilder.ldc(featureId);
-			precisionMode.aload(codeBuilder);
+			adapter.aload(codeBuilder);
 
 			// Load threshold onto stack
-			precisionMode.ldc(codeBuilder, threshold);
+			adapter.ldc(codeBuilder, threshold);
 			// Stack: feature, threshold
 
 			// Compare feature to threshold; if missing/NaN, follow the "missing" policy
 			final boolean invertNanPolarity = mode == PetrifyConstants.MODE_BRANCH_GT || mode == PetrifyConstants.MODE_BRANCH_GEQ;
 			if (missingTracksTrue == 0 != invertNanPolarity) {
-				precisionMode.cmpg(codeBuilder);
+				adapter.cmpg(codeBuilder);
 			} else {
-				precisionMode.cmpl(codeBuilder);
+				adapter.cmpl(codeBuilder);
 			}
 			// Stack: int {-1, 0, 1}
 
@@ -565,7 +571,7 @@ public class Petrify {
 		}
 	}
 
-	protected void emitBaseValues(final CodeBuilder codeBuilder, final double[] baseValues, final PrecisionMode mode) {
+	protected void emitBaseValues(final CodeBuilder codeBuilder, final double[] baseValues, final ByteCodeAdapter adapter) {
 		if (baseValues == null) {
 			return;
 		} else {
@@ -581,19 +587,29 @@ public class Petrify {
 					// Stack: scores_ref, classIdx, scores_ref, classIdx
 
 					// Read the current value at scores[idx]
-					mode.aload(codeBuilder);
+					adapter.aload(codeBuilder);
 					// Stack: scores_ref, classIdx, current_value
 
 					// Add the base value to the current value
-					mode.ldc(codeBuilder, baseValues[classIdx]);
-					mode.add(codeBuilder);
+					adapter.ldc(codeBuilder, baseValues[classIdx]);
+					adapter.add(codeBuilder);
 					// Stack: scores_ref, classIdx, new_value
 
 					// Store the add result back into the array
-					mode.astore(codeBuilder);
+					adapter.astore(codeBuilder);
 				}
 			}
 		}
+	}
+
+	protected ByteCodeAdapter getByteCodeAdapter(final PrecisionMode precisionMode) {
+		final ByteCodeAdapter result = switch (precisionMode) {
+			case F32:
+				yield SINGLE_PRECISION_ADAPTER;
+			case F64:
+				yield DOUBLE_PRECISION_ADAPTER;
+		};
+		return result;
 	}
 
 	protected ClassDesc nextClassDesc(final MethodHandles.Lookup lookup) {

@@ -183,6 +183,11 @@
 					<artifactId>protobuf-maven-plugin</artifactId>
 					<version>0.6.1</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.15.0</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -193,12 +198,11 @@
 				<version>1.7.1</version>
 			</extension>
 		</extensions>
-		
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.15.0</version>
 				<configuration>
 					<source>25</source>
 					<target>25</target>
