@@ -73,13 +73,12 @@ public class FossilizeMojo extends AbstractMojo {
 		validate(fossil, modelPath, resolvedClassName);
 
 		final Path outputClassFile = resolveOutputPath(packageName, resolvedClassName);
-		if (!buildContext.isIncremental() && isUpToDate(modelPath, outputClassFile)) {
+		if (isUpToDate(modelPath, outputClassFile)) {
 			getLog().info("processFossil() skipping up-to-date model:" + fossil.getModelFile() + " class:" + resolvedClassName);
 			buildContext.refresh(outputClassFile.toFile());
 		} else {
 			getLog().info("processFossil() compiling model:" + fossil.getModelFile() + " class:" + packageName + "." + resolvedClassName
 					+ " importer:" + fossil.getImporter() + " modelType:" + fossil.getModelType());
-
 			final byte[] modelBytes = readModelFile(modelPath);
 			final byte[] classBytes = compile(fossil, modelBytes, packageName, resolvedClassName);
 			writeClassFile(outputClassFile, classBytes);
@@ -252,7 +251,7 @@ public class FossilizeMojo extends AbstractMojo {
 
 	protected void writeClassFile(final Path outputClassFile, final byte[] classBytes) throws MojoExecutionException {
 		try {
-			Files.createDirectories(outputClassFile.getParent());
+			buildContext.refresh(Files.createDirectories(outputClassFile.getParent()).toFile());
 			try (final OutputStream outputStream = buildContext.newFileOutputStream(outputClassFile.toFile())) {
 				outputStream.write(classBytes);
 			}
