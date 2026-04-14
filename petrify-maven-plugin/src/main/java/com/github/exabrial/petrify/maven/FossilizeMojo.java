@@ -34,6 +34,7 @@ public class FossilizeMojo extends AbstractMojo {
 	private static final String MODEL_TYPE_CLASSIFIER = "classifier";
 	private static final String MODEL_TYPE_REGRESSOR = "regressor";
 
+	@SuppressWarnings("deprecation")
 	@Component
 	private BuildContext buildContext;
 
