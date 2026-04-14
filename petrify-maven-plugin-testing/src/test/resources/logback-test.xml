@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<jmxConfigurator />
+	<!-- Development -->
+	<appender
+		name="console"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%yellow([%thread]) %boldGreen(%level) %cyan(%logger{55}) - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<root level="info">
+		<appender-ref ref="console" />
+	</root>
+	<logger
+		name="com.github.exabrial.petrify"
+		level="debug" />
+</configuration>

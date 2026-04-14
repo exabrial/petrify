@@ -2,7 +2,7 @@
 
 🪵 -> 🪨 ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
 
-Before you leave, ⭐ leave a star! ⭐ Thanks! :)
+⭐ Before you leave, ⭐ Leave a star! ⭐ Thanks! :)
 
 ## Overview
 
@@ -104,6 +104,15 @@ Any framework that exports to a supported ONNX operator should work. The table b
 | scikit-learn | `HistGradientBoostingClassifier` | Classification | ONNX | |
 | scikit-learn | `HistGradientBoostingRegressor` | Regression | ONNX | |
 
+## Requirements
+
+* Compiler: JDK25
+* Runtime: JDK17
+
+Because Petrify uses the new Bytecode/Class-File API that was introduced in JEP-484, **JDK 25 is required** to run the Petrify compiler (including the Maven plugin). However, compiled fossils target JDK 17 bytecode and can run on JDK 17+.
+
+As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 17 compatible and is the only runtime dependency your application needs.
+
 ## Usage
 
 ### Maven Coordinates
@@ -113,7 +122,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-model</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -121,13 +130,13 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>compile</scope>
 </dependency>
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-compiler-model</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -135,7 +144,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-import-onnx</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -143,7 +152,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-import-lightgbm</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -151,7 +160,7 @@ Any framework that exports to a supported ONNX operator should work. The table b
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-import-scikit</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -210,9 +219,82 @@ final RegressionFossil fossil = petrify.fossilize(MethodHandles.lookup(), vine);
 final float prediction = fossil.predict(new float[] { 8.3252f, 41.0f, 6.9841f, 1.0238f, 322.0f, 2.5556f, 37.88f, -122.23f });
 ```
 
-### Pre-Compiling ONNX to JVM Classes at buildtime using Maven
+### Pre-compiling models at build time with the Maven plugin
 
-- coming soon
+The `petrify-maven-plugin` compiles ML models to JVM bytecode during your build. The compiled `.class` files are written to your project's output directory and packaged into your jar automatically.
+
+**Important:** The Maven plugin runs in-process and loads JDK 25 classes. Your Maven process must be running on JDK 25, even if your project targets JDK 17.
+
+#### Plugin configuration
+
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>com.github.exabrial</groupId>
+      <artifactId>petrify-maven-plugin</artifactId>
+      <version>1.1.0</version>
+      <executions>
+        <execution>
+          <goals>
+            <goal>fossilize</goal>
+          </goals>
+          <configuration>
+            <fossils>
+              <fossil>
+                <modelFile>volcanicRiskClassifier.onnx</modelFile>
+                <importer>onnx</importer>
+                <modelType>classifier</modelType>
+                <targetPackageName>com.example.models</targetPackageName>
+              </fossil>
+            </fossils>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+```
+
+Model files are resolved from `src/main/models/` by default.
+
+#### Fossil configuration reference
+
+| Parameter | Required | Description |
+|---|---|---|
+| `modelFile` | Yes | Filename of the model relative to the model directory |
+| `importer` | Yes | `onnx`, `lightgbm`, or `scikit` |
+| `modelType` | Yes | `classifier` or `regressor` |
+| `targetPackageName` | Yes | Java package for the generated class |
+| `targetClassName` | No | Class name stem (defaults to the model filename, PascalCased). `Fossil` is always appended. |
+| `modelDirectory` | No | Override the model directory (defaults to `src/main/models/`) |
+
+
+#### Skipping execution
+
+```bash
+mvn compile -Dpetrify.skip=true
+```
+
+#### Using the compiled fossil
+
+Your project only needs `petrify-model` as a runtime dependency:
+
+```xml
+<dependency>
+  <groupId>com.github.exabrial</groupId>
+  <artifactId>petrify-model</artifactId>
+  <version>1.1.0</version>
+  <scope>compile</scope>
+</dependency>
+```
+
+The generated class is available on the classpath like any other compiled class:
+
+```java
+final ClassifierFossil fossil = new VolcanicRiskFossil();
+final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f });
+```
 
 ### Known Limitations
 
@@ -280,7 +362,7 @@ Petrify takes a different approach: compile the tree ensemble directly to JVM by
 
 ### Verifying artifacts
 
-All release artifacts are signed with my GPG key. You can verify signatures using the following public key:
+All release artifacts are signed with Jonathan's GPG key (at this time; more committers would be awesome). You can verify signatures using the following public key:
 
 ```
 Fingerprint: 871638A21A7F2C38066471420306A354336B4F0D

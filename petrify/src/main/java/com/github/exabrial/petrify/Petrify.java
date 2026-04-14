@@ -4,8 +4,10 @@ import java.lang.classfile.ClassBuilder;
 import java.lang.classfile.ClassFile;
 import java.lang.classfile.CodeBuilder;
 import java.lang.classfile.CodeBuilder.BlockCodeBuilder;
+import java.lang.classfile.FieldBuilder;
 import java.lang.classfile.Label;
 import java.lang.classfile.Opcode;
+import java.lang.classfile.attribute.ConstantValueAttribute;
 import java.lang.classfile.instruction.SwitchCase;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.ConstantDescs;
@@ -57,8 +59,7 @@ public class Petrify {
 		try {
 			final ClassifierStratum stratum = new ClassifierStratum(grove);
 
-			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
-					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
@@ -68,8 +69,7 @@ public class Petrify {
 				implementClassifierPredictMethod(classBuilder, stratum, thisClass);
 			});
 
-			final Class<?> clazz = lookup.defineClass(fossilBytes);
-			final ClassifierFossil fossil = (ClassifierFossil) clazz.getDeclaredConstructor().newInstance();
+			final ClassifierFossil fossil = defineFossil(lookup, fossilBytes, ClassifierFossil.class);
 			return fossil;
 		} catch (final Exception e) {
 			throw new UnexpectedCometImpact(e);
@@ -83,8 +83,7 @@ public class Petrify {
 		try {
 			final RegressorStratum stratum = new RegressorStratum(grove);
 
-			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
-					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
@@ -94,8 +93,7 @@ public class Petrify {
 				implementRegressorPredictMethod(classBuilder, stratum, thisClass);
 			});
 
-			final Class<?> clazz = lookup.defineClass(fossilBytes);
-			final RegressionFossil fossil = (RegressionFossil) clazz.getDeclaredConstructor().newInstance();
+			final RegressionFossil fossil = defineFossil(lookup, fossilBytes, RegressionFossil.class);
 			return fossil;
 		} catch (final Exception e) {
 			throw new UnexpectedCometImpact(e);
@@ -107,8 +105,7 @@ public class Petrify {
 				vine.precisionMode);
 		log.trace("fossilize() vine:{}", vine);
 		try {
-			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
-					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
@@ -117,8 +114,7 @@ public class Petrify {
 				implementLinearClassifierPredictMethod(classBuilder, vine);
 			});
 
-			final Class<?> clazz = lookup.defineClass(fossilBytes);
-			final ClassifierFossil fossil = (ClassifierFossil) clazz.getDeclaredConstructor().newInstance();
+			final ClassifierFossil fossil = defineFossil(lookup, fossilBytes, ClassifierFossil.class);
 			return fossil;
 		} catch (final Exception e) {
 			throw new UnexpectedCometImpact(e);
@@ -130,8 +126,7 @@ public class Petrify {
 				vine.precisionMode);
 		log.trace("fossilize() vine:{}", vine);
 		try {
-			final ClassDesc thisClass = ClassDesc.of(lookup.lookupClass().getPackageName(),
-					PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
@@ -140,8 +135,7 @@ public class Petrify {
 				implementLinearRegressorPredictMethod(classBuilder, vine);
 			});
 
-			final Class<?> clazz = lookup.defineClass(fossilBytes);
-			final RegressionFossil fossil = (RegressionFossil) clazz.getDeclaredConstructor().newInstance();
+			final RegressionFossil fossil = defineFossil(lookup, fossilBytes, RegressionFossil.class);
 			return fossil;
 		} catch (final Exception e) {
 			throw new UnexpectedCometImpact(e);
@@ -602,6 +596,18 @@ public class Petrify {
 		}
 	}
 
+	protected ClassDesc nextClassDesc(final MethodHandles.Lookup lookup) {
+		return ClassDesc.of(lookup.lookupClass().getPackageName(), PETRIFIED_FOSSIL + Integer.toHexString(counter++));
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <T extends Fossil> T defineFossil(final MethodHandles.Lookup lookup, final byte[] fossilBytes, final Class<T> fossilType)
+			throws Exception {
+		final Class<?> clazz = lookup.defineClass(fossilBytes);
+		final T fossil = (T) clazz.getDeclaredConstructor().newInstance();
+		return fossil;
+	}
+
 	protected void setJdk(final ClassBuilder classBuilder) {
 		classBuilder.withVersion(JDK_17, 0);
 	}
@@ -611,9 +617,9 @@ public class Petrify {
 	}
 
 	protected void createSerialVersionUid(final ClassBuilder classBuilder) {
-		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long, (final java.lang.classfile.FieldBuilder fieldBuilder) -> {
+		classBuilder.withField("serialVersionUID", ConstantDescs.CD_long, (final FieldBuilder fieldBuilder) -> {
 			fieldBuilder.withFlags(ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC | ClassFile.ACC_FINAL);
-			fieldBuilder.with(java.lang.classfile.attribute.ConstantValueAttribute.of(1L));
+			fieldBuilder.with(ConstantValueAttribute.of(1L));
 		});
 	}
 

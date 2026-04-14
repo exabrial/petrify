@@ -129,10 +129,10 @@ public class OnnxArborist implements PetrifyConstants, Arborist {
 
 	protected byte toAggregateFunction(final String function) {
 		return switch (function) {
-			case "SUM" -> PetrifyConstants.AGGREGATE_SUM;
-			case "AVERAGE" -> PetrifyConstants.AGGREGATE_AVERAGE;
-			case "MIN" -> PetrifyConstants.AGGREGATE_MIN;
-			case "MAX" -> PetrifyConstants.AGGREGATE_MAX;
+			case "SUM" -> AGGREGATE_SUM;
+			case "AVERAGE" -> AGGREGATE_AVERAGE;
+			case "MIN" -> AGGREGATE_MIN;
+			case "MAX" -> AGGREGATE_MAX;
 			default -> throw new UnexpectedTreeBranch("Unknown aggregate_function: " + function);
 		};
 	}

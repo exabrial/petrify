@@ -85,11 +85,11 @@ with open("linear_regressor_housing.json", "w") as f:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `type` | string | yes | `"classifier"` or `"regressor"` |
-| `post_transform` | string | no | `"none"`, `"softmax"`, `"logistic"`, `"probit"`. Defaults to `"none"` if omitted. |
-| `class_labels` | long[] | classifier only | Class label values, e.g. `[0, 1, 2]` |
-| `intercepts` | double[] | yes | Bias terms. One per class (classifier) or one per target (regressor). |
-| `coefficients` | double[][] | yes | Coefficient matrix. One row per class (classifier) or per target (regressor). For binary OVR classifiers, scikit stores a single row. |
+| `type` | `string` | yes | `"classifier"` or `"regressor"` |
+| `post_transform` | `string` | no | `"none"`, `"softmax"`, `"logistic"`, `"probit"`. Defaults to `"none"` if omitted. |
+| `class_labels` | `long[]` | classifier only | Class label values, e.g. `[0, 1, 2]` |
+| `intercepts` | `double[]` | yes | Bias terms. One per class (classifier) or one per target (regressor). |
+| `coefficients` | `double[][]` | yes | Coefficient matrix. One row per class (classifier) or per target (regressor). For binary OVR classifiers, scikit stores a single row. |
 
 
 ## Java Usage

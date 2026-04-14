@@ -193,9 +193,11 @@ public class LightGbmArborist implements Arborist {
 		}
 
 		protected void featureImportanceLine(final String line) {
+			// Noop
 		}
 
 		protected void parameterLine(final String line) {
+			// Noop
 		}
 
 		@SuppressWarnings("unchecked")

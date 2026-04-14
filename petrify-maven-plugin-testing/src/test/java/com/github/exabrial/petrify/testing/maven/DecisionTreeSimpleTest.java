@@ -1,8 +1,6 @@
-package com.github.exabrial.petrify.testing.onnx;
+package com.github.exabrial.petrify.testing.maven;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.lang.invoke.MethodHandles;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,25 +11,16 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.exabrial.petrify.Petrify;
-import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
-import com.github.exabrial.petrify.imprt.Arborist;
-import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 
 @TestInstance(Lifecycle.PER_CLASS)
 class DecisionTreeSimpleTest {
-	private static final String ONNX = "/test-models/decisionTreeSimple.onnx";
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private ClassifierFossil fossil;
 
 	@BeforeAll
-	void beforeAll() {
-		final Arborist arborist = new OnnxArborist();
-		final ClassifierGrove grove = arborist.toGrove(ONNX);
-
-		final Petrify petrify = new Petrify();
-		fossil = petrify.fossilize(MethodHandles.lookup(), grove);
+	void beforeAll() throws Exception {
+		fossil = new DecisionTreeSimpleFossil();
 	}
 
 	@BeforeEach
