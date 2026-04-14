@@ -40,7 +40,7 @@ public class ScikitVintner implements Vintner {
 		}
 	}
 
-	@SuppressWarnings({"unchecked", "try"})
+	@SuppressWarnings({ "unchecked" })
 	@Override
 	public <T extends Vine> T toVine(final byte[] bytes) {
 		final String json = new String(bytes, StandardCharsets.UTF_8);
