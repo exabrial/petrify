@@ -6,8 +6,22 @@
 package com.github.exabrial.petrify.model;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 public interface Fossil extends Serializable {
+
+	default List<String> getFeatureNames() {
+		return Collections.emptyList();
+	}
+
+	default String getModelName() {
+		return null;
+	}
+
+	default String getModelVersion() {
+		return null;
+	}
 
 	default float logistic(final float score) {
 		return 1.0f / (1.0f + (float) Math.exp(-score));

@@ -24,6 +24,7 @@ public abstract class Grove implements Serializable {
 	public int[] nodesMissingValueTracksTrue;
 	public byte postTransform;
 	public double[] baseValues;
+	public ModelMetadata metadata;
 
 	public GroveSummary summary() {
 		final int totalNodes = nodesTreeIds.length;

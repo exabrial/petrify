@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
+import com.github.exabrial.petrify.compiler.model.ModelMetadata;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.Vine;
@@ -58,6 +59,12 @@ public class ScikitVintner implements Vintner {
 				default -> throw new UnexpectedTreeBranch("Unsupported scikit model 'type': " + model.getType());
 			}
 			vine.precisionMode = PrecisionMode.F64;
+			if (model.getFeatureNames() != null || model.getModelName() != null || model.getModelVersion() != null) {
+				vine.metadata = new ModelMetadata();
+				vine.metadata.featureNames = model.getFeatureNames();
+				vine.metadata.modelName = model.getModelName();
+				vine.metadata.modelVersion = model.getModelVersion();
+			}
 			return (T) vine;
 		} catch (final UnexpectedTreeBranch | UnexpectedCometImpact pe) {
 			throw pe;

@@ -1,4 +1,9 @@
-package com.github.exabrial.petrify.compiler.model.exception;
+/*
+ * Licensed under the terms of Apache Source License 2.0
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+package com.github.exabrial.petrify.model.exception;
 
 public abstract class PetrifyException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

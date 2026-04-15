@@ -1,5 +1,7 @@
 package com.github.exabrial.petrify.compiler.model.exception;
 
+import com.github.exabrial.petrify.model.exception.PetrifyException;
+
 /**
  * Thrown when an ONNX graph contains operators or attributes that Petrify cannot process at this time. Man, it'd be cool if it did
  * though. How about creating a PR?
