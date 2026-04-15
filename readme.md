@@ -48,6 +48,12 @@ Once your ONNX models are compiled, the only runtime dependency is the `Fossil` 
 | `petrify-import-lightgbm` | LightGBM native text (`.txt`) | F64 | LightGBM tree ensembles |
 | `petrify-import-scikit` | scikit-learn JSON (`.json`) | F64 | Linear/logistic regression |
 
+### Precision modes
+
+Each `Grove` and `Vine` carries a `PrecisionMode` (`F32` or `F64`) that controls whether the compiled bytecode performs arithmetic in 32-bit float or 64-bit double precision. ONNX imports default to `F32` to match the ONNX specification; LightGBM native and scikit-learn JSON imports default to `F64`. You can override precision before fossilizing by setting `grove.precisionMode = PrecisionMode.F64`. Both `predict(float[])` and `predict(double[])` overloads are available on the compiled fossil regardless of precision mode.
+
+The LightGBM native text importer (`petrify-import-lightgbm`) in F64 mode produces **bit-identical** IEEE 754 output to the official LightGBM C/C++ runtime (at least on  my machine). To achieve this, use `double[]` features so that feature values enter the F64 computation at full precision; using `float[]` introduces F32 quantization on the inputs and will produce small deltas (~1e-06).
+
 ### Supported ONNX Operators
 
 
@@ -168,8 +174,6 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 ### Compiling a model at runtime
 
 Tree ensemble models (XGBoost, LightGBM, CatBoost, scikit-learn trees) use `OnnxArborist` to produce a `Grove`. Linear models (LogisticRegression, LinearRegression) use `OnnxVintner` to produce a `Vine`. Both are then compiled to bytecode with `Petrify.fossilize()`.
-
-Each `Grove` and `Vine` carries a `PrecisionMode` (`F32` or `F64`) that controls whether the compiled bytecode performs arithmetic in 32-bit float or 64-bit double precision. ONNX imports always default to `F32` to match the ONNX specification. If your model was imported from a format that supports double precision, you can set `grove.precisionMode = PrecisionMode.F64` before fossilizing to get full double-precision arithmetic. Both `predict(float[])` and `predict(double[])` overloads are available on the compiled fossil regardless of precision mode.
 
 #### Grove classifier (tree ensemble)
 
