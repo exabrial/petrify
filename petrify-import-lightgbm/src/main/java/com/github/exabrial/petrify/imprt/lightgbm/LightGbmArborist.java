@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.ModelMetadata;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.exception.MissingSpecimen;
@@ -64,6 +65,7 @@ public class LightGbmArborist implements Arborist {
 		protected static final String KEY_VERSION = "version";
 		protected static final String KEY_NUM_TREE_PER_ITERATION = "num_tree_per_iteration";
 		protected static final String KEY_OBJECTIVE = "objective";
+		protected static final String KEY_FEATURE_NAMES = "feature_names";
 
 		protected static final String KEY_NUM_LEAVES = "num_leaves";
 		protected static final String KEY_SPLIT_FEATURE = "split_feature";
@@ -106,6 +108,7 @@ public class LightGbmArborist implements Arborist {
 		private boolean regressor;
 		private byte postTransform;
 		private int numTreePerIteration;
+		private String[] featureNames;
 		private final ArrayList<Tree> trees = new ArrayList<>();
 		private Tree currentTree;
 
@@ -172,6 +175,7 @@ public class LightGbmArborist implements Arborist {
 				case KEY_VERSION -> headerVersion(split[1]);
 				case KEY_NUM_TREE_PER_ITERATION -> headerNumTreePerIteration(split[1]);
 				case KEY_OBJECTIVE -> headerObjective(split[1]);
+				case KEY_FEATURE_NAMES -> headerFeatureNames(split[1]);
 				default -> {
 				}
 			}
@@ -299,6 +303,10 @@ public class LightGbmArborist implements Arborist {
 			grove.postTransform = postTransform;
 			grove.baseValues = new double[] { 0.0d };
 			grove.precisionMode = PrecisionMode.F64;
+			if (featureNames != null) {
+				grove.metadata = new ModelMetadata();
+				grove.metadata.featureNames = featureNames;
+			}
 			return (T) grove;
 		}
 
@@ -395,6 +403,10 @@ public class LightGbmArborist implements Arborist {
 
 		protected void headerNumTreePerIteration(final String value) {
 			numTreePerIteration = Integer.parseInt(value);
+		}
+
+		protected void headerFeatureNames(final String value) {
+			featureNames = value.split(" ");
 		}
 
 		protected static class Tree {

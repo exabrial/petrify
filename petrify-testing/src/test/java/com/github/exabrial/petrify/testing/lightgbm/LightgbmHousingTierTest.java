@@ -1,8 +1,10 @@
 package com.github.exabrial.petrify.testing.lightgbm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,24 @@ class LightgbmHousingTierTest {
 	@BeforeEach
 	void beforeEach(final TestInfo testInfo) {
 		log.info("beforeEach() starting test:{}", testInfo.getDisplayName());
+	}
+
+	@Test
+	void testGetFeatureNames() {
+		final List<String> featureNames = fossil.getFeatureNames();
+		assertEquals(8, featureNames.size());
+		assertEquals("Column_0", featureNames.get(0));
+		assertEquals("Column_7", featureNames.get(7));
+	}
+
+	@Test
+	void testGetModelName() {
+		assertNull(fossil.getModelName());
+	}
+
+	@Test
+	void testGetModelVersion() {
+		assertNull(fossil.getModelVersion());
 	}
 
 	@Test
