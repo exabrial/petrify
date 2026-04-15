@@ -272,6 +272,10 @@ Model files are resolved from `src/main/models/` by default.
 | `targetPackageName` | Yes | Java package for the generated class |
 | `targetClassName` | No | Class name stem (defaults to the model filename, PascalCased). `Fossil` is always appended. |
 | `modelDirectory` | No | Override the model directory (defaults to `src/main/models/`) |
+| `featureNames` | No | Comma-separated feature names in column order. Enables `FeatureMapper` on the compiled `Fossil`. |
+| `ignoreFeatureNamesFromModel` | No | If `true`, discard any feature names embedded in the model file. Defaults to `false`. |
+| `modelName` | No | Model name metadata. Stored on the compiled `Fossil`. |
+| `modelVersion` | No | Model version metadata. Stored on the compiled `Fossil`. |
 
 
 #### Skipping execution
@@ -299,6 +303,38 @@ The generated class is available on the classpath like any other compiled class:
 final ClassifierFossil fossil = new VolcanicRiskFossil();
 final int prediction = fossil.predict(new float[] { 1.0f, 2.0f, 3.0f, 4.0f });
 ```
+
+### FeatureMapper
+
+If your model's `Fossil` contains feature name metadata, you can use `FeatureMapper` to convert a `Map<String, Object>` to the positional primitive array your model expects. This avoids hand-maintaining index-aligned arrays that must stay synchronized with the model's training feature order.
+
+```java
+// ONNX does not carry feature name metadata, so set it yourself before fossilizing:
+grove.metadata = new ModelMetadata();
+grove.metadata.featureNames = new String[] { "MedInc", "HouseAge", "AveRooms", "AveBedrms", "Population", "AveOccup", "Latitude", "Longitude" };
+
+// Other importers (LightGBM native, scikit-learn JSON) read feature names from the model file by default.
+```
+
+```java
+final FeatureMapper mapper = new FeatureMapper(fossil);
+
+final Map<String, Object> features = Map.of(
+    "MedInc", 8.3252,
+    "HouseAge", 41.0,
+    "AveRooms", 6.984,
+    "AveBedrms", 1.024,
+    "Population", 322.0,
+    "AveOccup", 2.556,
+    "Latitude", 37.88,
+    "Longitude", -122.23
+);
+
+final float[] f32 = mapper.mapToF32(features);
+final double[] f64 = mapper.mapToF64(features);
+```
+
+Null map values are mapped to `NaN` (the ONNX missing-value sentinel), `Number` subtypes are narrowed to the target precision, and `Boolean` values are mapped to `1.0`/`0.0`. Unsupported types throw `FossilUnconformity`.
 
 ### Known Limitations
 
