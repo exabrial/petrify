@@ -23,6 +23,7 @@ import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import com.github.exabrial.petrify.compiler.model.LeafTargetEntry;
+import com.github.exabrial.petrify.compiler.model.ModelMetadata;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
@@ -71,6 +72,7 @@ public class Petrify {
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
+				emitMetadataMethods(classBuilder, grove.metadata);
 				createMethodPerEnsemble(classBuilder, stratum);
 				implementClassifierPredictMethod(classBuilder, stratum, thisClass);
 			});
@@ -95,6 +97,7 @@ public class Petrify {
 				implementFossilInterface(classBuilder, RegressionFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
+				emitMetadataMethods(classBuilder, grove.metadata);
 				createMethodPerEnsemble(classBuilder, stratum);
 				implementRegressorPredictMethod(classBuilder, stratum, thisClass);
 			});
@@ -117,6 +120,7 @@ public class Petrify {
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
+				emitMetadataMethods(classBuilder, vine.metadata);
 				implementLinearClassifierPredictMethod(classBuilder, vine);
 			});
 
@@ -138,6 +142,7 @@ public class Petrify {
 				implementFossilInterface(classBuilder, RegressionFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
+				emitMetadataMethods(classBuilder, vine.metadata);
 				implementLinearRegressorPredictMethod(classBuilder, vine);
 			});
 
@@ -600,6 +605,54 @@ public class Petrify {
 				}
 			}
 		}
+	}
+
+	protected void emitMetadataMethods(final ClassBuilder classBuilder, final ModelMetadata metadata) {
+		if (metadata != null) {
+			if (metadata.modelName != null) {
+				emitGetModelNameMethod(classBuilder, metadata.modelName);
+			}
+			if (metadata.modelVersion != null) {
+				emitGetModelVersionMethod(classBuilder, metadata.modelVersion);
+			}
+			if (metadata.featureNames != null) {
+				emitGetFeatureNamesMethod(classBuilder, metadata.featureNames);
+			}
+		}
+	}
+
+	protected void emitGetModelNameMethod(final ClassBuilder classBuilder, final String modelName) {
+		classBuilder.withMethodBody("getModelName", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(modelName);
+					codeBuilder.areturn();
+				});
+	}
+
+	protected void emitGetModelVersionMethod(final ClassBuilder classBuilder, final String modelVersion) {
+		classBuilder.withMethodBody("getModelVersion", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(modelVersion);
+					codeBuilder.areturn();
+				});
+	}
+
+	protected void emitGetFeatureNamesMethod(final ClassBuilder classBuilder, final String[] featureNames) {
+		final ClassDesc listDesc = ClassDesc.of("java.util.List");
+		classBuilder.withMethodBody("getFeatureNames", MethodTypeDesc.of(listDesc), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(featureNames.length);
+					codeBuilder.anewarray(ConstantDescs.CD_String);
+					for (int idx = 0; idx < featureNames.length; idx++) {
+						codeBuilder.dup();
+						codeBuilder.ldc(idx);
+						codeBuilder.ldc(featureNames[idx]);
+						codeBuilder.aastore();
+					}
+					codeBuilder.invokestatic(listDesc, "of",
+							MethodTypeDesc.of(listDesc, ConstantDescs.CD_Object.arrayType()), true);
+					codeBuilder.areturn();
+				});
 	}
 
 	protected ByteCodeAdapter getByteCodeAdapter(final PrecisionMode precisionMode) {
