@@ -10,6 +10,20 @@ public class FossilConfig {
 	private String modelType;
 	private String targetPackageName;
 	private String targetClassName;
+	private String modelName;
+	private String modelVersion;
+	private String featureNames;
+	private boolean ignoreFeatureNamesFromModel;
+
+	public String[] resolveFeatureNames() {
+		final String[] result;
+		if (featureNames != null && !featureNames.isEmpty()) {
+			result = featureNames.split(",");
+		} else {
+			result = null;
+		}
+		return result;
+	}
 
 	public String resolveClassName() {
 		final String result;

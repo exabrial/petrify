@@ -19,8 +19,11 @@ import org.sonatype.plexus.build.incremental.BuildContext;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
+import com.github.exabrial.petrify.compiler.model.Grove;
+import com.github.exabrial.petrify.compiler.model.ModelMetadata;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
+import com.github.exabrial.petrify.compiler.model.Vine;
 import com.github.exabrial.petrify.imprt.lightgbm.LightGbmArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
@@ -153,53 +156,60 @@ public class FossilizeMojo extends AbstractMojo {
 		final String modelType = fossil.getModelType();
 		switch (importer) {
 			case IMPORTER_LIGHTGBM -> {
-				compileLightgbm(petrify, modelBytes, modelType);
+				compileLightgbm(petrify, modelBytes, modelType, fossil);
 			}
 			case IMPORTER_ONNX -> {
-				compileOnnx(petrify, modelBytes, modelType);
+				compileOnnx(petrify, modelBytes, modelType, fossil);
 			}
 			case IMPORTER_SCIKIT -> {
-				compileScikit(petrify, modelBytes, modelType);
+				compileScikit(petrify, modelBytes, modelType, fossil);
 			}
 			default -> throw new MojoExecutionException("compile() unknown importer:" + importer);
 		}
 		return petrify.getFossilBytes();
 	}
 
-	protected void compileLightgbm(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType) {
+	protected void compileLightgbm(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType,
+			final FossilConfig fossilConfig) {
 		final LightGbmArborist arborist = new LightGbmArborist();
 		switch (modelType) {
 			case MODEL_TYPE_CLASSIFIER -> {
 				final ClassifierGrove grove = arborist.toGrove(modelBytes);
+				applyConfigMetadata(grove, fossilConfig);
 				petrify.fossilize(null, grove);
 			}
 			case MODEL_TYPE_REGRESSOR -> {
 				final RegressorGrove grove = arborist.toGrove(modelBytes);
+				applyConfigMetadata(grove, fossilConfig);
 				petrify.fossilize(null, grove);
 			}
 		}
 	}
 
-	protected void compileOnnx(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType) {
+	protected void compileOnnx(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType,
+			final FossilConfig fossilConfig) {
 		switch (modelType) {
 			case MODEL_TYPE_CLASSIFIER -> {
-				compileOnnxClassifier(petrify, modelBytes);
+				compileOnnxClassifier(petrify, modelBytes, fossilConfig);
 			}
 			case MODEL_TYPE_REGRESSOR -> {
-				compileOnnxRegressor(petrify, modelBytes);
+				compileOnnxRegressor(petrify, modelBytes, fossilConfig);
 			}
 		}
 	}
 
-	protected void compileOnnxClassifier(final BuildTimePetrify petrify, final byte[] modelBytes) {
+	protected void compileOnnxClassifier(final BuildTimePetrify petrify, final byte[] modelBytes,
+			final FossilConfig fossilConfig) {
 		try {
 			final OnnxArborist arborist = new OnnxArborist();
 			final ClassifierGrove grove = arborist.toGrove(modelBytes);
+			applyConfigMetadata(grove, fossilConfig);
 			petrify.fossilize(null, grove);
 		} catch (final Exception treeException) {
 			try {
 				final OnnxVintner vintner = new OnnxVintner();
 				final ClassifierVine vine = vintner.toVine(modelBytes);
+				applyConfigMetadata(vine, fossilConfig);
 				petrify.fossilize(null, vine);
 			} catch (final Exception vineException) {
 				treeException.addSuppressed(vineException);
@@ -208,15 +218,18 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
-	protected void compileOnnxRegressor(final BuildTimePetrify petrify, final byte[] modelBytes) {
+	protected void compileOnnxRegressor(final BuildTimePetrify petrify, final byte[] modelBytes,
+			final FossilConfig fossilConfig) {
 		try {
 			final OnnxArborist arborist = new OnnxArborist();
 			final RegressorGrove grove = arborist.toGrove(modelBytes);
+			applyConfigMetadata(grove, fossilConfig);
 			petrify.fossilize(null, grove);
 		} catch (final Exception treeException) {
 			try {
 				final OnnxVintner vintner = new OnnxVintner();
 				final RegressorVine vine = vintner.toVine(modelBytes);
+				applyConfigMetadata(vine, fossilConfig);
 				petrify.fossilize(null, vine);
 			} catch (final Exception vineException) {
 				treeException.addSuppressed(vineException);
@@ -225,15 +238,18 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
-	protected void compileScikit(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType) {
+	protected void compileScikit(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType,
+			final FossilConfig fossilConfig) {
 		final ScikitVintner vintner = new ScikitVintner();
 		switch (modelType) {
 			case MODEL_TYPE_CLASSIFIER -> {
 				final ClassifierVine vine = vintner.toVine(modelBytes);
+				applyConfigMetadata(vine, fossilConfig);
 				petrify.fossilize(null, vine);
 			}
 			case MODEL_TYPE_REGRESSOR -> {
 				final RegressorVine vine = vintner.toVine(modelBytes);
+				applyConfigMetadata(vine, fossilConfig);
 				petrify.fossilize(null, vine);
 			}
 		}
@@ -242,6 +258,54 @@ public class FossilizeMojo extends AbstractMojo {
 	protected boolean isEclipseIntegrationEnabled() {
 		final String buildContextClassName = buildContext.getClass().getName();
 		return !disableEclipseIntegration && buildContextClassName.startsWith("org.eclipse.m2e");
+	}
+
+	protected void applyConfigMetadata(final Grove grove, final FossilConfig fossilConfig) {
+		if (fossilConfig.getModelName() != null) {
+			if (grove.metadata == null) {
+				grove.metadata = new ModelMetadata();
+			}
+			grove.metadata.modelName = fossilConfig.getModelName();
+		}
+		if (fossilConfig.getModelVersion() != null) {
+			if (grove.metadata == null) {
+				grove.metadata = new ModelMetadata();
+			}
+			grove.metadata.modelVersion = fossilConfig.getModelVersion();
+		}
+		final String[] resolvedFeatureNames = fossilConfig.resolveFeatureNames();
+		if (resolvedFeatureNames != null) {
+			if (grove.metadata == null) {
+				grove.metadata = new ModelMetadata();
+			}
+			grove.metadata.featureNames = resolvedFeatureNames;
+		} else if (fossilConfig.isIgnoreFeatureNamesFromModel() && grove.metadata != null) {
+			grove.metadata.featureNames = null;
+		}
+	}
+
+	protected void applyConfigMetadata(final Vine vine, final FossilConfig fossilConfig) {
+		if (fossilConfig.getModelName() != null) {
+			if (vine.metadata == null) {
+				vine.metadata = new ModelMetadata();
+			}
+			vine.metadata.modelName = fossilConfig.getModelName();
+		}
+		if (fossilConfig.getModelVersion() != null) {
+			if (vine.metadata == null) {
+				vine.metadata = new ModelMetadata();
+			}
+			vine.metadata.modelVersion = fossilConfig.getModelVersion();
+		}
+		final String[] resolvedFeatureNames = fossilConfig.resolveFeatureNames();
+		if (resolvedFeatureNames != null) {
+			if (vine.metadata == null) {
+				vine.metadata = new ModelMetadata();
+			}
+			vine.metadata.featureNames = resolvedFeatureNames;
+		} else if (fossilConfig.isIgnoreFeatureNamesFromModel() && vine.metadata != null) {
+			vine.metadata.featureNames = null;
+		}
 	}
 
 	protected String resolveEclipseBaseDirectory() {
