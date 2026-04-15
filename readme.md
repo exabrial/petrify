@@ -128,7 +128,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-model</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -136,13 +136,13 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-compiler-model</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -150,7 +150,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-import-onnx</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -158,7 +158,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-import-lightgbm</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 
@@ -166,7 +166,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-import-scikit</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 ```
@@ -237,7 +237,7 @@ The `petrify-maven-plugin` compiles ML models to JVM bytecode during your build.
     <plugin>
       <groupId>com.github.exabrial</groupId>
       <artifactId>petrify-maven-plugin</artifactId>
-      <version>1.1.0</version>
+      <version>1.2.0</version>
       <executions>
         <execution>
           <goals>
@@ -288,7 +288,7 @@ Your project only needs `petrify-model` as a runtime dependency:
 <dependency>
   <groupId>com.github.exabrial</groupId>
   <artifactId>petrify-model</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <scope>compile</scope>
 </dependency>
 ```
