@@ -30,7 +30,10 @@ with open("logistic_housing_tier.json", "w") as f:
         "post_transform": "softmax",
         "class_labels": model.classes_.tolist(),
         "intercepts": model.intercept_.tolist(),
-        "coefficients": model.coef_.tolist()
+        "coefficients": model.coef_.tolist(),
+        "feature_names": data.feature_names,
+        "model_name": "logistic_housing_tier",
+        "model_version": "1.0.0"
     }, f)
 ```
 
@@ -46,7 +49,10 @@ with open("logistic_binary.json", "w") as f:
         "post_transform": "logistic",
         "class_labels": model.classes_.tolist(),
         "intercepts": model.intercept_.tolist(),
-        "coefficients": model.coef_.tolist()
+        "coefficients": model.coef_.tolist(),
+        "feature_names": data.feature_names,
+        "model_name": "logistic_binary",
+        "model_version": "1.0.0"
     }, f)
 ```
 
@@ -63,7 +69,10 @@ with open("linear_regressor_housing.json", "w") as f:
         "type": "regressor",
         "post_transform": "none",
         "intercepts": [model.intercept_] if isinstance(model.intercept_, float) else model.intercept_.tolist(),
-        "coefficients": [model.coef_.tolist()]
+        "coefficients": [model.coef_.tolist()],
+        "feature_names": data.feature_names,
+        "model_name": "linear_regressor_housing",
+        "model_version": "1.0.0"
     }, f)
 ```
 
@@ -79,7 +88,10 @@ with open("linear_regressor_housing.json", "w") as f:
         [0.4398, -0.0089, -0.0146, -0.0273, -0.0000, -0.0042, -0.0201, -0.0080],
         [-0.1273, 0.0014, 0.0001, 0.0070, 0.0000, 0.0004, -0.0175, 0.0190],
         [-0.3125, 0.0075, 0.0145, 0.0203, 0.0000, 0.0038, 0.0376, -0.0110]
-    ]
+    ],
+    "feature_names": ["MedInc", "HouseAge", "AveRooms", "AveBedrms", "Population", "AveOccup", "Latitude", "Longitude"],
+    "model_name": "logistic_housing_tier",
+    "model_version": "1.0.0"
 }
 ```
 
@@ -90,6 +102,9 @@ with open("linear_regressor_housing.json", "w") as f:
 | `class_labels` | `long[]` | classifier only | Class label values, e.g. `[0, 1, 2]` |
 | `intercepts` | `double[]` | yes | Bias terms. One per class (classifier) or one per target (regressor). |
 | `coefficients` | `double[][]` | yes | Coefficient matrix. One row per class (classifier) or per target (regressor). For binary OVR classifiers, scikit stores a single row. |
+| `feature_names` | `string[]` | no | Feature names in column order. Enables `FeatureMapper` for named-feature-to-array conversion. |
+| `model_name` | `string` | no | Model name metadata. Stored on the compiled `Fossil`. |
+| `model_version` | `string` | no | Model version metadata. Stored on the compiled `Fossil`. |
 
 
 ## Java Usage
