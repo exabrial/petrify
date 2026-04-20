@@ -60,8 +60,8 @@ public class Petrify {
 	protected static int counter = 0;
 
 	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final ClassifierGrove grove) {
-		log.info("fossilize() compiling ClassifierGrove summary:{} classes:{} precisionMode:{}", grove.summary(),
-				grove.classLabelsInt64s.length, grove.precisionMode);
+		log.info("fossilize() compiling ClassifierGrove classes:{} precisionMode:{} summary:{} ", grove.classLabelsInt64s.length,
+				grove.precisionMode, grove.summary());
 		log.trace("fossilize() grove:{}", grove);
 		try {
 			final ClassifierStratum stratum = new ClassifierStratum(grove);
@@ -649,8 +649,7 @@ public class Petrify {
 						codeBuilder.ldc(featureNames[idx]);
 						codeBuilder.aastore();
 					}
-					codeBuilder.invokestatic(listDesc, "of",
-							MethodTypeDesc.of(listDesc, ConstantDescs.CD_Object.arrayType()), true);
+					codeBuilder.invokestatic(listDesc, "of", MethodTypeDesc.of(listDesc, ConstantDescs.CD_Object.arrayType()), true);
 					codeBuilder.areturn();
 				});
 	}

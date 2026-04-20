@@ -2,6 +2,7 @@ package com.github.exabrial.petrify.compiler.model;
 
 import java.io.Serializable;
 
+import com.github.exabrial.petrify.compiler.internal.model.GroveSummary;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 
 import lombok.EqualsAndHashCode;
@@ -26,19 +27,24 @@ public abstract class Grove implements Serializable {
 	public double[] baseValues;
 	public ModelMetadata metadata;
 
-	public GroveSummary summary() {
-		final int totalNodes = nodesTreeIds.length;
-		int treeCount = 0;
-		int leafCount = 0;
-		for (int nodeIdx = 0; nodeIdx < totalNodes; nodeIdx++) {
-			if (nodesTreeIds[nodeIdx] >= treeCount) {
-				treeCount = nodesTreeIds[nodeIdx] + 1;
+	private GroveSummary groveSummary;
+
+	public String summary() {
+		if (groveSummary == null) {
+			final int totalNodes = nodesTreeIds.length;
+			int treeCount = 0;
+			int leafCount = 0;
+			for (int nodeIdx = 0; nodeIdx < totalNodes; nodeIdx++) {
+				if (nodesTreeIds[nodeIdx] >= treeCount) {
+					treeCount = nodesTreeIds[nodeIdx] + 1;
+				}
+				if (nodesModes[nodeIdx] == PetrifyConstants.MODE_LEAF) {
+					leafCount++;
+				}
 			}
-			if (nodesModes[nodeIdx] == PetrifyConstants.MODE_LEAF) {
-				leafCount++;
-			}
+			final int branchCount = totalNodes - leafCount;
+			groveSummary = new GroveSummary(treeCount, branchCount, leafCount, metadata);
 		}
-		final int branchCount = totalNodes - leafCount;
-		return new GroveSummary(treeCount, branchCount, leafCount);
+		return groveSummary.toString();
 	}
 }

@@ -1,7 +1,6 @@
 package com.github.exabrial.petrify.testing.lightgbm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -35,10 +34,16 @@ class LightgbmHousingTierTest {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private ClassifierFossil fossil;
 
+	private final String modelName = "Lightgbm Housing Tier, Junit5 Test";
+	private final String modelVersion = "1.2.3";
+
 	@BeforeAll
 	void beforeAll() {
 		final Arborist arborist = new LightGbmArborist();
 		final ClassifierGrove grove = arborist.toGrove(MODEL);
+
+		grove.metadata.modelName = modelName;
+		grove.metadata.modelVersion = modelVersion;
 
 		final Petrify petrify = new Petrify();
 		fossil = petrify.fossilize(MethodHandles.lookup(), grove);
@@ -59,12 +64,12 @@ class LightgbmHousingTierTest {
 
 	@Test
 	void testGetModelName() {
-		assertNull(fossil.getModelName());
+		assertEquals(modelName, fossil.getModelName());
 	}
 
 	@Test
 	void testGetModelVersion() {
-		assertNull(fossil.getModelVersion());
+		assertEquals(modelVersion, fossil.getModelVersion());
 	}
 
 	@Test
