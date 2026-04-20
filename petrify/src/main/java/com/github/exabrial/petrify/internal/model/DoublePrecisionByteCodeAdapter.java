@@ -8,6 +8,11 @@ import java.lang.constant.ConstantDescs;
 public final class DoublePrecisionByteCodeAdapter implements ByteCodeAdapter {
 
 	@Override
+	public void add(final CodeBuilder codeBuilder) {
+		codeBuilder.dadd();
+	}
+
+	@Override
 	public void aload(final CodeBuilder codeBuilder) {
 		codeBuilder.daload();
 	}
@@ -15,16 +20,6 @@ public final class DoublePrecisionByteCodeAdapter implements ByteCodeAdapter {
 	@Override
 	public void astore(final CodeBuilder codeBuilder) {
 		codeBuilder.dastore();
-	}
-
-	@Override
-	public void mul(final CodeBuilder codeBuilder) {
-		codeBuilder.dmul();
-	}
-
-	@Override
-	public void add(final CodeBuilder codeBuilder) {
-		codeBuilder.dadd();
 	}
 
 	@Override
@@ -38,18 +33,23 @@ public final class DoublePrecisionByteCodeAdapter implements ByteCodeAdapter {
 	}
 
 	@Override
-	public void return_(final CodeBuilder codeBuilder) {
-		codeBuilder.dreturn();
-	}
-
-	@Override
 	public void ldc(final CodeBuilder codeBuilder, final double value) {
 		codeBuilder.ldc(value);
 	}
 
 	@Override
-	public TypeKind typeKind() {
-		return TypeKind.DOUBLE;
+	public void mul(final CodeBuilder codeBuilder) {
+		codeBuilder.dmul();
+	}
+
+	@Override
+	public void return_(final CodeBuilder codeBuilder) {
+		codeBuilder.dreturn();
+	}
+
+	@Override
+	public ClassDesc arrayDesc() {
+		return ConstantDescs.CD_double.arrayType();
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public final class DoublePrecisionByteCodeAdapter implements ByteCodeAdapter {
 	}
 
 	@Override
-	public ClassDesc arrayDesc() {
-		return ConstantDescs.CD_double.arrayType();
+	public TypeKind typeKind() {
+		return TypeKind.DOUBLE;
 	}
 }

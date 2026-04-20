@@ -19,8 +19,8 @@ public interface RegressionFossil extends Fossil {
 
 	default float predict(final float[] features) {
 		final double[] widened = widen(features);
-		final double prediction = predict(widened);
-		return (float) prediction;
+		final float prediction = (float) predict(widened);
+		return prediction;
 	}
 
 	/**
