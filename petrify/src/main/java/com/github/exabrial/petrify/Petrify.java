@@ -52,9 +52,12 @@ public class Petrify {
 	public static final String PETRIFIED_FOSSIL = "PetrifiedFossil$Petrify0x";
 	public static final int JDK_17 = 61;
 
-	protected static final int SLOT_THIS = 0;
-	protected static final int SLOT_FEATURES = 1;
-	protected static final int SLOT_SCORES = 2;
+	protected static final int PREDICT_SLOT_THIS = 0;
+	protected static final int PREDICT_SLOT_FEATURES = 1;
+	protected static final int PREDICT_SLOT_SCORES = 2;
+
+	protected static final int TREE_SLOT_FEATURES = 0;
+	protected static final int TREE_SLOT_SCORES = 1;
 	protected static final String TREE_METHOD_PREFIX = "tree_";
 
 	private static final ByteCodeAdapter SINGLE_PRECISION_ADAPTER = new SinglePrecisionByteCodeAdapter();
@@ -72,6 +75,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				setClassFlags(classBuilder);
 				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
 				createSerialVersionUid(classBuilder);
@@ -98,6 +102,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				setClassFlags(classBuilder);
 				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
 				createSerialVersionUid(classBuilder);
@@ -122,6 +127,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				setClassFlags(classBuilder);
 				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
 				createSerialVersionUid(classBuilder);
@@ -145,6 +151,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				setClassFlags(classBuilder);
 				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
 				createSerialVersionUid(classBuilder);
@@ -169,7 +176,7 @@ public class Petrify {
 					final double intercept = vine.intercepts[0];
 
 					// Push this first; it will sit beneath the accumulating score for the aggregate call
-					codeBuilder.aload(SLOT_THIS);
+					codeBuilder.aload(PREDICT_SLOT_THIS);
 
 					// Start accumulating: score = intercept
 					adapter.ldc(codeBuilder, intercept);
@@ -179,7 +186,7 @@ public class Petrify {
 						final double coefficient = coefficients[featureIdx];
 						if (coefficient != 0.0) {
 							// Load features[featureIdx] onto stack
-							codeBuilder.aload(SLOT_FEATURES);
+							codeBuilder.aload(PREDICT_SLOT_FEATURES);
 							codeBuilder.ldc(featureIdx);
 							adapter.aload(codeBuilder);
 
@@ -213,12 +220,12 @@ public class Petrify {
 					// Create per-class score accumulator array
 					codeBuilder.ldc(nClasses);
 					codeBuilder.newarray(adapter.typeKind());
-					codeBuilder.astore(SLOT_SCORES);
+					codeBuilder.astore(PREDICT_SLOT_SCORES);
 
 					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
 					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
 						// Push scores array ref and index for eventual store, then seed the accumulator with the intercept
-						codeBuilder.aload(SLOT_SCORES);
+						codeBuilder.aload(PREDICT_SLOT_SCORES);
 						codeBuilder.ldc(classIdx);
 						adapter.ldc(codeBuilder, intercepts[classIdx]);
 						// Stack: scores_ref, classIdx, intercept
@@ -228,7 +235,7 @@ public class Petrify {
 							final double coefficient = coefficients[classIdx * nFeatures + featureIdx];
 							if (coefficient != 0.0) {
 								// Load features[featureIdx] onto stack
-								codeBuilder.aload(SLOT_FEATURES);
+								codeBuilder.aload(PREDICT_SLOT_FEATURES);
 								codeBuilder.ldc(featureIdx);
 								adapter.aload(codeBuilder);
 
@@ -246,8 +253,8 @@ public class Petrify {
 
 					// Prep and invoke fossil.classify(scores, postTransform, isBinarySingleScore)
 					final boolean isBinarySingleScore = vine.isBinarySingleScore();
-					codeBuilder.aload(SLOT_THIS);
-					codeBuilder.aload(SLOT_SCORES);
+					codeBuilder.aload(PREDICT_SLOT_THIS);
+					codeBuilder.aload(PREDICT_SLOT_SCORES);
 					codeBuilder.ldc((int) vine.postTransform);
 					codeBuilder.ldc(isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
@@ -273,7 +280,7 @@ public class Petrify {
 					// Create per-class score accumulator array
 					codeBuilder.ldc(stratum.classifierGrove.classLabelsInt64s.length);
 					codeBuilder.newarray(adapter.typeKind());
-					codeBuilder.astore(SLOT_SCORES);
+					codeBuilder.astore(PREDICT_SLOT_SCORES);
 
 					// Invoke each tree method: this.tree_N(features, scores)
 					emitTreeInvocations(codeBuilder, stratum, thisClass, treeMethodDesc);
@@ -282,8 +289,8 @@ public class Petrify {
 					emitBaseValues(codeBuilder, stratum.grove.baseValues, adapter);
 
 					// Prep and invoke classifierFossil.classify(..)
-					codeBuilder.aload(SLOT_THIS);
-					codeBuilder.aload(SLOT_SCORES);
+					codeBuilder.aload(PREDICT_SLOT_THIS);
+					codeBuilder.aload(PREDICT_SLOT_SCORES);
 					codeBuilder.ldc((int) stratum.grove.postTransform);
 					codeBuilder.ldc(stratum.isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
@@ -310,7 +317,7 @@ public class Petrify {
 					// Create single-element score accumulator (single-target regression)
 					codeBuilder.ldc(stratum.regressorGrove.nTargets);
 					codeBuilder.newarray(adapter.typeKind());
-					codeBuilder.astore(SLOT_SCORES);
+					codeBuilder.astore(PREDICT_SLOT_SCORES);
 
 					// Invoke each tree method: this.tree_N(features, scores)
 					emitTreeInvocations(codeBuilder, stratum, thisClass, treeMethodDesc);
@@ -319,8 +326,8 @@ public class Petrify {
 					emitBaseValues(codeBuilder, stratum.grove.baseValues, adapter);
 
 					// Push this first, then load scores[0] for the aggregate call
-					codeBuilder.aload(SLOT_THIS);
-					codeBuilder.aload(SLOT_SCORES);
+					codeBuilder.aload(PREDICT_SLOT_THIS);
+					codeBuilder.aload(PREDICT_SLOT_SCORES);
 					codeBuilder.ldc(0);
 					adapter.aload(codeBuilder);
 					// Stack: this, score
@@ -344,7 +351,7 @@ public class Petrify {
 			// implement: scores[classId] += weight
 
 			// Load scores array ref and classId index
-			codeBuilder.aload(SLOT_SCORES);
+			codeBuilder.aload(TREE_SLOT_SCORES);
 			codeBuilder.ldc(entry.classId());
 			// Duplicate scores ref and classId for the final store
 			codeBuilder.dup2();
@@ -408,7 +415,7 @@ public class Petrify {
 			// implement: scores[targetId] += weight
 
 			// Load scores array ref and targetId index
-			codeBuilder.aload(SLOT_SCORES);
+			codeBuilder.aload(TREE_SLOT_SCORES);
 			codeBuilder.ldc(entry.targetId());
 			// Duplicate scores ref and targetId for the final store
 			codeBuilder.dup2();
@@ -441,17 +448,16 @@ public class Petrify {
 	protected void emitTreeInvocations(final CodeBuilder codeBuilder, final Stratum stratum, final ClassDesc thisClass,
 			final MethodTypeDesc treeMethodDesc) {
 		for (final int treeId : stratum.treeRootIds) {
-			codeBuilder.aload(SLOT_THIS);
-			codeBuilder.aload(SLOT_FEATURES);
-			codeBuilder.aload(SLOT_SCORES);
-			codeBuilder.invokevirtual(thisClass, TREE_METHOD_PREFIX + treeId, treeMethodDesc);
+			codeBuilder.aload(PREDICT_SLOT_FEATURES);
+			codeBuilder.aload(PREDICT_SLOT_SCORES);
+			codeBuilder.invokestatic(thisClass, TREE_METHOD_PREFIX + treeId, treeMethodDesc);
 		}
 	}
 
 	protected void emitTreeMethod(final ClassBuilder classBuilder, final MethodTypeDesc treeMethodDesc, final Stratum stratum,
 			final int treeId, final int rootArrayIdx) {
-		// Slot layout matches predict(): this=0, features=1, scores=2
-		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_PRIVATE,
+		// slot layout: features=0, scores=1
+		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC,
 				(final CodeBuilder codeBuilder) -> {
 					emitTree(codeBuilder, stratum, treeId, rootArrayIdx);
 					codeBuilder.return_();
@@ -509,7 +515,7 @@ public class Petrify {
 			final double threshold = stratum.grove.nodesValues[arrayIdx];
 
 			// Load features[featureId] onto stack
-			codeBuilder.aload(SLOT_FEATURES);
+			codeBuilder.aload(TREE_SLOT_FEATURES);
 			codeBuilder.ldc(featureId);
 			adapter.aload(codeBuilder);
 
@@ -592,7 +598,7 @@ public class Petrify {
 					// implement: scores[idx] += baseValue
 
 					// Load scores array ref and index
-					codeBuilder.aload(SLOT_SCORES);
+					codeBuilder.aload(PREDICT_SLOT_SCORES);
 					codeBuilder.ldc(classIdx);
 					// Duplicate scores ref and index for the final store
 					codeBuilder.dup2();
@@ -685,6 +691,10 @@ public class Petrify {
 
 	protected void setJdk(final ClassBuilder classBuilder) {
 		classBuilder.withVersion(JDK_17, 0);
+	}
+
+	protected void setClassFlags(final ClassBuilder classBuilder) {
+		classBuilder.withFlags(ClassFile.ACC_PUBLIC | ClassFile.ACC_FINAL | ClassFile.ACC_SUPER);
 	}
 
 	protected void addGeneratedAnnotation(final ClassBuilder classBuilder) {
