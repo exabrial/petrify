@@ -29,15 +29,19 @@ import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
 import com.github.exabrial.petrify.imprt.scikit.ScikitVintner;
 
+/**
+ * Compiles machine-learning models into JVM bytecode at build time.
+ *
+ * <p>For each {@code <fossil>} entry in the plugin configuration, reads the source model file,
+ * parses it with the selected {@link Importer}, compiles it into a fossil class implementing the
+ * appropriate {@code Fossil} interface for its {@link ModelType}, and writes the resulting
+ * {@code .class} file into {@code ${project.build.outputDirectory}}.
+ *
+ * <p>Binds to {@link LifecyclePhase#GENERATE_RESOURCES} by default so generated classes are
+ * available on the compile classpath.
+ */
 @Mojo(name = "fossilize", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class FossilizeMojo extends AbstractMojo {
-	private static final String IMPORTER_LIGHTGBM = "lightgbm";
-	private static final String IMPORTER_ONNX = "onnx";
-	private static final String IMPORTER_SCIKIT = "scikit";
-
-	private static final String MODEL_TYPE_CLASSIFIER = "classifier";
-	private static final String MODEL_TYPE_REGRESSOR = "regressor";
-
 	private static final String PETRIFY_CLASSES_DIR = "petrify-classes";
 	private static final String PETRIFY_CLASSPATH_ENTRY = "<classpathentry exported=\"true\" kind=\"lib\" path=\"target/"
 			+ PETRIFY_CLASSES_DIR + "\"/>";
@@ -51,15 +55,36 @@ public class FossilizeMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
 	private MavenProject project;
 
+	/**
+	 * One or more models to compile. Each entry describes a single source model file and how to
+	 * translate it into a fossil class. Required; the goal fails if this list is empty.
+	 *
+	 * @see FossilConfig
+	 */
 	@Parameter(required = true)
 	private FossilConfig[] fossils;
 
+	/**
+	 * Destination directory for generated fossil class files. Defaults to the project's standard
+	 * build output directory ({@code target/classes}).
+	 */
 	@Parameter(defaultValue = "${project.build.outputDirectory}")
 	private String outputDirectory;
 
+	/**
+	 * When {@code true}, the goal becomes a no-op. Useful for disabling fossil compilation in a
+	 * specific profile or build. Controlled by the {@code petrify.skip} system property.
+	 */
 	@Parameter(property = "petrify.skip", defaultValue = "false")
 	private boolean skip;
 
+	/**
+	 * When {@code true}, disables the Eclipse-specific integration that writes an extra copy of each
+	 * compiled class into a sibling {@code petrify-classes} directory and registers it in
+	 * {@code .classpath}. The integration activates automatically when Eclipse m2e is detected as the
+	 * build context; set this flag to override that detection. Controlled by the
+	 * {@code petrify.disableEclipseIntegration} system property.
+	 */
 	@Parameter(property = "petrify.disableEclipseIntegration", defaultValue = "false")
 	private boolean disableEclipseIntegration;
 
@@ -121,9 +146,9 @@ public class FossilizeMojo extends AbstractMojo {
 			throws MojoFailureException {
 		if (fossil.getModelFile() == null || fossil.getModelFile().isEmpty()) {
 			throw new MojoFailureException("modelFile is required");
-		} else if (fossil.getImporter() == null || fossil.getImporter().isEmpty()) {
+		} else if (fossil.getImporter() == null) {
 			throw new MojoFailureException("importer is required for modelFile:" + fossil.getModelFile());
-		} else if (fossil.getModelType() == null || fossil.getModelType().isEmpty()) {
+		} else if (fossil.getModelType() == null) {
 			throw new MojoFailureException("modelType is required for modelFile:" + fossil.getModelFile());
 		} else if (fossil.getTargetPackageName() == null || fossil.getTargetPackageName().isEmpty()) {
 			throw new MojoFailureException("targetPackageName is required for modelFile:" + fossil.getModelFile());
@@ -131,19 +156,6 @@ public class FossilizeMojo extends AbstractMojo {
 			throw new MojoFailureException("modelFile not found:" + modelPath);
 		} else if (resolvedClassName == null || resolvedClassName.isEmpty()) {
 			throw new MojoFailureException("className could not be resolved for modelFile:" + fossil.getModelFile());
-		} else {
-			switch (fossil.getImporter()) {
-				case IMPORTER_LIGHTGBM, IMPORTER_ONNX, IMPORTER_SCIKIT -> {
-				}
-				default -> throw new MojoFailureException(
-						"unknown importer:" + fossil.getImporter() + " for modelFile:" + fossil.getModelFile());
-			}
-			switch (fossil.getModelType()) {
-				case MODEL_TYPE_CLASSIFIER, MODEL_TYPE_REGRESSOR -> {
-				}
-				default -> throw new MojoFailureException(
-						"unknown modelType:" + fossil.getModelType() + " for modelFile:" + fossil.getModelFile());
-			}
 		}
 	}
 
@@ -152,33 +164,32 @@ public class FossilizeMojo extends AbstractMojo {
 		final BuildTimePetrify petrify = new BuildTimePetrify();
 		petrify.setTarget(packageName, resolvedClassName);
 
-		final String importer = fossil.getImporter();
-		final String modelType = fossil.getModelType();
+		final Importer importer = fossil.getImporter();
+		final ModelType modelType = fossil.getModelType();
 		switch (importer) {
-			case IMPORTER_LIGHTGBM -> {
+			case lightgbm -> {
 				compileLightgbm(petrify, modelBytes, modelType, fossil);
 			}
-			case IMPORTER_ONNX -> {
+			case onnx -> {
 				compileOnnx(petrify, modelBytes, modelType, fossil);
 			}
-			case IMPORTER_SCIKIT -> {
+			case scikit -> {
 				compileScikit(petrify, modelBytes, modelType, fossil);
 			}
-			default -> throw new MojoExecutionException("compile() unknown importer:" + importer);
 		}
 		return petrify.getFossilBytes();
 	}
 
-	protected void compileLightgbm(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType,
+	protected void compileLightgbm(final BuildTimePetrify petrify, final byte[] modelBytes, final ModelType modelType,
 			final FossilConfig fossilConfig) {
 		final LightGbmArborist arborist = new LightGbmArborist();
 		switch (modelType) {
-			case MODEL_TYPE_CLASSIFIER -> {
+			case classifier -> {
 				final ClassifierGrove grove = arborist.toGrove(modelBytes);
 				applyConfigMetadata(grove, fossilConfig);
 				petrify.fossilize(null, grove);
 			}
-			case MODEL_TYPE_REGRESSOR -> {
+			case regressor -> {
 				final RegressorGrove grove = arborist.toGrove(modelBytes);
 				applyConfigMetadata(grove, fossilConfig);
 				petrify.fossilize(null, grove);
@@ -186,13 +197,13 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
-	protected void compileOnnx(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType,
+	protected void compileOnnx(final BuildTimePetrify petrify, final byte[] modelBytes, final ModelType modelType,
 			final FossilConfig fossilConfig) {
 		switch (modelType) {
-			case MODEL_TYPE_CLASSIFIER -> {
+			case classifier -> {
 				compileOnnxClassifier(petrify, modelBytes, fossilConfig);
 			}
-			case MODEL_TYPE_REGRESSOR -> {
+			case regressor -> {
 				compileOnnxRegressor(petrify, modelBytes, fossilConfig);
 			}
 		}
@@ -238,16 +249,16 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
-	protected void compileScikit(final BuildTimePetrify petrify, final byte[] modelBytes, final String modelType,
+	protected void compileScikit(final BuildTimePetrify petrify, final byte[] modelBytes, final ModelType modelType,
 			final FossilConfig fossilConfig) {
 		final ScikitVintner vintner = new ScikitVintner();
 		switch (modelType) {
-			case MODEL_TYPE_CLASSIFIER -> {
+			case classifier -> {
 				final ClassifierVine vine = vintner.toVine(modelBytes);
 				applyConfigMetadata(vine, fossilConfig);
 				petrify.fossilize(null, vine);
 			}
-			case MODEL_TYPE_REGRESSOR -> {
+			case regressor -> {
 				final RegressorVine vine = vintner.toVine(modelBytes);
 				applyConfigMetadata(vine, fossilConfig);
 				petrify.fossilize(null, vine);
