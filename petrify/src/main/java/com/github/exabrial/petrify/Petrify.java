@@ -1,5 +1,6 @@
 package com.github.exabrial.petrify;
 
+import java.lang.classfile.Annotation;
 import java.lang.classfile.ClassBuilder;
 import java.lang.classfile.ClassFile;
 import java.lang.classfile.CodeBuilder;
@@ -8,6 +9,7 @@ import java.lang.classfile.FieldBuilder;
 import java.lang.classfile.Label;
 import java.lang.classfile.Opcode;
 import java.lang.classfile.attribute.ConstantValueAttribute;
+import java.lang.classfile.attribute.RuntimeInvisibleAnnotationsAttribute;
 import java.lang.classfile.instruction.SwitchCase;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.ConstantDescs;
@@ -37,6 +39,7 @@ import com.github.exabrial.petrify.internal.model.SinglePrecisionByteCodeAdapter
 import com.github.exabrial.petrify.internal.model.Stratum;
 import com.github.exabrial.petrify.model.ClassifierFossil;
 import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.model.Generated;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 import com.github.exabrial.petrify.model.RegressionFossil;
 
@@ -69,6 +72,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
@@ -94,6 +98,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
@@ -117,6 +122,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, ClassifierFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
@@ -139,6 +145,7 @@ public class Petrify {
 			final ClassDesc thisClass = nextClassDesc(lookup);
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
+				addGeneratedAnnotation(classBuilder);
 				implementFossilInterface(classBuilder, RegressionFossil.class);
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
@@ -678,6 +685,11 @@ public class Petrify {
 
 	protected void setJdk(final ClassBuilder classBuilder) {
 		classBuilder.withVersion(JDK_17, 0);
+	}
+
+	protected void addGeneratedAnnotation(final ClassBuilder classBuilder) {
+		final ClassDesc generatedDesc = ClassDesc.of(Generated.class.getPackageName(), Generated.class.getSimpleName());
+		classBuilder.with(RuntimeInvisibleAnnotationsAttribute.of(Annotation.of(generatedDesc)));
 	}
 
 	protected void implementFossilInterface(final ClassBuilder classBuilder, final Class<? extends Fossil> fossilType) {
