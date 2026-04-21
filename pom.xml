@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.github.exabrial</groupId>
@@ -155,6 +156,7 @@
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -171,21 +173,88 @@
 
 		<pluginManagement>
 			<plugins>
-				<!-- Obviously update this, not sure if release plugin will! -->
 				<plugin>
 					<groupId>com.github.exabrial</groupId>
 					<artifactId>petrify-maven-plugin</artifactId>
 					<version>1.2.1-SNAPSHOT</version>
 				</plugin>
+
 				<plugin>
-					<groupId>org.xolstice.maven.plugins</groupId>
-					<artifactId>protobuf-maven-plugin</artifactId>
-					<version>0.6.1</version>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+					<version>3.2.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.15.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<version>3.2.8</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>3.1.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.4.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.12.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-plugin-plugin</artifactId>
+					<version>3.15.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>3.9.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>3.3.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.12.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.4.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.5.4</version>
+				</plugin>
+
+				<plugin>
+					<groupId>org.sonatype.central</groupId>
+					<artifactId>central-publishing-maven-plugin</artifactId>
+					<version>0.7.0</version>
+					<extensions>true</extensions>
+				</plugin>
+				<plugin>
+					<groupId>org.xolstice.maven.plugins</groupId>
+					<artifactId>protobuf-maven-plugin</artifactId>
+					<version>0.6.1</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -200,6 +269,13 @@
 
 		<plugins>
 			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<configuration>
+					<publishingServerId>ossrh</publishingServerId>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
@@ -213,37 +289,29 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.44</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.4</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.4.0</version>
+				<artifactId>maven-gpg-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>source-package</id>
+						<id>gpg-sign</id>
+						<phase>verify</phase>
 						<goals>
-							<goal>jar</goal>
+							<goal>sign</goal>
 						</goals>
+						<configuration>
+							<keyname>871638A21A7F2C38066471420306A354336B4F0D</keyname>
+						</configuration>
 					</execution>
 				</executions>
-				<configuration>
-					<attach>true</attach>
-					<includePom>true</includePom>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.12.0</version>
 				<executions>
 					<execution>
 						<id>javadocs-package</id>
@@ -259,28 +327,18 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>3.2.8</version>
+				<artifactId>maven-source-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>gpg-sign</id>
-						<phase>verify</phase>
+						<id>source-package</id>
 						<goals>
-							<goal>sign</goal>
+							<goal>jar</goal>
 						</goals>
-						<configuration>
-							<keyname>871638A21A7F2C38066471420306A354336B4F0D</keyname>
-						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.sonatype.central</groupId>
-				<artifactId>central-publishing-maven-plugin</artifactId>
-				<version>0.7.0</version>
-				<extensions>true</extensions>
 				<configuration>
-					<publishingServerId>ossrh</publishingServerId>
+					<attach>true</attach>
+					<includePom>true</includePom>
 				</configuration>
 			</plugin>
 		</plugins>
