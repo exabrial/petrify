@@ -51,34 +51,21 @@ public class Petrify {
 
 	public static final String PETRIFIED_FOSSIL = "PetrifiedFossil$Petrify0x";
 	public static final int JDK_17 = 61;
+	public static final int DEFAULT_CONSTANT_POOL_SOFT_MAX = 0xFFFF - 0x2EE0; // Constant pool max minus 12k
 
-	protected static final int PREDICT_SLOT_THIS = 0;
+	protected static final ByteCodeAdapter DOUBLE_PRECISION_ADAPTER = new DoublePrecisionByteCodeAdapter();
+	protected static final ByteCodeAdapter SINGLE_PRECISION_ADAPTER = new SinglePrecisionByteCodeAdapter();
+	protected static final String INNER_CLASS_PREFIX = "$Trees";
+	protected static final String TREE_METHOD_PREFIX = "tree_";
+	protected static final int CP_ENTRIES_PER_CROSS_CLASS_INVOCATION = 5;
 	protected static final int PREDICT_SLOT_FEATURES = 1;
 	protected static final int PREDICT_SLOT_SCORES = 2;
-
+	protected static final int PREDICT_SLOT_THIS = 0;
 	protected static final int TREE_SLOT_FEATURES = 0;
 	protected static final int TREE_SLOT_SCORES = 1;
-	protected static final String TREE_METHOD_PREFIX = "tree_";
 
-	protected static final String INNER_CLASS_PREFIX = "$Trees";
-
-	protected static final int CP_ENTRIES_PER_CROSS_CLASS_INVOCATION = 5;
-	public static final int DEFAULT_CONSTANT_POOL_SOFT_MAX = 55000;
-
-	private static final ByteCodeAdapter SINGLE_PRECISION_ADAPTER = new SinglePrecisionByteCodeAdapter();
-	private static final ByteCodeAdapter DOUBLE_PRECISION_ADAPTER = new DoublePrecisionByteCodeAdapter();
-
-	private int constantPoolSoftMax = DEFAULT_CONSTANT_POOL_SOFT_MAX;
-
-	protected static int counter = 0;
-
-	public void setConstantPoolSoftMax(final int constantPoolSoftMax) {
-		this.constantPoolSoftMax = constantPoolSoftMax;
-	}
-
-	protected int getConstantPoolSoftMax() {
-		return constantPoolSoftMax;
-	}
+	protected static int counter = 1337;
+	protected int constantPoolSoftMax = DEFAULT_CONSTANT_POOL_SOFT_MAX;
 
 	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final ClassifierGrove grove) {
 		log.info("fossilize() compiling ClassifierGrove classes:{} precisionMode:{} summary:{} ", grove.classLabelsInt64s.length,
@@ -784,5 +771,13 @@ public class Petrify {
 					initCodeBuilder.invokespecial(ConstantDescs.CD_Object, ConstantDescs.INIT_NAME, ConstantDescs.MTD_void);
 					initCodeBuilder.return_();
 				});
+	}
+
+	public void setConstantPoolSoftMax(final int constantPoolSoftMax) {
+		this.constantPoolSoftMax = constantPoolSoftMax;
+	}
+
+	protected int getConstantPoolSoftMax() {
+		return constantPoolSoftMax;
 	}
 }
