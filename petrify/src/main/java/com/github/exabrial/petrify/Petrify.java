@@ -453,11 +453,25 @@ public class Petrify {
 		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
 		final ClassDesc[] treeOwners = new ClassDesc[stratum.treeRootIds.length];
-		for (int i = 0; i < stratum.treeRootIds.length; i++) {
-			final int treeId = stratum.treeRootIds[i];
-			final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
-			emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
-			treeOwners[i] = thisClass;
+		int treeIdx = 0;
+		// Fossil phase: pack trees onto the fossil class, reserving CP headroom for cross-class invocations
+		while (treeIdx < stratum.treeRootIds.length) {
+			final int remainingTrees = stratum.treeRootIds.length - treeIdx;
+			final int projectedCpUsage = classBuilder.constantPool().size() + remainingTrees * CP_ENTRIES_PER_CROSS_CLASS_INVOCATION;
+			if (projectedCpUsage >= constantPoolSoftMax) {
+				log.debug("createMethodPerEnsemble() fossil spill at tree index:{}, constantPoolSize:{} remainingTrees:{}", treeIdx,
+						classBuilder.constantPool().size(), remainingTrees);
+				break;
+			} else {
+				final int treeId = stratum.treeRootIds[treeIdx];
+				final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
+				emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
+				treeOwners[treeIdx] = thisClass;
+				treeIdx++;
+			}
+		}
+		if (treeIdx < stratum.treeRootIds.length) {
+			// TODO: inner class phase (step 4) — remaining trees at index i..treeRootIds.length
 		}
 		return treeOwners;
 	}
