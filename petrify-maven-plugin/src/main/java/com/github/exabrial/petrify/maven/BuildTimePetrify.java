@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.github.exabrial.petrify.CompiledModel;
 import com.github.exabrial.petrify.Petrify;
+import com.github.exabrial.petrify.internal.model.CompiledModel;
 import com.github.exabrial.petrify.model.Fossil;
 
 public class BuildTimePetrify extends Petrify {
@@ -35,12 +35,12 @@ public class BuildTimePetrify extends Petrify {
 	@Override
 	protected <T extends Fossil> T defineFossil(final MethodHandles.Lookup lookup, final CompiledModel compiledClass,
 			final Class<T> fossilType) {
-		this.fossilClass = compiledClass;
+		fossilClass = compiledClass;
 		return null;
 	}
 
 	@Override
 	protected void defineInnerClass(final MethodHandles.Lookup lookup, final CompiledModel compiledClass) {
-		this.innerClasses.add(compiledClass);
+		innerClasses.add(compiledClass);
 	}
 }

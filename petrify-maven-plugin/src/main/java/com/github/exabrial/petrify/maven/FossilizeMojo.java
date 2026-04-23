@@ -17,7 +17,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
-import com.github.exabrial.petrify.CompiledModel;
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.Grove;
@@ -29,6 +28,7 @@ import com.github.exabrial.petrify.imprt.lightgbm.LightGbmArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
 import com.github.exabrial.petrify.imprt.scikit.ScikitVintner;
+import com.github.exabrial.petrify.internal.model.CompiledModel;
 
 /**
  * Compiles machine-learning models into JVM bytecode at build time.

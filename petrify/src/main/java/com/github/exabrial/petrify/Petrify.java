@@ -33,6 +33,7 @@ import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpac
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.internal.model.ByteCodeAdapter;
 import com.github.exabrial.petrify.internal.model.ClassifierStratum;
+import com.github.exabrial.petrify.internal.model.CompiledModel;
 import com.github.exabrial.petrify.internal.model.DoublePrecisionByteCodeAdapter;
 import com.github.exabrial.petrify.internal.model.RegressorStratum;
 import com.github.exabrial.petrify.internal.model.SinglePrecisionByteCodeAdapter;
@@ -679,6 +680,17 @@ public class Petrify {
 				emitGetFeatureNamesMethod(classBuilder, metadata.featureNames);
 			}
 		}
+		emitToStringMethod(classBuilder);
+	}
+
+	protected void emitToStringMethod(final ClassBuilder classBuilder) {
+		final ClassDesc fossilDesc = ClassDesc.of(Fossil.class.getPackageName(), Fossil.class.getSimpleName());
+		classBuilder.withMethodBody("toString", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.aload(0);
+					codeBuilder.invokestatic(fossilDesc, "fossilToString", MethodTypeDesc.of(ConstantDescs.CD_String, fossilDesc), true);
+					codeBuilder.areturn();
+				});
 	}
 
 	protected void emitGetModelNameMethod(final ClassBuilder classBuilder, final String modelName) {

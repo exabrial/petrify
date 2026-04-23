@@ -62,4 +62,34 @@ public interface Fossil extends Serializable {
 		}
 		return narrowed;
 	}
+
+	static String fossilToString(final Fossil fossil) {
+		final StringBuilder result = new StringBuilder();
+		result.append(fossil.getClass().getName());
+		result.append('@').append(Integer.toHexString(System.identityHashCode(fossil)));
+		result.append('[');
+		boolean first = true;
+		final String modelName = fossil.getModelName();
+		if (modelName != null) {
+			result.append("modelName=").append(modelName);
+			first = false;
+		}
+		final String modelVersion = fossil.getModelVersion();
+		if (modelVersion != null) {
+			if (!first) {
+				result.append(", ");
+			}
+			result.append("modelVersion=").append(modelVersion);
+			first = false;
+		}
+		final List<String> featureNames = fossil.getFeatureNames();
+		if (!featureNames.isEmpty()) {
+			if (!first) {
+				result.append(", ");
+			}
+			result.append("featureCount=").append(featureNames.size());
+		}
+		result.append(']');
+		return result.toString();
+	}
 }

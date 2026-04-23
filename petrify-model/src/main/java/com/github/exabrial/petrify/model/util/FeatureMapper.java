@@ -20,19 +20,9 @@ public class FeatureMapper {
 		if (names.isEmpty()) {
 			throw new FossilUnconformity("Fossil does not contain feature name metadata");
 		} else {
-			this.mappedFor = fossil.getClass().getName();
-			this.featureNames = names;
+			mappedFor = fossil.getClass().getName();
+			featureNames = names;
 		}
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder result = new StringBuilder();
-		result.append("FeatureMapper@").append(Integer.toHexString(System.identityHashCode(this)));
-		result.append("[mappedFor=").append(mappedFor);
-		result.append(", featureCount=").append(featureNames.size());
-		result.append(']');
-		return result.toString();
 	}
 
 	public float[] mapToF32(final Map<String, Object> features) {
@@ -77,5 +67,15 @@ public class FeatureMapper {
 			throw new FossilUnconformity(featureName, feature.getClass().getName());
 		}
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder result = new StringBuilder();
+		result.append("FeatureMapper@").append(Integer.toHexString(System.identityHashCode(this)));
+		result.append("[mappedFor=").append(mappedFor);
+		result.append(", featureCount=").append(featureNames.size());
+		result.append(']');
+		return result.toString();
 	}
 }
