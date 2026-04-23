@@ -94,8 +94,8 @@ public class Petrify {
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				emitMetadataMethods(classBuilder, grove.metadata);
-				createMethodPerEnsemble(classBuilder, stratum);
-				implementClassifierPredictMethod(classBuilder, stratum, thisClass);
+				final ClassDesc[] treeOwners = createMethodPerEnsemble(classBuilder, stratum, thisClass);
+				implementClassifierPredictMethod(classBuilder, stratum, treeOwners);
 			});
 
 			final ClassifierFossil fossil = defineFossil(lookup, fossilBytes, ClassifierFossil.class);
@@ -121,8 +121,8 @@ public class Petrify {
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				emitMetadataMethods(classBuilder, grove.metadata);
-				createMethodPerEnsemble(classBuilder, stratum);
-				implementRegressorPredictMethod(classBuilder, stratum, thisClass);
+				final ClassDesc[] treeOwners = createMethodPerEnsemble(classBuilder, stratum, thisClass);
+				implementRegressorPredictMethod(classBuilder, stratum, treeOwners);
 			});
 
 			final RegressionFossil fossil = defineFossil(lookup, fossilBytes, RegressionFossil.class);
@@ -284,7 +284,7 @@ public class Petrify {
 	}
 
 	protected void implementClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierStratum stratum,
-			final ClassDesc thisClass) {
+			final ClassDesc[] treeOwners) {
 		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
 
@@ -295,8 +295,8 @@ public class Petrify {
 					codeBuilder.newarray(adapter.typeKind());
 					codeBuilder.astore(PREDICT_SLOT_SCORES);
 
-					// Invoke each tree method: this.tree_N(features, scores)
-					emitTreeInvocations(codeBuilder, stratum, thisClass, treeMethodDesc);
+					// Invoke each tree method
+					emitTreeInvocations(codeBuilder, stratum, treeOwners, treeMethodDesc);
 
 					// Apply per-class bias before post-transform
 					emitBaseValues(codeBuilder, stratum.grove.baseValues, adapter);
@@ -321,7 +321,7 @@ public class Petrify {
 	}
 
 	protected void implementRegressorPredictMethod(final ClassBuilder classBuilder, final RegressorStratum stratum,
-			final ClassDesc thisClass) {
+			final ClassDesc[] treeOwners) {
 		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
 
@@ -332,8 +332,8 @@ public class Petrify {
 					codeBuilder.newarray(adapter.typeKind());
 					codeBuilder.astore(PREDICT_SLOT_SCORES);
 
-					// Invoke each tree method: this.tree_N(features, scores)
-					emitTreeInvocations(codeBuilder, stratum, thisClass, treeMethodDesc);
+					// Invoke each tree method
+					emitTreeInvocations(codeBuilder, stratum, treeOwners, treeMethodDesc);
 
 					// Apply base values bias
 					emitBaseValues(codeBuilder, stratum.grove.baseValues, adapter);
@@ -449,21 +449,25 @@ public class Petrify {
 		}
 	}
 
-	protected void createMethodPerEnsemble(final ClassBuilder classBuilder, final Stratum stratum) {
+	protected ClassDesc[] createMethodPerEnsemble(final ClassBuilder classBuilder, final Stratum stratum, final ClassDesc thisClass) {
 		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
-		for (final int treeId : stratum.treeRootIds) {
+		final ClassDesc[] treeOwners = new ClassDesc[stratum.treeRootIds.length];
+		for (int i = 0; i < stratum.treeRootIds.length; i++) {
+			final int treeId = stratum.treeRootIds[i];
 			final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
 			emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
+			treeOwners[i] = thisClass;
 		}
+		return treeOwners;
 	}
 
-	protected void emitTreeInvocations(final CodeBuilder codeBuilder, final Stratum stratum, final ClassDesc thisClass,
+	protected void emitTreeInvocations(final CodeBuilder codeBuilder, final Stratum stratum, final ClassDesc[] treeOwners,
 			final MethodTypeDesc treeMethodDesc) {
-		for (final int treeId : stratum.treeRootIds) {
+		for (int i = 0; i < stratum.treeRootIds.length; i++) {
 			codeBuilder.aload(PREDICT_SLOT_FEATURES);
 			codeBuilder.aload(PREDICT_SLOT_SCORES);
-			codeBuilder.invokestatic(thisClass, TREE_METHOD_PREFIX + treeId, treeMethodDesc);
+			codeBuilder.invokestatic(treeOwners[i], TREE_METHOD_PREFIX + stratum.treeRootIds[i], treeMethodDesc);
 		}
 	}
 
