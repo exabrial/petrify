@@ -60,10 +60,23 @@ public class Petrify {
 	protected static final int TREE_SLOT_SCORES = 1;
 	protected static final String TREE_METHOD_PREFIX = "tree_";
 
+	protected static final int CP_ENTRIES_PER_CROSS_CLASS_INVOCATION = 5;
+	public static final int DEFAULT_CONSTANT_POOL_SOFT_MAX = 55000;
+
 	private static final ByteCodeAdapter SINGLE_PRECISION_ADAPTER = new SinglePrecisionByteCodeAdapter();
 	private static final ByteCodeAdapter DOUBLE_PRECISION_ADAPTER = new DoublePrecisionByteCodeAdapter();
 
+	private int constantPoolSoftMax = DEFAULT_CONSTANT_POOL_SOFT_MAX;
+
 	protected static int counter = 0;
+
+	public void setConstantPoolSoftMax(final int constantPoolSoftMax) {
+		this.constantPoolSoftMax = constantPoolSoftMax;
+	}
+
+	protected int getConstantPoolSoftMax() {
+		return constantPoolSoftMax;
+	}
 
 	public ClassifierFossil fossilize(final MethodHandles.Lookup lookup, final ClassifierGrove grove) {
 		log.info("fossilize() compiling ClassifierGrove classes:{} precisionMode:{} summary:{} ", grove.classLabelsInt64s.length,
