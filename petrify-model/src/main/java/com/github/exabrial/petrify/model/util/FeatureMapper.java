@@ -11,7 +11,8 @@ import java.util.Map;
 import com.github.exabrial.petrify.model.Fossil;
 import com.github.exabrial.petrify.model.exception.FossilUnconformity;
 
-public final class FeatureMapper {
+public class FeatureMapper {
+	private final String mappedFor;
 	private final List<String> featureNames;
 
 	public FeatureMapper(final Fossil fossil) {
@@ -19,8 +20,19 @@ public final class FeatureMapper {
 		if (names.isEmpty()) {
 			throw new FossilUnconformity("Fossil does not contain feature name metadata");
 		} else {
-			featureNames = fossil.getFeatureNames();
+			this.mappedFor = fossil.getClass().getName();
+			this.featureNames = names;
 		}
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder result = new StringBuilder();
+		result.append("FeatureMapper@").append(Integer.toHexString(System.identityHashCode(this)));
+		result.append("[mappedFor=").append(mappedFor);
+		result.append(", featureCount=").append(featureNames.size());
+		result.append(']');
+		return result.toString();
 	}
 
 	public float[] mapToF32(final Map<String, Object> features) {
