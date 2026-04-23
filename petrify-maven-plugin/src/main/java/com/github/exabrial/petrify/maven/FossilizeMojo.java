@@ -17,6 +17,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
+import com.github.exabrial.petrify.CompiledModel;
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.Grove;
@@ -32,13 +33,13 @@ import com.github.exabrial.petrify.imprt.scikit.ScikitVintner;
 /**
  * Compiles machine-learning models into JVM bytecode at build time.
  *
- * <p>For each {@code <fossil>} entry in the plugin configuration, reads the source model file,
- * parses it with the selected {@link Importer}, compiles it into a fossil class implementing the
- * appropriate {@code Fossil} interface for its {@link ModelType}, and writes the resulting
- * {@code .class} file into {@code ${project.build.outputDirectory}}.
+ * <p>
+ * For each {@code <fossil>} entry in the plugin configuration, reads the source model file, parses it with the selected
+ * {@link Importer}, compiles it into a fossil class implementing the appropriate {@code Fossil} interface for its {@link ModelType},
+ * and writes the resulting {@code .class} file into {@code ${project.build.outputDirectory}}.
  *
- * <p>Binds to {@link LifecyclePhase#GENERATE_RESOURCES} by default so generated classes are
- * available on the compile classpath.
+ * <p>
+ * Binds to {@link LifecyclePhase#GENERATE_RESOURCES} by default so generated classes are available on the compile classpath.
  */
 @Mojo(name = "fossilize", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class FossilizeMojo extends AbstractMojo {
@@ -56,8 +57,8 @@ public class FossilizeMojo extends AbstractMojo {
 	private MavenProject project;
 
 	/**
-	 * One or more models to compile. Each entry describes a single source model file and how to
-	 * translate it into a fossil class. Required; the goal fails if this list is empty.
+	 * One or more models to compile. Each entry describes a single source model file and how to translate it into a fossil class.
+	 * Required; the goal fails if this list is empty.
 	 *
 	 * @see FossilConfig
 	 */
@@ -65,24 +66,23 @@ public class FossilizeMojo extends AbstractMojo {
 	private FossilConfig[] fossils;
 
 	/**
-	 * Destination directory for generated fossil class files. Defaults to the project's standard
-	 * build output directory ({@code target/classes}).
+	 * Destination directory for generated fossil class files. Defaults to the project's standard build output directory
+	 * ({@code target/classes}).
 	 */
 	@Parameter(defaultValue = "${project.build.outputDirectory}")
 	private String outputDirectory;
 
 	/**
-	 * When {@code true}, the goal becomes a no-op. Useful for disabling fossil compilation in a
-	 * specific profile or build. Controlled by the {@code petrify.skip} system property.
+	 * When {@code true}, the goal becomes a no-op. Useful for disabling fossil compilation in a specific profile or build. Controlled by
+	 * the {@code petrify.skip} system property.
 	 */
 	@Parameter(property = "petrify.skip", defaultValue = "false")
 	private boolean skip;
 
 	/**
-	 * When {@code true}, disables the Eclipse-specific integration that writes an extra copy of each
-	 * compiled class into a sibling {@code petrify-classes} directory and registers it in
-	 * {@code .classpath}. The integration activates automatically when Eclipse m2e is detected as the
-	 * build context; set this flag to override that detection. Controlled by the
+	 * When {@code true}, disables the Eclipse-specific integration that writes an extra copy of each compiled class into a sibling
+	 * {@code petrify-classes} directory and registers it in {@code .classpath}. The integration activates automatically when Eclipse m2e
+	 * is detected as the build context; set this flag to override that detection. Controlled by the
 	 * {@code petrify.disableEclipseIntegration} system property.
 	 */
 	@Parameter(property = "petrify.disableEclipseIntegration", defaultValue = "false")
@@ -177,7 +177,17 @@ public class FossilizeMojo extends AbstractMojo {
 				compileScikit(petrify, modelBytes, modelType, fossil);
 			}
 		}
-		return petrify.getFossilBytes();
+
+		for (final CompiledModel innerClass : petrify.getInnerClasses()) {
+			final Path innerOutputPath = resolveOutputPath(outputDirectory, packageName, innerClass.className());
+			writeClassFile(innerOutputPath, innerClass.classBytes());
+			if (isEclipseIntegrationEnabled()) {
+				final Path innerEclipsePath = resolveEclipseOutputPath(packageName, innerClass.className());
+				writeClassFile(innerEclipsePath, innerClass.classBytes());
+			}
+		}
+
+		return petrify.getFossilClass().classBytes();
 	}
 
 	protected void compileLightgbm(final BuildTimePetrify petrify, final byte[] modelBytes, final ModelType modelType,
@@ -209,8 +219,7 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
-	protected void compileOnnxClassifier(final BuildTimePetrify petrify, final byte[] modelBytes,
-			final FossilConfig fossilConfig) {
+	protected void compileOnnxClassifier(final BuildTimePetrify petrify, final byte[] modelBytes, final FossilConfig fossilConfig) {
 		try {
 			final OnnxArborist arborist = new OnnxArborist();
 			final ClassifierGrove grove = arborist.toGrove(modelBytes);
@@ -229,8 +238,7 @@ public class FossilizeMojo extends AbstractMojo {
 		}
 	}
 
-	protected void compileOnnxRegressor(final BuildTimePetrify petrify, final byte[] modelBytes,
-			final FossilConfig fossilConfig) {
+	protected void compileOnnxRegressor(final BuildTimePetrify petrify, final byte[] modelBytes, final FossilConfig fossilConfig) {
 		try {
 			final OnnxArborist arborist = new OnnxArborist();
 			final RegressorGrove grove = arborist.toGrove(modelBytes);
