@@ -1,16 +1,19 @@
 # 🪨 Petrify 
 
-🪵 -> 🪨 ML models -> JVM bytecode compiler. Models go in, fossils (bytecode) come out!
+🪵 -> 🪨 ML models -> ultralight JVM bytecode compiler. Models go in, fossils (bytecode) come out!
 
-⭐ Before you leave, ⭐ Leave a star! ⭐ Thanks! :)
+⭐ Before you leave, ⭐ Leave a star! ⭐ Thanks! :) ⭐
 
 ## Overview
 
 ### Theory of operation
 
-Petrify is a machine learning model compiler for the the JVM. It reads your model from an ONNX, LightGBM native, or scikit-learn JSON format, walks the Trees or Linear models, and encodes the model in equivalent JVM bytecode as a stateless class you can invoke.
+Petrify is a ultralight machine learning model compiler for the the JVM. It reads your model from an ONNX, LightGBM native, or scikit-learn JSON format, walks the Trees or Linear models, and encodes the model in equivalent JVM bytecode as a stateless class you can invoke.
 
-This differs from every other ONNX Runtime that I know of, which are essentially interpreters.
+This differs from every other ONNX Runtime that I know of, which are essentially interpreters and are reading data from the JVM Heap. Petrify encodes your model as bytecode and stores your splits/weights in the constant pool.
+
+Petrify has exactly one heap allocation per invocation when executing trees (the scores accumulator array). This is required to make the compiled model thread-safe. Future iterations might have an option where thread safety is not a concern, making a model invocation create 0 Garbage Collection pressure.
+
 
 A `Grove` or a `Vine` is the IR (intermediate representation) of your model. The resulting `Fossil` is the compiled equivelant of your model.
 
