@@ -60,6 +60,8 @@ public class Petrify {
 	protected static final int TREE_SLOT_SCORES = 1;
 	protected static final String TREE_METHOD_PREFIX = "tree_";
 
+	protected static final String INNER_CLASS_PREFIX = "$Trees";
+
 	protected static final int CP_ENTRIES_PER_CROSS_CLASS_INVOCATION = 5;
 	public static final int DEFAULT_CONSTANT_POOL_SOFT_MAX = 55000;
 
@@ -86,6 +88,7 @@ public class Petrify {
 			final ClassifierStratum stratum = new ClassifierStratum(grove);
 
 			final ClassDesc thisClass = nextClassDesc(lookup);
+			final List<byte[]> innerClassBytes = new ArrayList<>();
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				setClassFlags(classBuilder);
@@ -94,10 +97,13 @@ public class Petrify {
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				emitMetadataMethods(classBuilder, grove.metadata);
-				final ClassDesc[] treeOwners = createMethodPerEnsemble(classBuilder, stratum, thisClass);
+				final ClassDesc[] treeOwners = createMethodPerEnsemble(classBuilder, stratum, thisClass, innerClassBytes);
 				implementClassifierPredictMethod(classBuilder, stratum, treeOwners);
 			});
 
+			for (final byte[] innerBytes : innerClassBytes) {
+				lookup.defineClass(innerBytes);
+			}
 			final ClassifierFossil fossil = defineFossil(lookup, fossilBytes, ClassifierFossil.class);
 			return fossil;
 		} catch (final Exception e) {
@@ -113,6 +119,7 @@ public class Petrify {
 			final RegressorStratum stratum = new RegressorStratum(grove);
 
 			final ClassDesc thisClass = nextClassDesc(lookup);
+			final List<byte[]> innerClassBytes = new ArrayList<>();
 			final byte[] fossilBytes = ClassFile.of().build(thisClass, (final ClassBuilder classBuilder) -> {
 				setJdk(classBuilder);
 				setClassFlags(classBuilder);
@@ -121,10 +128,13 @@ public class Petrify {
 				createSerialVersionUid(classBuilder);
 				createDefaultConstructor(classBuilder);
 				emitMetadataMethods(classBuilder, grove.metadata);
-				final ClassDesc[] treeOwners = createMethodPerEnsemble(classBuilder, stratum, thisClass);
+				final ClassDesc[] treeOwners = createMethodPerEnsemble(classBuilder, stratum, thisClass, innerClassBytes);
 				implementRegressorPredictMethod(classBuilder, stratum, treeOwners);
 			});
 
+			for (final byte[] innerBytes : innerClassBytes) {
+				lookup.defineClass(innerBytes);
+			}
 			final RegressionFossil fossil = defineFossil(lookup, fossilBytes, RegressionFossil.class);
 			return fossil;
 		} catch (final Exception e) {
@@ -449,30 +459,46 @@ public class Petrify {
 		}
 	}
 
-	protected ClassDesc[] createMethodPerEnsemble(final ClassBuilder classBuilder, final Stratum stratum, final ClassDesc thisClass) {
+	protected ClassDesc[] createMethodPerEnsemble(final ClassBuilder classBuilder, final Stratum stratum, final ClassDesc thisClass,
+			final List<byte[]> innerClassBytes) {
 		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
 		final MethodTypeDesc treeMethodDesc = MethodTypeDesc.of(ConstantDescs.CD_void, adapter.arrayDesc(), adapter.arrayDesc());
-		final ClassDesc[] treeOwners = new ClassDesc[stratum.treeRootIds.length];
-		int treeIdx = 0;
+		final int[] treeRootIds = stratum.treeRootIds;
+		final ClassDesc[] treeOwners = new ClassDesc[treeRootIds.length];
+		final int[] treeIdxHolder = { 0 };
 		// Fossil phase: pack trees onto the fossil class, reserving CP headroom for cross-class invocations
-		while (treeIdx < stratum.treeRootIds.length) {
-			final int remainingTrees = stratum.treeRootIds.length - treeIdx;
-			final int projectedCpUsage = classBuilder.constantPool().size() + remainingTrees * CP_ENTRIES_PER_CROSS_CLASS_INVOCATION;
-			if (projectedCpUsage >= constantPoolSoftMax) {
-				log.debug("createMethodPerEnsemble() fossil spill at tree index:{}, constantPoolSize:{} remainingTrees:{}", treeIdx,
-						classBuilder.constantPool().size(), remainingTrees);
-				break;
-			} else {
-				final int treeId = stratum.treeRootIds[treeIdx];
-				final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
-				emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
-				treeOwners[treeIdx] = thisClass;
-				treeIdx++;
-			}
+		while (treeIdxHolder[0] < treeRootIds.length && classBuilder.constantPool().size()
+				+ (treeRootIds.length - treeIdxHolder[0]) * CP_ENTRIES_PER_CROSS_CLASS_INVOCATION < constantPoolSoftMax) {
+			final int treeId = treeRootIds[treeIdxHolder[0]];
+			final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
+			emitTreeMethod(classBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
+			treeOwners[treeIdxHolder[0]] = thisClass;
+			treeIdxHolder[0]++;
 		}
-		if (treeIdx < stratum.treeRootIds.length) {
-			// TODO: inner class phase (step 4) — remaining trees at index i..treeRootIds.length
+		if (treeIdxHolder[0] < treeRootIds.length) {
+			log.debug("createMethodPerEnsemble() fossil spill at treeIdx:{} constantPoolSize:{} remainingTrees:{}", treeIdxHolder[0],
+					classBuilder.constantPool().size(), treeRootIds.length - treeIdxHolder[0]);
 		}
+		// Inner class phase: spill remaining trees into static inner classes
+		int innerClassCounter = 0;
+		while (treeIdxHolder[0] < treeRootIds.length) {
+			final ClassDesc innerClassDesc = ClassDesc.of(thisClass.packageName(),
+					thisClass.displayName() + INNER_CLASS_PREFIX + innerClassCounter);
+			final byte[] innerBytes = ClassFile.of().build(innerClassDesc, (final ClassBuilder innerBuilder) -> {
+				setJdk(innerBuilder);
+				innerBuilder.withFlags(ClassFile.ACC_FINAL | ClassFile.ACC_SUPER);
+				while (treeIdxHolder[0] < treeRootIds.length && innerBuilder.constantPool().size() < constantPoolSoftMax) {
+					final int treeId = treeRootIds[treeIdxHolder[0]];
+					final int rootArrayIdx = stratum.nodeIndex.get(PetrifyConstants.packLong(treeId, 0));
+					emitTreeMethod(innerBuilder, treeMethodDesc, stratum, treeId, rootArrayIdx);
+					treeOwners[treeIdxHolder[0]] = innerClassDesc;
+					treeIdxHolder[0]++;
+				}
+			});
+			innerClassBytes.add(innerBytes);
+			innerClassCounter++;
+		}
+		log.info("createMethodPerEnsemble() trees:{} innerClasses:{}", treeRootIds.length, innerClassCounter);
 		return treeOwners;
 	}
 
@@ -488,11 +514,10 @@ public class Petrify {
 	protected void emitTreeMethod(final ClassBuilder classBuilder, final MethodTypeDesc treeMethodDesc, final Stratum stratum,
 			final int treeId, final int rootArrayIdx) {
 		// slot layout: features=0, scores=1
-		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_PRIVATE | ClassFile.ACC_STATIC,
-				(final CodeBuilder codeBuilder) -> {
-					emitTree(codeBuilder, stratum, treeId, rootArrayIdx);
-					codeBuilder.return_();
-				});
+		classBuilder.withMethodBody(TREE_METHOD_PREFIX + treeId, treeMethodDesc, ClassFile.ACC_STATIC, (final CodeBuilder codeBuilder) -> {
+			emitTree(codeBuilder, stratum, treeId, rootArrayIdx);
+			codeBuilder.return_();
+		});
 	}
 
 	protected void emitTree(final CodeBuilder codeBuilder, final Stratum stratum, final int treeId, final int arrayIdx) {
