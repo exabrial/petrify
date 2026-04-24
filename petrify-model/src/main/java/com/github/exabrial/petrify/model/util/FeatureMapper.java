@@ -26,11 +26,10 @@ public class FeatureMapper {
 	}
 
 	public float[] mapToF32(final Map<String, Object> features) {
-		final double[] doubles = featureNames.stream().mapToDouble((final String featureName) -> doubleOf(featureName, features))
-				.toArray();
-		final float[] result = new float[doubles.length];
-		for (int idx = 0; idx < doubles.length; idx++) {
-			result[idx] = (float) doubles[idx];
+		// ok so... the Java streams api does not have a mapToFloat? Alrighty then.
+		final float[] result = new float[featureNames.size()];
+		for (int idx = 0; idx < featureNames.size(); idx++) {
+			result[idx] = floatOf(featureNames.get(idx), features);
 		}
 		return result;
 	}

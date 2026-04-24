@@ -279,7 +279,12 @@ Model files are resolved from `src/main/models/` by default.
 | `ignoreFeatureNamesFromModel` | No | If `true`, discard any feature names embedded in the model file. Defaults to `false`. |
 | `modelName` | No | Model name metadata. Stored on the compiled `Fossil`. |
 | `modelVersion` | No | Model version metadata. Stored on the compiled `Fossil`. |
-| `disableEclipseIntegration` | No | Plugin-level parameter (not per-fossil). When `true`, skips the m2e `.classpath` edit and `target/petrify-classes/` dual-write. Defaults to `false`. No effect outside m2e. Also settable as `-Dpetrify.disableEclipseIntegration=true`. |
+
+#### Plugin-level parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `disableEclipseIntegration` | No | When `true`, skips the m2e `.classpath` edit and `target/petrify-classes/` dual-write. Defaults to `false`. No effect outside m2e. Also settable as `-Dpetrify.disableEclipseIntegration=true`. |
 
 
 #### Skipping execution
