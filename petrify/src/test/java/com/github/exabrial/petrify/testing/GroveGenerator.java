@@ -24,14 +24,6 @@ public class GroveGenerator {
 
 		grove.precisionMode = precision;
 		grove.postTransform = PetrifyConstants.POST_TRANSFORM_NONE;
-<<<<<<< HEAD
-		grove.baseValues = new double[] { 0.0, 0.0 };
-
-		grove.nodesTreeIds = new int[] { 0, 0, 0 }; // all three nodes belong to tree 0
-		grove.nodesNodeIds = new int[] { 0, 1, 2 }; // node ids within tree 0: root=0, true-leaf=1, false-leaf=2
-		grove.nodesModes = new byte[] { mode, PetrifyConstants.MODE_LEAF, PetrifyConstants.MODE_LEAF }; // root is branch; children are
-																																																		// leaves
-=======
 		grove.baseValues = new double[] { 0.0, 0.0 }; // biases; just set to zero
 
 		// Node Property Matrix. Slot[0] in all arrays below refers to properties of node #0 (the root node), and so forth for other nodes
@@ -39,7 +31,6 @@ public class GroveGenerator {
 		grove.nodesNodeIds = new int[] { 0, 1, 2 }; // node ids within tree 0: root=0, true-leaf=1, false-leaf=2
 		// root is branch; children are leaves
 		grove.nodesModes = new byte[] { mode, PetrifyConstants.MODE_LEAF, PetrifyConstants.MODE_LEAF };
->>>>>>> 05f5183 (add branching test)
 		grove.nodesFeatureIds = new int[] { 0, 0, 0 }; // root tests features[0]; unused at leaves
 		grove.nodesValues = new double[] { THRESHOLD, 0.0, 0.0 }; // root threshold; unused at leaves
 		grove.nodesTrueNodeIds = new int[] { 1, 0, 0 }; // root true-branch -> node 1; unused at leaves
