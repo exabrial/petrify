@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -43,6 +46,8 @@ import com.github.exabrial.petrify.internal.model.CompiledModel;
  */
 @Mojo(name = "fossilize", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class FossilizeMojo extends AbstractMojo {
+	static final String PETRIFY_MANIFEST_DIR = "petrify";
+	static final String PETRIFY_MANIFEST_FILE = "manifest.txt";
 	private static final String PETRIFY_CLASSES_DIR = "petrify-classes";
 	private static final String PETRIFY_CLASSPATH_ENTRY = "<classpathentry exported=\"true\" kind=\"lib\" path=\"target/"
 			+ PETRIFY_CLASSES_DIR + "\"/>";
@@ -88,6 +93,8 @@ public class FossilizeMojo extends AbstractMojo {
 	@Parameter(property = "petrify.disableEclipseIntegration", defaultValue = "false")
 	private boolean disableEclipseIntegration;
 
+	private final List<String> manifestEntries = new ArrayList<>();
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (skip) {
@@ -101,6 +108,7 @@ public class FossilizeMojo extends AbstractMojo {
 				project.addCompileSourceRoot(modelDirectory);
 				processFossil(fossil);
 			}
+			writeManifest();
 			refreshOutputDirectories();
 
 			if (isEclipseIntegrationEnabled()) {
@@ -119,6 +127,7 @@ public class FossilizeMojo extends AbstractMojo {
 		if (!buildContext.isIncremental() && isUpToDate(modelPath, outputClassFile)) {
 			getLog().debug("processFossil() up-to-date, skipping modelFile:" + fossil.getModelFile() + " class:" + resolvedClassName);
 			buildContext.refresh(outputClassFile.toFile());
+			recordExistingManifestEntries(packageName, resolvedClassName);
 		} else {
 			deleteStaleClassFile(outputClassFile);
 			final Path eclipseClassFile;
@@ -136,6 +145,7 @@ public class FossilizeMojo extends AbstractMojo {
 			final byte[] modelBytes = readModelFile(modelPath);
 			final byte[] classBytes = compile(fossil, modelBytes, packageName, resolvedClassName);
 			writeClassFile(outputClassFile, classBytes);
+			manifestEntries.add(toRelativePath(packageName, resolvedClassName));
 			if (eclipseClassFile != null) {
 				writeClassFile(eclipseClassFile, classBytes);
 			}
@@ -181,6 +191,7 @@ public class FossilizeMojo extends AbstractMojo {
 		for (final CompiledModel innerClass : petrify.getInnerClasses()) {
 			final Path innerOutputPath = resolveOutputPath(outputDirectory, packageName, innerClass.className());
 			writeClassFile(innerOutputPath, innerClass.classBytes());
+			manifestEntries.add(toRelativePath(packageName, innerClass.className()));
 			if (isEclipseIntegrationEnabled()) {
 				final Path innerEclipsePath = resolveEclipseOutputPath(packageName, innerClass.className());
 				writeClassFile(innerEclipsePath, innerClass.classBytes());
@@ -446,6 +457,37 @@ public class FossilizeMojo extends AbstractMojo {
 			getLog().info("writeClassFile() wrote bytes:" + classBytes.length + " to:" + outputClassFile);
 		} catch (final IOException ioException) {
 			throw new MojoExecutionException("writeClassFile() failed to write classFile:" + outputClassFile, ioException);
+		}
+	}
+
+	protected void writeManifest() throws MojoExecutionException {
+		final Path manifestDir = Path.of(project.getBuild().getDirectory(), PETRIFY_MANIFEST_DIR);
+		final Path manifestFile = manifestDir.resolve(PETRIFY_MANIFEST_FILE);
+		try {
+			Files.createDirectories(manifestDir);
+			Files.write(manifestFile, manifestEntries, StandardCharsets.UTF_8);
+			getLog().info("writeManifest() wrote entries:" + manifestEntries.size() + " to:" + manifestFile);
+		} catch (final IOException ioException) {
+			throw new MojoExecutionException("writeManifest() failed to write manifest:" + manifestFile, ioException);
+		}
+	}
+
+	protected String toRelativePath(final String packageName, final String className) {
+		return packageName.replace('.', File.separatorChar) + File.separator + className + ".class";
+	}
+
+	protected void recordExistingManifestEntries(final String packageName, final String resolvedClassName) {
+		final String packageDir = packageName.replace('.', File.separatorChar);
+		final Path packagePath = Path.of(outputDirectory, packageDir);
+		if (Files.isDirectory(packagePath)) {
+			try (final DirectoryStream<Path> stream = Files.newDirectoryStream(packagePath,
+					resolvedClassName + "*.class")) {
+				for (final Path classFile : stream) {
+					manifestEntries.add(packageDir + File.separator + classFile.getFileName().toString());
+				}
+			} catch (final IOException ioException) {
+				getLog().warn("recordExistingManifestEntries() failed to enumerate existing class files in:" + packagePath, ioException);
+			}
 		}
 	}
 }
