@@ -619,6 +619,7 @@ public class Petrify {
 				}
 
 				default -> {
+					// unreachable code
 					throw new UnexpectedTreeBranch("Unknown branch mode: " + mode);
 				}
 			};
