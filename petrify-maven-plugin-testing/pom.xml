@@ -28,7 +28,6 @@
 			<plugin>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-maven-plugin</artifactId>
-				<extensions>true</extensions>
 				<executions>
 					<execution>
 						<goals>
