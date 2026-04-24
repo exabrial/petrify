@@ -2,12 +2,15 @@ package com.github.exabrial.petrify.testing;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
+import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.model.PetrifyConstants;
 
 public class GroveGenerator {
 	public static final int CLASS_TRUE = 1;
 	public static final int CLASS_FALSE = 0;
 	public static final double THRESHOLD = 100.0;
+	public static final double WEIGHT_TRUE = 7.0;
+	public static final double WEIGHT_FALSE = -3.0;
 
 	public final PrecisionMode precision;
 
@@ -24,12 +27,10 @@ public class GroveGenerator {
 
 		grove.precisionMode = precision;
 		grove.postTransform = PetrifyConstants.POST_TRANSFORM_NONE;
-		grove.baseValues = new double[] { 0.0, 0.0 }; // biases; just set to zero
+		grove.baseValues = new double[] { 0.0, 0.0 };
 
-		// Node Property Matrix. Slot[0] in all arrays below refers to properties of node #0 (the root node), and so forth for other nodes
 		grove.nodesTreeIds = new int[] { 0, 0, 0 }; // all three nodes belong to tree 0
 		grove.nodesNodeIds = new int[] { 0, 1, 2 }; // node ids within tree 0: root=0, true-leaf=1, false-leaf=2
-		// root is branch; children are leaves
 		grove.nodesModes = new byte[] { mode, PetrifyConstants.MODE_LEAF, PetrifyConstants.MODE_LEAF };
 		grove.nodesFeatureIds = new int[] { 0, 0, 0 }; // root tests features[0]; unused at leaves
 		grove.nodesValues = new double[] { THRESHOLD, 0.0, 0.0 }; // root threshold; unused at leaves
@@ -43,6 +44,38 @@ public class GroveGenerator {
 		grove.classIds = new int[] { 0, 0 }; // both target class 0 (binary single-score)
 		grove.classWeights = new double[] { 1.0, -1.0 }; // true-leaf +1.0, false-leaf -1.0
 		grove.classLabelsInt64s = new long[] { CLASS_FALSE, CLASS_TRUE }; // two class labels -> binary classifier
+
+		return grove;
+	}
+
+	public RegressorGrove singleSplitRegressorGrove(final byte mode) {
+		return singleSplitRegressorGrove(mode, 0);
+	}
+
+	public RegressorGrove singleSplitRegressorGrove(final byte mode, final int missingValueTracksTrue) {
+		final RegressorGrove grove = new RegressorGrove();
+
+		grove.precisionMode = precision;
+		grove.postTransform = PetrifyConstants.POST_TRANSFORM_NONE;
+		grove.baseValues = new double[] { 0.0 };
+
+		grove.nodesTreeIds = new int[] { 0, 0, 0 }; // all three nodes belong to tree 0
+		grove.nodesNodeIds = new int[] { 0, 1, 2 }; // root=0, true-leaf=1, false-leaf=2
+		grove.nodesModes = new byte[] { mode, PetrifyConstants.MODE_LEAF, PetrifyConstants.MODE_LEAF };
+		grove.nodesFeatureIds = new int[] { 0, 0, 0 }; // root tests features[0]; unused at leaves
+		grove.nodesValues = new double[] { THRESHOLD, 0.0, 0.0 }; // root threshold; unused at leaves
+		grove.nodesTrueNodeIds = new int[] { 1, 0, 0 }; // root true-branch -> node 1; unused at leaves
+		grove.nodesFalseNodeIds = new int[] { 2, 0, 0 }; // root false-branch -> node 2; unused at leaves
+		grove.nodesHitRates = new double[] { 1.0, 1.0, 1.0 }; // unused at inference
+		grove.nodesMissingValueTracksTrue = new int[] { missingValueTracksTrue, 0, 0 };
+
+		// predict(features) = WEIGHT_TRUE:7.0 if branch is true, WEIGHT_FALSE:-3.0 if false
+		grove.targetTreeIds = new int[] { 0, 0 }; // both leaf contributions from tree 0
+		grove.targetNodeIds = new int[] { 1, 2 }; // node 1 = true-leaf, node 2 = false-leaf
+		grove.targetIds = new int[] { 0, 0 }; // both target id 0 (single-target regression)
+		grove.targetWeights = new double[] { WEIGHT_TRUE, WEIGHT_FALSE };
+		grove.nTargets = 1;
+		grove.aggregateFunction = PetrifyConstants.AGGREGATE_SUM;
 
 		return grove;
 	}
