@@ -23,8 +23,6 @@ class PetrifyF32BranchingTest {
 	private final GroveGenerator groveGenerator = new GroveGenerator(PrecisionMode.F32);
 	private final Petrify petrify = new Petrify();
 
-	// Compile a bunch of 3 node trees. Modify just the branching mode.
-
 	@Test
 	void test_MODE_BRANCH_EQ() throws Exception {
 		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(),
@@ -32,6 +30,7 @@ class PetrifyF32BranchingTest {
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { BELOW }));
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { (float) THRESHOLD }));
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { ABOVE }));
+		assertEquals(CLASS_FALSE, fossil.predict(new float[] { Float.NaN }));
 	}
 
 	@Test
@@ -41,6 +40,7 @@ class PetrifyF32BranchingTest {
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { BELOW }));
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { (float) THRESHOLD }));
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { ABOVE }));
+		assertEquals(CLASS_TRUE, fossil.predict(new float[] { Float.NaN }));
 	}
 
 	@Test
@@ -50,6 +50,7 @@ class PetrifyF32BranchingTest {
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { BELOW }));
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { (float) THRESHOLD }));
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { ABOVE }));
+		assertEquals(CLASS_FALSE, fossil.predict(new float[] { Float.NaN }));
 	}
 
 	@Test
@@ -59,6 +60,7 @@ class PetrifyF32BranchingTest {
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { BELOW }));
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { (float) THRESHOLD }));
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { ABOVE }));
+		assertEquals(CLASS_FALSE, fossil.predict(new float[] { Float.NaN }));
 	}
 
 	@Test
@@ -68,6 +70,7 @@ class PetrifyF32BranchingTest {
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { BELOW }));
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { (float) THRESHOLD }));
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { ABOVE }));
+		assertEquals(CLASS_FALSE, fossil.predict(new float[] { Float.NaN }));
 	}
 
 	@Test
@@ -77,6 +80,35 @@ class PetrifyF32BranchingTest {
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { BELOW }));
 		assertEquals(CLASS_FALSE, fossil.predict(new float[] { (float) THRESHOLD }));
 		assertEquals(CLASS_TRUE, fossil.predict(new float[] { ABOVE }));
+		assertEquals(CLASS_FALSE, fossil.predict(new float[] { Float.NaN }));
+	}
+
+	@Test
+	void test_MODE_BRANCH_LEQ_NaN_missingTracksTrue() throws Exception {
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(),
+				groveGenerator.singleSplitGrove(PetrifyConstants.MODE_BRANCH_LEQ, 1));
+		assertEquals(CLASS_TRUE, fossil.predict(new float[] { Float.NaN }));
+	}
+
+	@Test
+	void test_MODE_BRANCH_LT_NaN_missingTracksTrue() throws Exception {
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(),
+				groveGenerator.singleSplitGrove(PetrifyConstants.MODE_BRANCH_LT, 1));
+		assertEquals(CLASS_TRUE, fossil.predict(new float[] { Float.NaN }));
+	}
+
+	@Test
+	void test_MODE_BRANCH_GEQ_NaN_missingTracksTrue() throws Exception {
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(),
+				groveGenerator.singleSplitGrove(PetrifyConstants.MODE_BRANCH_GEQ, 1));
+		assertEquals(CLASS_TRUE, fossil.predict(new float[] { Float.NaN }));
+	}
+
+	@Test
+	void test_MODE_BRANCH_GT_NaN_missingTracksTrue() throws Exception {
+		final ClassifierFossil fossil = petrify.fossilize(MethodHandles.lookup(),
+				groveGenerator.singleSplitGrove(PetrifyConstants.MODE_BRANCH_GT, 1));
+		assertEquals(CLASS_TRUE, fossil.predict(new float[] { Float.NaN }));
 	}
 
 	@Test
