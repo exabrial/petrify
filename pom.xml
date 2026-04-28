@@ -4,7 +4,7 @@
 
 	<groupId>com.github.exabrial</groupId>
 	<artifactId>petrify-parent</artifactId>
-	<version>1.4.0</version>
+	<version>1.4.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<description>Petrify: A Machine Learning Model compiler for the JVM</description>
 	<name>${project.artifactId}</name>
@@ -14,7 +14,7 @@
 		<connection>scm:git:ssh://git@github.com/exabrial/petrify.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/exabrial/petrify.git</developerConnection>
 		<url>https://github.com/exabrial/petrify/tree/master</url>
-		<tag>v1.4.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<properties>
@@ -47,37 +47,37 @@
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-compiler-model</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-import-lightgbm</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-import-onnx</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-import-scikit</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-model</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.exabrial</groupId>
 				<artifactId>petrify-onnx-proto</artifactId>
-				<version>1.4.0</version>
+				<version>1.4.1-SNAPSHOT</version>
 			</dependency>
 
 			<!-- third-party dependencies -->
@@ -175,7 +175,7 @@
 				<plugin>
 					<groupId>com.github.exabrial</groupId>
 					<artifactId>petrify-maven-plugin</artifactId>
-					<version>1.4.0</version>
+					<version>1.4.1-SNAPSHOT</version>
 				</plugin>
 
 				<plugin>
