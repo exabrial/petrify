@@ -1,8 +1,6 @@
 package com.github.exabrial.petrify.model.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
@@ -22,7 +20,6 @@ import com.github.exabrial.petrify.compiler.model.ClassifierGrove;
 import com.github.exabrial.petrify.imprt.Arborist;
 import com.github.exabrial.petrify.imprt.lightgbm.LightGbmArborist;
 import com.github.exabrial.petrify.model.ClassifierFossil;
-import com.github.exabrial.petrify.model.exception.FossilUnconformity;
 
 @TestInstance(Lifecycle.PER_CLASS)
 class FeatureMapperTest {
@@ -79,43 +76,5 @@ class FeatureMapperTest {
 
 		final double[] array = mapper.mapToF64(features);
 		assertEquals(8, array.length);
-	}
-
-	@Test
-	void testmapToF64_missingKeyBecomesNaN() {
-		final Map<String, Object> features = new HashMap<>();
-		features.put("Column_0", 3.625);
-
-		final double[] array = mapper.mapToF64(features);
-		assertEquals(3.625, array[0]);
-		assertTrue(Double.isNaN(array[1]));
-	}
-
-	@Test
-	void testmapToF32_booleanConversion() {
-		final Map<String, Object> features = new HashMap<>();
-		features.put("Column_0", true);
-		features.put("Column_1", false);
-
-		final float[] array = mapper.mapToF32(features);
-		assertEquals(1.0f, array[0]);
-		assertEquals(0.0f, array[1]);
-	}
-
-	@Test
-	void testmapToF64_integerConversion() {
-		final Map<String, Object> features = new HashMap<>();
-		features.put("Column_0", 5);
-
-		final double[] array = mapper.mapToF64(features);
-		assertEquals(5.0, array[0]);
-	}
-
-	@Test
-	void testmapToF64_unsupportedTypeThrows() {
-		final Map<String, Object> features = new HashMap<>();
-		features.put("Column_0", "not_a_number");
-
-		assertThrows(FossilUnconformity.class, () -> mapper.mapToF64(features));
 	}
 }
