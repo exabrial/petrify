@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
 import com.github.exabrial.petrify.model.Fossil;
-import com.github.exabrial.petrify.model.exception.ExpectedFeatureMissing;
+import com.github.exabrial.petrify.model.exception.FeatureUnconformity;
 import com.github.exabrial.petrify.model.exception.FossilUnconformity;
 
 @ExtendWith(MockitoExtension.class)
@@ -115,7 +115,7 @@ class FeatureMapperTest {
 		final Map<String, Object> features = new HashMap<>();
 		features.put("feat_0", 1.0);
 
-		assertThrows(ExpectedFeatureMissing.class, () -> mapper.mapToF64(features));
+		assertThrows(FeatureUnconformity.class, () -> mapper.mapToF64(features));
 		verify(mockLog).warn(any(String.class), eq(mapper.mappedFor), eq(2), eq(List.of("feat_1", "feat_2")));
 	}
 
@@ -180,7 +180,7 @@ class FeatureMapperTest {
 		final Map<String, Object> features = new HashMap<>();
 		features.put("feat_0", 1.0);
 
-		assertThrows(ExpectedFeatureMissing.class, () -> mapper.mapToF32(features));
+		assertThrows(FeatureUnconformity.class, () -> mapper.mapToF32(features));
 		verify(mockLog).warn(any(String.class), eq(mapper.mappedFor), eq(2), eq(List.of("feat_1", "feat_2")));
 	}
 

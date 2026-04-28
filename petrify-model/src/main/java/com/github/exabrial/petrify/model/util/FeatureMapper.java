@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.exabrial.petrify.model.Fossil;
-import com.github.exabrial.petrify.model.exception.ExpectedFeatureMissing;
+import com.github.exabrial.petrify.model.exception.FeatureUnconformity;
 import com.github.exabrial.petrify.model.exception.FossilUnconformity;
 
 import lombok.Getter;
@@ -48,7 +48,7 @@ public class FeatureMapper {
 		}
 	}
 
-	public float[] mapToF32(final Map<String, Object> features) throws ExpectedFeatureMissing {
+	public float[] mapToF32(final Map<String, Object> features) throws FeatureUnconformity {
 		// ok so... the Java streams api does not have a mapToFloat? Alrighty then.
 		final List<String> missingFeatures = new ArrayList<>();
 		final float[] result = new float[featureNames.size()];
@@ -63,13 +63,13 @@ public class FeatureMapper {
 			log.warn("mapToF32() detected missing features! mappedFor:{} missingFeatureCount:{} missingFeatures:{}", mappedFor,
 					missingFeatures.size(), missingFeatures);
 			if (tossExceptionOnMissingFeatures) {
-				throw new ExpectedFeatureMissing("mapToF32()", mappedFor, missingFeatures);
+				throw new FeatureUnconformity("mapToF32()", mappedFor, missingFeatures);
 			}
 		}
 		return result;
 	}
 
-	public double[] mapToF64(final Map<String, Object> features) throws ExpectedFeatureMissing {
+	public double[] mapToF64(final Map<String, Object> features) throws FeatureUnconformity {
 		final List<String> missingFeatures = new ArrayList<>();
 		for (final String featureName : featureNames) {
 			if (!features.containsKey(featureName)) {
@@ -80,7 +80,7 @@ public class FeatureMapper {
 			log.warn("mapToF64() detected missing features! mappedFor:{} missingFeatureCount:{} missingFeatures:{}", mappedFor,
 					missingFeatures.size(), missingFeatures);
 			if (tossExceptionOnMissingFeatures) {
-				throw new ExpectedFeatureMissing("mapToF64()", mappedFor, missingFeatures);
+				throw new FeatureUnconformity("mapToF64()", mappedFor, missingFeatures);
 			}
 		}
 		return featureNames.stream().mapToDouble((final String featureName) -> doubleOf(featureName, features)).toArray();
