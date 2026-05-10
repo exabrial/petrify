@@ -2,9 +2,7 @@
 
 Import scikit-learn linear models into Petrify via JSON. Supports `LinearRegression` and `LogisticRegression` (binary and multiclass).
 
-ONNX only supports f32 (Float, in Java). This importer will maintain f64 (Double) precision. The JVM and most Python runtimes
-have some slight differences how they handle Floating Point arithmetic;  My testing shows it's with about decimal place, but
-definitely implement some rounding in your code if you need extremely precision that's appropriate for your application.
+ONNX only supports f32 (Float, in Java). This importer will maintain f64 (Double) precision. The JVM and most Python runtimes have some slight differences how they handle Floating Point arithmetic;  My testing shows it's pretty close (OSx, ARM64) but definitely implement some rounding in your code and don't count on exact values (which you really shouldn't be doing much anyway).
 
 ## Python Export
 
