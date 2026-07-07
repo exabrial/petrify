@@ -25,6 +25,12 @@
 		<tag>HEAD</tag>
 	</scm>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<gpg.skip>true</gpg.skip>
+		<dep.version.protobuf>4.29.3</dep.version.protobuf>
+	</properties>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -67,7 +73,7 @@
 			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java</artifactId>
-				<version>4.29.3</version>
+				<version>${dep.version.protobuf}</version>
 			</dependency>
 			<dependency>
 				<groupId>jakarta.json</groupId>
