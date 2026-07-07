@@ -12,7 +12,7 @@ Petrify is a ultralight machine learning model compiler for the the JVM. It read
 
 This differs from every other ONNX Runtime that I know of, which are essentially interpreters and are reading data from the JVM Heap. Petrify encodes your model as bytecode and stores your splits/weights in the constant pool.
 
-Petrify has exactly one heap allocation per invocation when executing trees (the scores accumulator array). This is required to make the compiled model thread-safe. Future iterations might have an option where thread safety is not a concern, making a model invocation create 0 Garbage Collection pressure.
+Petrify has exactly one heap allocation per invocation when executing trees (the scores accumulator array). This is required to make the compiled model thread-safe. (Future iterations might have an option where thread safety is not a concern, making a model invocation create 0 Garbage Collection pressure.)
 
 
 A `Grove` or a `Vine` is the IR (intermediate representation) of your model. The resulting `Fossil` is the compiled equivelant of your model.
@@ -129,7 +129,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 ```xml
 <!-- Fossil interfaces (ASL2 licensed) -->
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify-model</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>
@@ -137,13 +137,13 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 
 <!-- Compiler and libs -->
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>
 </dependency>
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify-compiler-model</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>
@@ -151,7 +151,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 
 <!-- ONNX importer (f32 "float" precision) -->
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify-import-onnx</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>
@@ -159,7 +159,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 
 <!-- LightGBM native text importer (f64 "double" precision) -->
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify-import-lightgbm</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>
@@ -167,7 +167,7 @@ As such, the `petrify-model` module (containing the `Fossil` interfaces) is JDK 
 
 <!-- scikit-learn JSON importer (f64 "double" precision) -->
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify-import-scikit</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>
@@ -240,7 +240,7 @@ The `petrify-maven-plugin` compiles ML models to JVM bytecode during your build.
 <build>
   <plugins>
     <plugin>
-      <groupId>com.github.exabrial</groupId>
+      <groupId>com.github.exabrial.petrify</groupId>
       <artifactId>petrify-maven-plugin</artifactId>
       <version>1.4.1</version>
       <extensions>true</extensions>
@@ -303,7 +303,7 @@ Your project only needs `petrify-model` as a runtime dependency:
 
 ```xml
 <dependency>
-  <groupId>com.github.exabrial</groupId>
+  <groupId>com.github.exabrial.petrify</groupId>
   <artifactId>petrify-model</artifactId>
   <version>1.4.1</version>
   <scope>compile</scope>

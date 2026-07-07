@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.github.exabrial</groupId>
+	<parent>
+		<groupId>com.github.exabrial</groupId>
+		<artifactId>java25-parent-pom</artifactId>
+		<version>1-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.github.exabrial.petrify</groupId>
 	<artifactId>petrify-parent</artifactId>
-	<version>1.4.2-SNAPSHOT</version>
+	<version>1.5.0-SNAPSHOT</version>
+
 	<packaging>pom</packaging>
 	<description>Petrify: A Machine Learning Model compiler for the JVM</description>
 	<name>${project.artifactId}</name>
@@ -17,79 +25,49 @@
 		<tag>HEAD</tag>
 	</scm>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<gpg.skip>true</gpg.skip>
-		<dep.version.protobuf>4.29.3</dep.version.protobuf>
-	</properties>
-
-	<licenses>
-		<license>
-			<name>EUPL-1.2</name>
-			<url>https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt</url>
-			<distribution>repo</distribution>
-			<comments>European Union Public Licence v1.2</comments>
-		</license>
-	</licenses>
-
-	<developers>
-		<developer>
-			<id>exabrial</id>
-			<name>Jonathan S. Fisher</name>
-			<properties>
-				<dev.pgp.fingerprint>871638A21A7F2C38066471420306A354336B4F0D</dev.pgp.fingerprint>
-			</properties>
-		</developer>
-	</developers>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify-compiler-model</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify-import-lightgbm</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify-import-onnx</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify-import-scikit</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify-model</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>com.github.exabrial</groupId>
+				<groupId>com.github.exabrial.petrify</groupId>
 				<artifactId>petrify-onnx-proto</artifactId>
-				<version>1.4.2-SNAPSHOT</version>
+				<version>1.5.0-SNAPSHOT</version>
 			</dependency>
 
 			<!-- third-party dependencies -->
 			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>1.18.44</version>
-			</dependency>
-			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java</artifactId>
-				<version>${dep.version.protobuf}</version>
+				<version>4.29.3</version>
 			</dependency>
 			<dependency>
 				<groupId>jakarta.json</groupId>
@@ -107,64 +85,32 @@
 				<version>2.0.1</version>
 			</dependency>
 			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter-api</artifactId>
-				<version>5.14.2</version>
+				<groupId>net.bytebuddy</groupId>
+				<artifactId>byte-buddy-agent</artifactId>
+				<version>1.17.5</version>
 			</dependency>
 			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter-engine</artifactId>
-				<version>5.14.2</version>
-			</dependency>
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>1.7.36</version>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-core</artifactId>
+				<version>1.5.18</version>
 			</dependency>
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
 				<artifactId>logback-classic</artifactId>
-				<version>1.2.13</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>5.18.0</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-junit-jupiter</artifactId>
-				<version>5.18.0</version>
-			</dependency>
-			<dependency>
-				<groupId>net.bytebuddy</groupId>
-				<artifactId>byte-buddy-agent</artifactId>
-				<version>1.17.5</version>
+				<version>1.5.18</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -173,82 +119,9 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
-					<groupId>com.github.exabrial</groupId>
+					<groupId>com.github.exabrial.petrify</groupId>
 					<artifactId>petrify-maven-plugin</artifactId>
-					<version>1.4.2-SNAPSHOT</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-clean-plugin</artifactId>
-					<version>3.2.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.15.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.1.2</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-gpg-plugin</artifactId>
-					<version>3.2.8</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-install-plugin</artifactId>
-					<version>3.1.2</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.4.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.12.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-plugin-plugin</artifactId>
-					<version>3.15.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.9.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.3.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.12.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-source-plugin</artifactId>
-					<version>3.4.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.5.4</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.sonatype.central</groupId>
-					<artifactId>central-publishing-maven-plugin</artifactId>
-					<version>0.7.0</version>
-					<extensions>true</extensions>
+					<version>1.5.0-SNAPSHOT</version>
 				</plugin>
 				<plugin>
 					<groupId>org.xolstice.maven.plugins</groupId>
@@ -265,94 +138,7 @@
 				<version>1.7.1</version>
 			</extension>
 		</extensions>
-
-		<plugins>
-			<plugin>
-				<groupId>org.sonatype.central</groupId>
-				<artifactId>central-publishing-maven-plugin</artifactId>
-				<configuration>
-					<publishingServerId>ossrh</publishingServerId>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>25</source>
-					<target>25</target>
-					<release>25</release>
-					<compilerArgs>
-						<arg>-Xlint:all,-processing,-path</arg>
-					</compilerArgs>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>gpg-sign</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-						<configuration>
-							<keyname>871638A21A7F2C38066471420306A354336B4F0D</keyname>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>javadocs-package</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<attach>true</attach>
-					<doclint>none</doclint>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>source-package</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<attach>true</attach>
-					<includePom>true</includePom>
-				</configuration>
-			</plugin>
-		</plugins>
 	</build>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>central</id>
-			<name>Central Repository</name>
-			<releases>
-				<checksumPolicy>fail</checksumPolicy>
-			</releases>
-			<url>https://repo.maven.apache.org/maven2</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<modules>
 		<!-- please maintain alphabetical order -->
@@ -367,13 +153,4 @@
 		<module>petrify-onnx-proto</module>
 		<module>petrify-testing</module>
 	</modules>
-
-	<profiles>
-		<profile>
-			<id>sign</id>
-			<properties>
-				<gpg.skip>false</gpg.skip>
-			</properties>
-		</profile>
-	</profiles>
 </project>
