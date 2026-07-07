@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
+
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.ModelMetadata;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
@@ -14,9 +17,6 @@ import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpac
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.imprt.Vintner;
 import com.github.exabrial.petrify.model.PetrifyConstants;
-
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
 
 public class ScikitVintner implements Vintner {
 	protected static final String TYPE_CLASSIFIER = "classifier";
@@ -29,7 +29,7 @@ public class ScikitVintner implements Vintner {
 
 	@Override
 	public <T extends Vine> T toVine(final String classpathLocation) {
-		try (final InputStream is = getClass().getResourceAsStream(classpathLocation)) {
+		try (InputStream is = getClass().getResourceAsStream(classpathLocation)) {
 			if (is == null) {
 				throw new MissingSpecimen("Scikit model not found on classpath: " + classpathLocation);
 			} else {
@@ -46,7 +46,7 @@ public class ScikitVintner implements Vintner {
 	public <T extends Vine> T toVine(final byte[] bytes) {
 		final String json = new String(bytes, StandardCharsets.UTF_8);
 		final ScikitLinearModel model;
-		try (final Jsonb jsonb = JsonbBuilder.create()) {
+		try (Jsonb jsonb = JsonbBuilder.create()) {
 			model = jsonb.fromJson(json, ScikitLinearModel.class);
 			final Vine vine;
 			switch (model.getType()) {

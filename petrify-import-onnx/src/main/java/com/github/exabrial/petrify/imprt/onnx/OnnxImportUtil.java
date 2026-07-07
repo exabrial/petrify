@@ -30,7 +30,7 @@ public final class OnnxImportUtil implements PetrifyConstants {
 	}
 
 	public static ModelProto loadModel(final Class<?> callerClass, final String classpathLocation) {
-		try (final InputStream is = callerClass.getResourceAsStream(classpathLocation)) {
+		try (InputStream is = callerClass.getResourceAsStream(classpathLocation)) {
 			if (is == null) {
 				throw new MissingSpecimen("ONNX model not found on classpath: " + classpathLocation);
 			} else {

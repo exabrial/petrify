@@ -516,7 +516,8 @@ public class Petrify {
 		final byte mode = stratum.grove.nodesModes[arrayIdx];
 		switch (mode) {
 
-			case PetrifyConstants.MODE_BRANCH_LEQ, PetrifyConstants.MODE_BRANCH_LT, PetrifyConstants.MODE_BRANCH_GEQ, PetrifyConstants.MODE_BRANCH_GT, PetrifyConstants.MODE_BRANCH_EQ, PetrifyConstants.MODE_BRANCH_NEQ -> {
+			case PetrifyConstants.MODE_BRANCH_LEQ, PetrifyConstants.MODE_BRANCH_LT, PetrifyConstants.MODE_BRANCH_GEQ, //
+					PetrifyConstants.MODE_BRANCH_GT, PetrifyConstants.MODE_BRANCH_EQ, PetrifyConstants.MODE_BRANCH_NEQ -> {
 				emitBranch(codeBuilder, stratum, treeId, arrayIdx);
 			}
 
@@ -639,9 +640,7 @@ public class Petrify {
 	}
 
 	protected void emitBaseValues(final CodeBuilder codeBuilder, final double[] baseValues, final ByteCodeAdapter adapter) {
-		if (baseValues == null) {
-			return;
-		} else {
+		if (baseValues != null) {
 			for (int classIdx = 0; classIdx < baseValues.length; classIdx++) {
 				if (baseValues[classIdx] != 0.0) {
 					// implement: scores[idx] += baseValue

@@ -450,8 +450,11 @@ public class FossilizeMojo extends AbstractMojo {
 
 	protected void writeClassFile(final Path outputClassFile, final byte[] classBytes) throws MojoExecutionException {
 		try {
-			Files.createDirectories(outputClassFile.getParent());
-			try (final OutputStream outputStream = buildContext.newFileOutputStream(outputClassFile.toFile())) {
+			final Path parentDirectory = outputClassFile.getParent();
+			if (parentDirectory != null) {
+				Files.createDirectories(parentDirectory);
+			}
+			try (OutputStream outputStream = buildContext.newFileOutputStream(outputClassFile.toFile())) {
 				outputStream.write(classBytes);
 			}
 			getLog().info("writeClassFile() wrote bytes:" + classBytes.length + " to:" + outputClassFile);
@@ -480,10 +483,12 @@ public class FossilizeMojo extends AbstractMojo {
 		final String packageDir = packageName.replace('.', File.separatorChar);
 		final Path packagePath = Path.of(outputDirectory, packageDir);
 		if (Files.isDirectory(packagePath)) {
-			try (final DirectoryStream<Path> stream = Files.newDirectoryStream(packagePath,
-					resolvedClassName + "*.class")) {
+			try (DirectoryStream<Path> stream = Files.newDirectoryStream(packagePath, resolvedClassName + "*.class")) {
 				for (final Path classFile : stream) {
-					manifestEntries.add(packageDir + File.separator + classFile.getFileName().toString());
+					final Path fileName = classFile.getFileName();
+					if (fileName != null) {
+						manifestEntries.add(packageDir + File.separator + fileName.toString());
+					}
 				}
 			} catch (final IOException ioException) {
 				getLog().warn("recordExistingManifestEntries() failed to enumerate existing class files in:" + packagePath, ioException);

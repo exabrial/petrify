@@ -3,6 +3,7 @@ package com.github.exabrial.petrify.imprt.scikit;
 import java.io.Serializable;
 
 import jakarta.json.bind.annotation.JsonbProperty;
+
 import lombok.Data;
 
 @Data

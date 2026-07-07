@@ -22,7 +22,7 @@ import com.github.exabrial.petrify.model.PetrifyConstants;
 public class LightGbmArborist implements Arborist {
 	@Override
 	public <T extends Grove> T toGrove(final String classpathLocation) {
-		try (final InputStream is = getClass().getResourceAsStream(classpathLocation)) {
+		try (InputStream is = getClass().getResourceAsStream(classpathLocation)) {
 			if (is == null) {
 				throw new MissingSpecimen("LightGbm model not found on classpath: " + classpathLocation);
 			} else {
@@ -43,7 +43,7 @@ public class LightGbmArborist implements Arborist {
 	@SuppressWarnings("unchecked")
 	protected <T extends Grove> T parse(final String modelString) {
 		final ParseMachine machine = new ParseMachine();
-		try (final BufferedReader reader = new BufferedReader(new StringReader(modelString))) {
+		try (BufferedReader reader = new BufferedReader(new StringReader(modelString))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				machine.feedLine(line);
@@ -118,9 +118,7 @@ public class LightGbmArborist implements Arborist {
 
 		protected void feedLine(final String line) {
 			final String trimmedLine = line.trim();
-			if (trimmedLine.isEmpty()) {
-				return;
-			} else {
+			if (!trimmedLine.isEmpty()) {
 				final ParseState nextState = detectTransition(trimmedLine);
 				if (nextState != null) {
 					state = nextState;

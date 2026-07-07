@@ -29,6 +29,17 @@
 		</dependency>
 	</dependencies>
 
+	<properties>
+		<rat.skip>true</rat.skip>
+		<checkstyle.skip>true</checkstyle.skip>
+		<cpd.skip>true</cpd.skip>
+		<pmd.skip>true</pmd.skip>
+		<spotbugs.skip>true</spotbugs.skip>
+		<mdep.analyze.skip>true</mdep.analyze.skip>
+		<mdep.skip>true</mdep.skip>
+		<enforcer.skip>true</enforcer.skip>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>

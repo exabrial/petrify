@@ -10,6 +10,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to add two (float|double)s.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void add(CodeBuilder codeBuilder);
 
@@ -17,6 +18,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to load from a (float|double) array.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void aload(CodeBuilder codeBuilder);
 
@@ -24,6 +26,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to store into a (float|double) array.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void astore(CodeBuilder codeBuilder);
 
@@ -31,6 +34,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to compare (float|double)s, producing {@code 1} if any operand is NaN.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void cmpg(CodeBuilder codeBuilder);
 
@@ -38,6 +42,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to compare (float|double)s, producing {@code -1} if any operand is NaN.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void cmpl(CodeBuilder codeBuilder);
 
@@ -45,6 +50,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction pushing a constant (float|double) value onto the operand stack.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 * @param value
 	 *          the constant value to push
 	 */
@@ -54,6 +60,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to multiply (float|double)s.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void mul(CodeBuilder codeBuilder);
 
@@ -61,6 +68,7 @@ public interface ByteCodeAdapter {
 	 * Generates an instruction to return a (float|double) from this method.
 	 *
 	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
 	 */
 	void return_(CodeBuilder codeBuilder);
 

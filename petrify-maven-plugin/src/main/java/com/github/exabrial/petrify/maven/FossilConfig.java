@@ -114,7 +114,7 @@ public class FossilConfig {
 		boolean capitalizeNext = true;
 		for (int charIdx = 0; charIdx < raw.length(); charIdx++) {
 			final char ch = raw.charAt(charIdx);
-			if ((!Character.isJavaIdentifierPart(ch) || (ch == '_')) || (sb.isEmpty() && !Character.isJavaIdentifierStart(ch))) {
+			if (!Character.isJavaIdentifierPart(ch) || (ch == '_') || (sb.isEmpty() && !Character.isJavaIdentifierStart(ch))) {
 				capitalizeNext = true;
 			} else {
 				if (capitalizeNext) {
