@@ -28,7 +28,7 @@ public class FeatureMapper {
 	protected boolean tossExceptionOnMissingFeatures = false;
 
 	public FeatureMapper(final Fossil fossil) {
-		log = LoggerFactory.getLogger(FeatureMapper.class);
+		log = LoggerFactory.getLogger(getClass());
 		final List<String> names = fossil.getFeatureNames();
 		if (names.isEmpty()) {
 			throw new FossilUnconformity("Fossil does not contain feature name metadata");
@@ -39,7 +39,7 @@ public class FeatureMapper {
 	}
 
 	public FeatureMapper(final List<String> featureNames, final Fossil fossil) {
-		log = LoggerFactory.getLogger(FeatureMapper.class);
+		log = LoggerFactory.getLogger(getClass());
 		if (featureNames.isEmpty()) {
 			throw new FossilUnconformity("Feature names list cannot be empty");
 		} else {
@@ -50,6 +50,7 @@ public class FeatureMapper {
 
 	public float[] mapToF32(final Map<String, Object> features) throws FeatureUnconformity {
 		// ok so... the Java streams api does not have a mapToFloat? Alrighty then.
+		log.trace("mapToF32() mappedFor:{} inboundFeatureCount:{} inboundKeys:{}", mappedFor, features.size(), features.keySet());
 		final List<String> missingFeatures = new ArrayList<>();
 		final float[] result = new float[featureNames.size()];
 		for (int idx = 0; idx < featureNames.size(); idx++) {
@@ -70,6 +71,7 @@ public class FeatureMapper {
 	}
 
 	public double[] mapToF64(final Map<String, Object> features) throws FeatureUnconformity {
+		log.trace("mapToF64() mappedFor:{} inboundFeatureCount:{} inboundKeys:{}", mappedFor, features.size(), features.keySet());
 		final List<String> missingFeatures = new ArrayList<>();
 		for (final String featureName : featureNames) {
 			if (!features.containsKey(featureName)) {
