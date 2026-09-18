@@ -17,6 +17,7 @@
 .classpath
 .checkstyle
 .settings/
+.factorypath
 
 # Maven files #
 data/
