@@ -239,6 +239,10 @@ public class Petrify {
 					final int nFeatures = vine.nFeatures;
 					final double[] coefficients = vine.coefficients;
 					final double[] intercepts = vine.intercepts;
+					final boolean isBinarySingleScore = vine.isBinarySingleScore();
+					// A binary single-score model (e.g. scikit binary LogisticRegression) has one intercept and one coefficient row; it fills
+					// scores[0] only, and classify() derives both class scores from it
+					final int nScoreRows = isBinarySingleScore ? 1 : nClasses;
 
 					// Reserve a local variable for the scores array
 					final int scoresSlot = codeBuilder.allocateLocal(TypeKind.REFERENCE);
@@ -251,8 +255,8 @@ public class Petrify {
 					// Compute each transformed feature into its own local variable once, before the per-class scoring starts
 					final int[] featureSlots = emitPreTransformers(codeBuilder, vine, adapter);
 
-					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
-					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
+					// For each score row, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
+					for (int classIdx = 0; classIdx < nScoreRows; classIdx++) {
 						// Push scores array ref and index for eventual store, then seed the accumulator with the intercept
 						codeBuilder.aload(scoresSlot);
 						codeBuilder.ldc(classIdx);
@@ -279,7 +283,6 @@ public class Petrify {
 					}
 
 					// Prep and invoke fossil.classify(scores, postTransform, isBinarySingleScore)
-					final boolean isBinarySingleScore = vine.isBinarySingleScore();
 					codeBuilder.aload(PREDICT_SLOT_THIS);
 					codeBuilder.aload(scoresSlot);
 					codeBuilder.ldc((int) vine.postTransform);
