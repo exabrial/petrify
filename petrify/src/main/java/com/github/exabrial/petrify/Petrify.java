@@ -380,6 +380,20 @@ public class Petrify {
 		}
 	}
 
+	protected void emitFeatureLoad(final CodeBuilder codeBuilder, final int featureIdx, final int[] featureSlots,
+			final ByteCodeAdapter adapter) {
+		final int slot = featureSlots[featureIdx];
+		if (slot == NO_SLOT) {
+			// No pre-transformers: load features[featureIdx] straight from the caller's array
+			codeBuilder.aload(PREDICT_SLOT_FEATURES);
+			codeBuilder.ldc(featureIdx);
+			adapter.aload(codeBuilder);
+		} else {
+			// Load the transformed value from the local variable slot emitPreTransformers() filled
+			codeBuilder.loadLocal(adapter.typeKind(), slot);
+		}
+	}
+
 	protected void implementClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierStratum stratum,
 			final ClassDesc[] treeOwners) {
 		final ByteCodeAdapter adapter = getByteCodeAdapter(stratum.grove.precisionMode);
