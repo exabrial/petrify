@@ -240,15 +240,18 @@ public class Petrify {
 					final double[] coefficients = vine.coefficients;
 					final double[] intercepts = vine.intercepts;
 
+					// Reserve a local variable for the scores array
+					final int scoresSlot = codeBuilder.allocateLocal(TypeKind.REFERENCE);
+
 					// Create per-class score accumulator array
 					codeBuilder.ldc(nClasses);
 					codeBuilder.newarray(adapter.typeKind());
-					codeBuilder.astore(PREDICT_SLOT_SCORES);
+					codeBuilder.astore(scoresSlot);
 
 					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
 					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
 						// Push scores array ref and index for eventual store, then seed the accumulator with the intercept
-						codeBuilder.aload(PREDICT_SLOT_SCORES);
+						codeBuilder.aload(scoresSlot);
 						codeBuilder.ldc(classIdx);
 						adapter.ldc(codeBuilder, intercepts[classIdx]);
 						// Stack: scores_ref, classIdx, intercept
@@ -277,7 +280,7 @@ public class Petrify {
 					// Prep and invoke fossil.classify(scores, postTransform, isBinarySingleScore)
 					final boolean isBinarySingleScore = vine.isBinarySingleScore();
 					codeBuilder.aload(PREDICT_SLOT_THIS);
-					codeBuilder.aload(PREDICT_SLOT_SCORES);
+					codeBuilder.aload(scoresSlot);
 					codeBuilder.ldc((int) vine.postTransform);
 					codeBuilder.ldc(isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
