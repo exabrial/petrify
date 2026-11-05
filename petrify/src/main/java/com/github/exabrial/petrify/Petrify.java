@@ -302,8 +302,8 @@ public class Petrify {
 		// direct from features[i]
 		final int[] featureSlots = new int[vine.nFeatures];
 		for (int featureIdx = 0; featureIdx < vine.nFeatures; featureIdx++) {
-			final PreTransformer[] chain = vine.preTransformers[featureIdx];
-			final boolean isNoop = Arrays.stream(chain)
+			// A null preTransformers (e.g. ONNX vines, or vines built before pre-transformers existed) means every feature is noop
+			final boolean isNoop = vine.preTransformers == null || Arrays.stream(vine.preTransformers[featureIdx])
 					.allMatch((final PreTransformer preTransformer) -> preTransformer.type() == PreTransformerType.noop);
 			if (isNoop) {
 				featureSlots[featureIdx] = NO_SLOT;
@@ -317,7 +317,7 @@ public class Petrify {
 				adapter.aload(codeBuilder);
 				codeBuilder.storeLocal(adapter.typeKind(), slot);
 
-				for (final PreTransformer preTransformer : chain) {
+				for (final PreTransformer preTransformer : vine.preTransformers[featureIdx]) {
 					emitPreTransformer(codeBuilder, preTransformer, slot, adapter);
 				}
 				featureSlots[featureIdx] = slot;
