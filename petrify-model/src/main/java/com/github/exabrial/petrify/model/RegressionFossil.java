@@ -6,6 +6,10 @@
 
 package com.github.exabrial.petrify.model;
 
+/**
+ * A {@link Fossil} for regression. The generated class implements {@code predict} for its precision; the other overload converts the
+ * features and delegates. {@code aggregate} applies the post-transform to the summed score.
+ */
 public interface RegressionFossil extends Fossil {
 	String aggregate = "aggregate";
 	String predict = "predict";

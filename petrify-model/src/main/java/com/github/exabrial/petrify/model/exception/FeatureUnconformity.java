@@ -8,6 +8,9 @@ package com.github.exabrial.petrify.model.exception;
 
 import java.util.List;
 
+/**
+ * Thrown by {@code FeatureMapper} when input features are missing and {@code tossExceptionOnMissingFeatures} is set.
+ */
 public class FeatureUnconformity extends PetrifyException {
 	private static final long serialVersionUID = 1L;
 

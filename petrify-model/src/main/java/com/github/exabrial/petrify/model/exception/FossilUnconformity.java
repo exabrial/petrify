@@ -6,6 +6,10 @@
 
 package com.github.exabrial.petrify.model.exception;
 
+/**
+ * Thrown when a {@code Fossil} or its input cannot be used as given: no feature name metadata, an empty feature name list, or a
+ * feature value that is not a number or boolean.
+ */
 public class FossilUnconformity extends PetrifyException {
 	private static final long serialVersionUID = 1L;
 

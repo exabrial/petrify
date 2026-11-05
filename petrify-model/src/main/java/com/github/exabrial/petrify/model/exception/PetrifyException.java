@@ -6,6 +6,9 @@
 
 package com.github.exabrial.petrify.model.exception;
 
+/**
+ * Base unchecked exception for Petrify.
+ */
 public abstract class PetrifyException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 

@@ -6,6 +6,10 @@
 
 package com.github.exabrial.petrify.model;
 
+/**
+ * A {@link Fossil} for classification. The generated class implements {@code predict} for its precision; the other overload converts
+ * the features and delegates. {@code classify} applies the post-transform to the class scores and picks the winner.
+ */
 public interface ClassifierFossil extends Fossil {
 	String classify = "classify";
 	String predict = "predict";

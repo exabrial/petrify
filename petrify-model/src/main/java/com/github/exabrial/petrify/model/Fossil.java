@@ -10,6 +10,10 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Base type of every compiled model. A fossil is a generated class whose predict methods are the model, written directly as bytecode.
+ * The default methods are the post-transform functions and float/double conversions the generated code calls.
+ */
 public interface Fossil extends Serializable {
 
 	default List<String> getFeatureNames() {

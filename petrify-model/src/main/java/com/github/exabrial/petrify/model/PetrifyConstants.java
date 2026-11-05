@@ -6,6 +6,10 @@
 
 package com.github.exabrial.petrify.model;
 
+/**
+ * Shared constants for the compiler and compiled fossils: ONNX operator names, tree node modes, regressor aggregate functions, and
+ * post-transform codes.
+ */
 public interface PetrifyConstants {
 	// ONNX operator types
 	String OP_TREE_ENSEMBLE_CLASSIFIER = "TreeEnsembleClassifier";

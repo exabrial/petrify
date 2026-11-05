@@ -20,6 +20,11 @@ import com.github.exabrial.petrify.model.exception.FossilUnconformity;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Turns a {@code Map} of named features into the ordered {@code float[]} or {@code double[]} a {@link Fossil} predicts on, using the
+ * fossil's feature names (or a supplied list) for column order. A missing or {@code null} feature becomes {@code NaN}; numbers and
+ * booleans are converted. Logs a warning on missing features, or throws when {@code tossExceptionOnMissingFeatures} is set.
+ */
 public class FeatureMapper {
 	protected final Logger log;
 	protected final String mappedFor;
