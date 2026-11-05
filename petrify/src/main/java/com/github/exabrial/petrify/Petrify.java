@@ -248,6 +248,9 @@ public class Petrify {
 					codeBuilder.newarray(adapter.typeKind());
 					codeBuilder.astore(scoresSlot);
 
+					// Compute each transformed feature into its own local variable once, before the per-class scoring starts
+					final int[] featureSlots = emitPreTransformers(codeBuilder, vine, adapter);
+
 					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
 					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
 						// Push scores array ref and index for eventual store, then seed the accumulator with the intercept
@@ -260,10 +263,8 @@ public class Petrify {
 						for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
 							final double coefficient = coefficients[classIdx * nFeatures + featureIdx];
 							if (coefficient != 0.0) {
-								// Load features[featureIdx] onto stack
-								codeBuilder.aload(PREDICT_SLOT_FEATURES);
-								codeBuilder.ldc(featureIdx);
-								adapter.aload(codeBuilder);
+								// Load the (possibly transformed) feature onto stack
+								emitFeatureLoad(codeBuilder, featureIdx, featureSlots, adapter);
 
 								// Multiply by coefficient and accumulate into running score
 								adapter.ldc(codeBuilder, coefficient);
