@@ -1,0 +1,45 @@
+{
+	"type": "regressor",
+	"post_transform": "logistic",
+	"intercepts": [
+		-0.5
+	],
+	"coefficients": [
+		[
+			0.4,
+			0.01,
+			-0.03
+		]
+	],
+	"feature_names": [
+		"MedInc",
+		"HouseAge",
+		"Population"
+	],
+	"pre_transformers": {
+		"1": [
+			{
+				"transformer": "noop"
+			}
+		],
+		"2": [
+			{
+				"transformer": "fill",
+				"value": 1000.0
+			},
+			{
+				"transformer": "max",
+				"value": 20000.0
+			},
+			{
+				"transformer": "min",
+				"value": 100.0
+			},
+			{
+				"transformer": "log1p"
+			}
+		]
+	},
+	"model_name": "linear_regressor_pre_transformers",
+	"model_version": "1.0.0"
+}
