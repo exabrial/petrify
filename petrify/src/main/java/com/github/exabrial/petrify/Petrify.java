@@ -200,6 +200,9 @@ public class Petrify {
 					// Push this first; it will sit beneath the accumulating score for the aggregate call
 					codeBuilder.aload(PREDICT_SLOT_THIS);
 
+					// Compute each transformed feature into its own local variable, before the scoring starts
+					final int[] featureSlots = emitPreTransformers(codeBuilder, vine, adapter);
+
 					// Start accumulating: score = intercept
 					adapter.ldc(codeBuilder, intercept);
 
@@ -207,10 +210,8 @@ public class Petrify {
 					for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
 						final double coefficient = coefficients[featureIdx];
 						if (coefficient != 0.0) {
-							// Load features[featureIdx] onto stack
-							codeBuilder.aload(PREDICT_SLOT_FEATURES);
-							codeBuilder.ldc(featureIdx);
-							adapter.aload(codeBuilder);
+							// Load the (possibly transformed) feature onto stack
+							emitFeatureLoad(codeBuilder, featureIdx, featureSlots, adapter);
 
 							// Multiply by coefficient and accumulate into running score
 							adapter.ldc(codeBuilder, coefficient);
