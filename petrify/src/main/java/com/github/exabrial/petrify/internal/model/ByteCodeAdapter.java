@@ -4,6 +4,10 @@ import java.lang.classfile.CodeBuilder;
 import java.lang.classfile.TypeKind;
 import java.lang.constant.ClassDesc;
 
+/**
+ * Emits the precision-specific instructions (float or double) for a {@link com.github.exabrial.petrify.compiler.model.PrecisionMode},
+ * so the code generator is written once for both precisions.
+ */
 public interface ByteCodeAdapter {
 
 	/**

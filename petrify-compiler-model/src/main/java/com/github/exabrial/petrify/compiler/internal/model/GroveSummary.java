@@ -2,6 +2,9 @@ package com.github.exabrial.petrify.compiler.internal.model;
 
 import com.github.exabrial.petrify.compiler.model.ModelMetadata;
 
+/**
+ * Counts of trees, branches, and leaves in a {@code Grove}, cached by {@code Grove.summary()} for log output.
+ */
 public record GroveSummary(int treeCount, int branchCount, int leafCount, ModelMetadata metadata) {
 
 	@Override

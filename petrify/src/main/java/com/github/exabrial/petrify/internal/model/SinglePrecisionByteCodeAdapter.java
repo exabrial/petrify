@@ -5,6 +5,9 @@ import java.lang.classfile.TypeKind;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.ConstantDescs;
 
+/**
+ * {@link ByteCodeAdapter} for {@code F32}: emits {@code float} instructions.
+ */
 public final class SinglePrecisionByteCodeAdapter implements ByteCodeAdapter {
 
 	@Override

@@ -13,6 +13,10 @@ import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+/**
+ * A {@link Stratum} for a {@link ClassifierGrove}: groups the leaf contributions by packed (treeId, nodeId), and records whether the
+ * model is binary with a single score (all leaves write to class 0).
+ */
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ClassifierStratum extends Stratum {

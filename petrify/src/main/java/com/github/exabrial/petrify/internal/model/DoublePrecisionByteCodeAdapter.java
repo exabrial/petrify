@@ -5,6 +5,9 @@ import java.lang.classfile.TypeKind;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.ConstantDescs;
 
+/**
+ * {@link ByteCodeAdapter} for {@code F64}: emits {@code double} instructions.
+ */
 public final class DoublePrecisionByteCodeAdapter implements ByteCodeAdapter {
 
 	@Override

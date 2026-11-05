@@ -11,6 +11,10 @@ import com.github.exabrial.petrify.compiler.model.Grove;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+/**
+ * Compile-time lookup structures built from a {@link Grove}: {@code nodeIndex} maps a packed (treeId, nodeId) key to the node's array
+ * index, and {@code treeRootIds} lists each tree once. Used only while emitting bytecode.
+ */
 @ToString
 @EqualsAndHashCode
 public class Stratum {

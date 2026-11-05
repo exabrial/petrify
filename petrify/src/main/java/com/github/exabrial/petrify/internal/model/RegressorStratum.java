@@ -13,6 +13,9 @@ import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+/**
+ * A {@link Stratum} for a {@link RegressorGrove}: groups the leaf contributions by packed (treeId, nodeId).
+ */
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class RegressorStratum extends Stratum {

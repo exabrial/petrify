@@ -8,6 +8,11 @@ import com.github.exabrial.petrify.model.PetrifyConstants;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+/**
+ * Intermediate representation of a tree ensemble model (from ONNX or LightGBM). All trees are stored as parallel node arrays in the
+ * ONNX TreeEnsemble layout: index {@code i} of each {@code nodes*} array describes the same node. Compiled by {@code Petrify} into a
+ * {@code Fossil}.
+ */
 @ToString
 @EqualsAndHashCode
 public abstract class Grove implements Serializable {
