@@ -350,6 +350,8 @@ final double[] f64 = mapper.mapToF64(features);
 
 Null map values are mapped to `NaN` (the ONNX missing-value sentinel), `Number` subtypes are narrowed to the target precision, and `Boolean` values are mapped to `1.0`/`0.0`. Unsupported types throw `FossilUnconformity`.
 
+With `setTossExceptionOnMissingFeatures(true)`, an absent key or a `null` value throws `FeatureUnconformity`. A `NaN` value is not missing: it passes through to the model, where a `fill` pre-transformer can replace it.
+
 ### Known Limitations
 
 - **String class labels are not supported.** ONNX classifiers can store labels as either `classlabels_ints` or `classlabels_strings`. Petrify only supports integer labels at this time. Models trained on string targets (e.g., `["cat", "dog", "fish"]`) must be label-encoded to `integer`s before export.

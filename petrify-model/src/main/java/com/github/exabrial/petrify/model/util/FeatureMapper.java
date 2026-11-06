@@ -22,8 +22,9 @@ import lombok.Setter;
 
 /**
  * Turns a {@code Map} of named features into the ordered {@code float[]} or {@code double[]} a {@link Fossil} predicts on, using the
- * fossil's feature names (or a supplied list) for column order. A missing or {@code null} feature becomes {@code NaN}; numbers and
- * booleans are converted. Logs a warning on missing features, or throws when {@code tossExceptionOnMissingFeatures} is set.
+ * fossil's feature names (or a supplied list) for column order. Numbers and booleans are converted; a {@code null} value becomes
+ * {@code NaN}. A feature whose key is absent is missing: it becomes {@code NaN} and logs a warning. When
+ * {@code tossExceptionOnMissingFeatures} is set, a {@code null} value also counts as missing, and any missing feature throws.
  */
 public class FeatureMapper {
 	protected final Logger log;
@@ -61,7 +62,7 @@ public class FeatureMapper {
 		final float[] result = new float[featureNames.size()];
 		for (int idx = 0; idx < featureNames.size(); idx++) {
 			final String featureName = featureNames.get(idx);
-			if (!features.containsKey(featureName)) {
+			if (!features.containsKey(featureName) || (tossExceptionOnMissingFeatures && features.get(featureName) == null)) {
 				missingFeatures.add(featureName);
 			}
 			result[idx] = floatOf(featureName, features);
@@ -80,7 +81,7 @@ public class FeatureMapper {
 		log.trace("mapToF64() mappedFor:{} inboundFeatureCount:{} inboundKeys:{}", mappedFor, features.size(), features.keySet());
 		final List<String> missingFeatures = new ArrayList<>();
 		for (final String featureName : featureNames) {
-			if (!features.containsKey(featureName)) {
+			if (!features.containsKey(featureName) || (tossExceptionOnMissingFeatures && features.get(featureName) == null)) {
 				missingFeatures.add(featureName);
 			}
 		}
