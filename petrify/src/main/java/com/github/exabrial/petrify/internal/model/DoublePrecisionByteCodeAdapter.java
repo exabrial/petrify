@@ -41,6 +41,14 @@ public final class DoublePrecisionByteCodeAdapter implements ByteCodeAdapter {
 	}
 
 	@Override
+	public void f2d(final CodeBuilder codeBuilder) {
+	}
+
+	@Override
+	public void d2f(final CodeBuilder codeBuilder) {
+	}
+
+	@Override
 	public void mul(final CodeBuilder codeBuilder) {
 		codeBuilder.dmul();
 	}

@@ -8,6 +8,7 @@ import java.lang.classfile.CodeBuilder.BlockCodeBuilder;
 import java.lang.classfile.FieldBuilder;
 import java.lang.classfile.Label;
 import java.lang.classfile.Opcode;
+import java.lang.classfile.TypeKind;
 import java.lang.classfile.attribute.ConstantValueAttribute;
 import java.lang.classfile.attribute.RuntimeInvisibleAnnotationsAttribute;
 import java.lang.classfile.instruction.SwitchCase;
@@ -16,6 +17,7 @@ import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -26,9 +28,12 @@ import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.LeafClassEntry;
 import com.github.exabrial.petrify.compiler.model.LeafTargetEntry;
 import com.github.exabrial.petrify.compiler.model.ModelMetadata;
+import com.github.exabrial.petrify.compiler.model.PreTransformer;
+import com.github.exabrial.petrify.compiler.model.PreTransformerType;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorGrove;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
+import com.github.exabrial.petrify.compiler.model.Vine;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedCometImpact;
 import com.github.exabrial.petrify.compiler.model.exception.UnexpectedTreeBranch;
 import com.github.exabrial.petrify.internal.model.ByteCodeAdapter;
@@ -64,6 +69,8 @@ public class Petrify {
 	protected static final int PREDICT_SLOT_THIS = 0;
 	protected static final int TREE_SLOT_FEATURES = 0;
 	protected static final int TREE_SLOT_SCORES = 1;
+	protected static final int NO_SLOT = -1;
+	protected static final ClassDesc CD_MATH = ClassDesc.of(Math.class.getName());
 
 	protected static int counter = 1337;
 	protected int constantPoolSoftMax = DEFAULT_CONSTANT_POOL_SOFT_MAX;
@@ -193,6 +200,9 @@ public class Petrify {
 					// Push this first; it will sit beneath the accumulating score for the aggregate call
 					codeBuilder.aload(PREDICT_SLOT_THIS);
 
+					// Compute each transformed feature into its own local variable, before the scoring starts
+					final int[] featureSlots = emitPreTransformers(codeBuilder, vine, adapter);
+
 					// Start accumulating: score = intercept
 					adapter.ldc(codeBuilder, intercept);
 
@@ -200,10 +210,8 @@ public class Petrify {
 					for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
 						final double coefficient = coefficients[featureIdx];
 						if (coefficient != 0.0) {
-							// Load features[featureIdx] onto stack
-							codeBuilder.aload(PREDICT_SLOT_FEATURES);
-							codeBuilder.ldc(featureIdx);
-							adapter.aload(codeBuilder);
+							// Load the (possibly transformed) feature onto stack
+							emitFeatureLoad(codeBuilder, featureIdx, featureSlots, adapter);
 
 							// Multiply by coefficient and accumulate into running score
 							adapter.ldc(codeBuilder, coefficient);
@@ -231,16 +239,26 @@ public class Petrify {
 					final int nFeatures = vine.nFeatures;
 					final double[] coefficients = vine.coefficients;
 					final double[] intercepts = vine.intercepts;
+					final boolean isBinarySingleScore = vine.isBinarySingleScore();
+					// A binary single-score model (e.g. scikit binary LogisticRegression) has one intercept and one coefficient row; it fills
+					// scores[0] only, and classify() derives both class scores from it
+					final int nScoreRows = isBinarySingleScore ? 1 : nClasses;
+
+					// Reserve a local variable for the scores array
+					final int scoresSlot = codeBuilder.allocateLocal(TypeKind.REFERENCE);
 
 					// Create per-class score accumulator array
 					codeBuilder.ldc(nClasses);
 					codeBuilder.newarray(adapter.typeKind());
-					codeBuilder.astore(PREDICT_SLOT_SCORES);
+					codeBuilder.astore(scoresSlot);
 
-					// For each class, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
-					for (int classIdx = 0; classIdx < nClasses; classIdx++) {
+					// Compute each transformed feature into its own local variable once, before the per-class scoring starts
+					final int[] featureSlots = emitPreTransformers(codeBuilder, vine, adapter);
+
+					// For each score row, compute: scores[c] = intercepts[c] + sum(features[f] * coefficients[c * nFeatures + f])
+					for (int classIdx = 0; classIdx < nScoreRows; classIdx++) {
 						// Push scores array ref and index for eventual store, then seed the accumulator with the intercept
-						codeBuilder.aload(PREDICT_SLOT_SCORES);
+						codeBuilder.aload(scoresSlot);
 						codeBuilder.ldc(classIdx);
 						adapter.ldc(codeBuilder, intercepts[classIdx]);
 						// Stack: scores_ref, classIdx, intercept
@@ -249,10 +267,8 @@ public class Petrify {
 						for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
 							final double coefficient = coefficients[classIdx * nFeatures + featureIdx];
 							if (coefficient != 0.0) {
-								// Load features[featureIdx] onto stack
-								codeBuilder.aload(PREDICT_SLOT_FEATURES);
-								codeBuilder.ldc(featureIdx);
-								adapter.aload(codeBuilder);
+								// Load the (possibly transformed) feature onto stack
+								emitFeatureLoad(codeBuilder, featureIdx, featureSlots, adapter);
 
 								// Multiply by coefficient and accumulate into running score
 								adapter.ldc(codeBuilder, coefficient);
@@ -267,9 +283,8 @@ public class Petrify {
 					}
 
 					// Prep and invoke fossil.classify(scores, postTransform, isBinarySingleScore)
-					final boolean isBinarySingleScore = vine.isBinarySingleScore();
 					codeBuilder.aload(PREDICT_SLOT_THIS);
-					codeBuilder.aload(PREDICT_SLOT_SCORES);
+					codeBuilder.aload(scoresSlot);
 					codeBuilder.ldc((int) vine.postTransform);
 					codeBuilder.ldc(isBinarySingleScore ? 1 : 0);
 					codeBuilder.invokeinterface(ClassDesc.of(ClassifierFossil.class.getPackageName(), ClassifierFossil.class.getSimpleName()),
@@ -283,6 +298,108 @@ public class Petrify {
 					// Return the value from classLabel lookup to the callee
 					codeBuilder.ireturn();
 				});
+	}
+
+	protected int[] emitPreTransformers(final CodeBuilder codeBuilder, final Vine vine, final ByteCodeAdapter adapter) {
+		// The local variable slot in the generated predict() method that holds the transformed value. -1 means no slot allocated, read
+		// direct from features[i]
+		final int[] featureSlots = new int[vine.nFeatures];
+		for (int featureIdx = 0; featureIdx < vine.nFeatures; featureIdx++) {
+			// A null preTransformers (e.g. ONNX vines, or vines built before pre-transformers existed) means every feature is noop
+			final boolean isNoop = vine.preTransformers == null || Arrays.stream(vine.preTransformers[featureIdx])
+					.allMatch((final PreTransformer preTransformer) -> preTransformer.type() == PreTransformerType.noop);
+			if (isNoop) {
+				featureSlots[featureIdx] = NO_SLOT;
+			} else {
+				// Reserve a new local variable in the generated predict() method to hold this feature's transformed value
+				final int slot = codeBuilder.allocateLocal(adapter.typeKind());
+
+				// copy value of features[featureIdx] into our new local variable slot
+				codeBuilder.aload(PREDICT_SLOT_FEATURES);
+				codeBuilder.ldc(featureIdx);
+				adapter.aload(codeBuilder);
+				codeBuilder.storeLocal(adapter.typeKind(), slot);
+
+				for (final PreTransformer preTransformer : vine.preTransformers[featureIdx]) {
+					emitPreTransformer(codeBuilder, preTransformer, slot, adapter);
+				}
+				featureSlots[featureIdx] = slot;
+			}
+		}
+		return featureSlots;
+	}
+
+	protected void emitPreTransformer(final CodeBuilder codeBuilder, final PreTransformer preTransformer, final int slot,
+			final ByteCodeAdapter adapter) {
+		final TypeKind typeKind = adapter.typeKind();
+		final MethodTypeDesc binaryDesc = MethodTypeDesc.of(adapter.scalarDesc(), adapter.scalarDesc(), adapter.scalarDesc());
+		switch (preTransformer.type()) {
+			case noop -> {
+				// Well that was easy
+			}
+			case fill -> {
+				// NaN is the only value not equal to itself. So load the value twice!
+				codeBuilder.loadLocal(typeKind, slot);
+				codeBuilder.loadLocal(typeKind, slot);
+
+				// cmpl pushes -1 for NaN, 0 otherwise
+				adapter.cmpl(codeBuilder);
+
+				// If cmpl result != 0 (meaning: the loadLocal is NaN)
+				codeBuilder.ifThen(Opcode.IFNE, (final BlockCodeBuilder blockCodeBuilder) -> {
+					// get the fill value
+					adapter.ldc(blockCodeBuilder, preTransformer.value());
+					// write it to the slot
+					blockCodeBuilder.storeLocal(typeKind, slot);
+				});
+			}
+			case max -> {
+				// Load input
+				codeBuilder.loadLocal(typeKind, slot);
+				// Load arg
+				adapter.ldc(codeBuilder, preTransformer.value());
+				// Upper bound: Math.min(input, arg)
+				codeBuilder.invokestatic(CD_MATH, "min", binaryDesc);
+				// write it to the slot
+				codeBuilder.storeLocal(typeKind, slot);
+			}
+			case min -> {
+				// Load input
+				codeBuilder.loadLocal(typeKind, slot);
+				// Load arg
+				adapter.ldc(codeBuilder, preTransformer.value());
+				// Lower bound: Math.max(input, arg)
+				codeBuilder.invokestatic(CD_MATH, "max", binaryDesc);
+				// write it to the slot
+				codeBuilder.storeLocal(typeKind, slot);
+			}
+			case log1p -> {
+				// Load input
+				codeBuilder.loadLocal(typeKind, slot);
+				// optionally transform to double
+				adapter.f2d(codeBuilder);
+				// Math.log1p(input)
+				codeBuilder.invokestatic(CD_MATH, "log1p", MethodTypeDesc.of(ConstantDescs.CD_double, ConstantDescs.CD_double));
+				// optionally transform to float
+				adapter.d2f(codeBuilder);
+				// write it to the slot
+				codeBuilder.storeLocal(typeKind, slot);
+			}
+		}
+	}
+
+	protected void emitFeatureLoad(final CodeBuilder codeBuilder, final int featureIdx, final int[] featureSlots,
+			final ByteCodeAdapter adapter) {
+		final int slot = featureSlots[featureIdx];
+		if (slot == NO_SLOT) {
+			// No pre-transformers: load features[featureIdx] straight from the caller's array
+			codeBuilder.aload(PREDICT_SLOT_FEATURES);
+			codeBuilder.ldc(featureIdx);
+			adapter.aload(codeBuilder);
+		} else {
+			// Load the transformed value from the local variable slot emitPreTransformers() filled
+			codeBuilder.loadLocal(adapter.typeKind(), slot);
+		}
 	}
 
 	protected void implementClassifierPredictMethod(final ClassBuilder classBuilder, final ClassifierStratum stratum,

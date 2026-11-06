@@ -61,6 +61,24 @@ public interface ByteCodeAdapter {
 	void ldc(CodeBuilder codeBuilder, double value);
 
 	/**
+	 * Generates an instruction to convert the (float|double) on top of the operand stack to a double. Emits {@code f2d} for float; emits
+	 * nothing for double.
+	 *
+	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
+	 */
+	void f2d(CodeBuilder codeBuilder);
+
+	/**
+	 * Generates an instruction to convert the double on top of the operand stack back to this adapter's precision. Emits {@code d2f} for
+	 * float; emits nothing for double.
+	 *
+	 * @param codeBuilder
+	 *          the code builder to emit the instruction into
+	 */
+	void d2f(CodeBuilder codeBuilder);
+
+	/**
 	 * Generates an instruction to multiply (float|double)s.
 	 *
 	 * @param codeBuilder
