@@ -3,12 +3,16 @@ package com.github.exabrial.petrify.imprt.scikit;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 
 import com.github.exabrial.petrify.compiler.model.ClassifierVine;
 import com.github.exabrial.petrify.compiler.model.ModelMetadata;
+import com.github.exabrial.petrify.compiler.model.PreTransformer;
+import com.github.exabrial.petrify.compiler.model.PreTransformerType;
 import com.github.exabrial.petrify.compiler.model.PrecisionMode;
 import com.github.exabrial.petrify.compiler.model.RegressorVine;
 import com.github.exabrial.petrify.compiler.model.Vine;
@@ -26,6 +30,8 @@ public class ScikitVintner implements Vintner {
 	protected static final String POST_TRANSFORM_SOFTMAX = "softmax";
 	protected static final String POST_TRANSFORM_LOGISTIC = "logistic";
 	protected static final String POST_TRANSFORM_PROBIT = "probit";
+
+	protected static final PreTransformer NOOP = new PreTransformer(PreTransformerType.noop, 0.0d);
 
 	@Override
 	public <T extends Vine> T toVine(final String classpathLocation) {
@@ -58,6 +64,7 @@ public class ScikitVintner implements Vintner {
 				}
 				default -> throw new UnexpectedTreeBranch("Unsupported scikit model 'type': " + model.getType());
 			}
+			vine.preTransformers = buildPreTransformers(model.getPreTransformers(), vine.nFeatures);
 			vine.precisionMode = PrecisionMode.F64;
 			if (model.getFeatureNames() != null || model.getModelName() != null || model.getModelVersion() != null) {
 				vine.metadata = new ModelMetadata();
@@ -124,6 +131,47 @@ public class ScikitVintner implements Vintner {
 				default -> throw new UnexpectedTreeBranch("Unsupported 'post_transform': " + postTransform);
 			};
 		}
+		return result;
+	}
+
+	protected PreTransformer[][] buildPreTransformers(final Map<Integer, List<ScikitPreTransformer>> source, final int nFeatures) {
+		final PreTransformer[][] result = new PreTransformer[nFeatures][];
+		for (int featureIdx = 0; featureIdx < nFeatures; featureIdx++) {
+			result[featureIdx] = new PreTransformer[] { NOOP };
+		}
+		if (source != null) {
+			for (final Map.Entry<Integer, List<ScikitPreTransformer>> entry : source.entrySet()) {
+				final int featureIdx = entry.getKey();
+				final List<ScikitPreTransformer> chain = entry.getValue();
+				if (featureIdx < 0 || featureIdx >= nFeatures) {
+					throw new UnexpectedTreeBranch("'pre_transformers' key out of range: " + featureIdx + " nFeatures: " + nFeatures);
+				} else if (!chain.isEmpty()) {
+					result[featureIdx] = chain.stream().map(this::toPreTransformer).toArray(PreTransformer[]::new);
+				}
+			}
+		}
+		return result;
+	}
+
+	protected PreTransformer toPreTransformer(final ScikitPreTransformer source) {
+		final PreTransformerType type = source.getTransformer();
+		final Double value = source.getArg();
+		final PreTransformer result = switch (type) {
+			case fill, max, min -> {
+				if (value == null) {
+					throw new UnexpectedTreeBranch("'pre_transformers' transformer '" + type + "' requires an 'arg'");
+				} else {
+					yield new PreTransformer(type, value);
+				}
+			}
+			case noop, log1p -> {
+				if (value != null) {
+					throw new UnexpectedTreeBranch("'pre_transformers' transformer '" + type + "' does not take an 'arg'");
+				} else {
+					yield new PreTransformer(type, 0.0d);
+				}
+			}
+		};
 		return result;
 	}
 }

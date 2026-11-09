@@ -41,6 +41,16 @@ public final class SinglePrecisionByteCodeAdapter implements ByteCodeAdapter {
 	}
 
 	@Override
+	public void f2d(final CodeBuilder codeBuilder) {
+		codeBuilder.f2d();
+	}
+
+	@Override
+	public void d2f(final CodeBuilder codeBuilder) {
+		codeBuilder.d2f();
+	}
+
+	@Override
 	public void mul(final CodeBuilder codeBuilder) {
 		codeBuilder.fmul();
 	}

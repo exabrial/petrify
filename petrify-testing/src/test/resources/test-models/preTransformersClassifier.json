@@ -1,0 +1,49 @@
+{
+	"type": "classifier",
+	"post_transform": "logistic",
+	"class_labels": [
+		0,
+		1
+	],
+	"intercepts": [
+		-6.5
+	],
+	"coefficients": [
+		[
+			0.1,
+			0.01,
+			1.0
+		]
+	],
+	"feature_names": [
+		"MedInc",
+		"HouseAge",
+		"Population"
+	],
+	"pre_transformers": {
+		"1": [
+			{
+				"transformer": "noop"
+			}
+		],
+		"2": [
+			{
+				"transformer": "fill",
+				"arg": 1000.0
+			},
+			{
+				"transformer": "max",
+				"arg": 20000.0
+			},
+			{
+				"transformer": "min",
+				"arg": 100.0
+			},
+			{
+				"transformer": "log1p"
+			}
+		]
+	},
+	"model_name": "pre_transformers_classifier",
+	"model_version": "1.0.0"
+}

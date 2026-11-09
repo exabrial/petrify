@@ -1,13 +1,19 @@
 package com.github.exabrial.petrify.imprt.scikit;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.json.bind.annotation.JsonbProperty;
 
 import lombok.Data;
 
+/**
+ * The scikit-learn JSON model file, as read by JSON-B. Field names follow the JSON keys in the readme's JSON Format section.
+ * {@code ScikitVintner} validates it and converts it to a {@code Vine}.
+ */
 @Data
-public class ScikitLinearModel implements Serializable {
+class ScikitLinearModel implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String type;
@@ -23,4 +29,6 @@ public class ScikitLinearModel implements Serializable {
 	private String modelName;
 	@JsonbProperty("model_version")
 	private String modelVersion;
+	@JsonbProperty("pre_transformers")
+	private Map<Integer, List<ScikitPreTransformer>> preTransformers;
 }

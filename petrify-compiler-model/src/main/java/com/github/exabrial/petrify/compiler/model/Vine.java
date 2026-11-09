@@ -20,5 +20,6 @@ public abstract class Vine implements Serializable {
 	public double[] intercepts;
 	public byte postTransform;
 	public int nFeatures;
+	public PreTransformer[][] preTransformers;
 	public ModelMetadata metadata;
 }
