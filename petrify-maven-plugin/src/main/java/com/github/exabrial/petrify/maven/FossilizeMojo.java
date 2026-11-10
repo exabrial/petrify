@@ -8,7 +8,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -32,6 +34,9 @@ import com.github.exabrial.petrify.imprt.onnx.OnnxArborist;
 import com.github.exabrial.petrify.imprt.onnx.OnnxVintner;
 import com.github.exabrial.petrify.imprt.scikit.ScikitVintner;
 import com.github.exabrial.petrify.internal.model.CompiledModel;
+import com.github.exabrial.petrify.model.ClassifierFossil;
+import com.github.exabrial.petrify.model.Fossil;
+import com.github.exabrial.petrify.model.RegressionFossil;
 
 /**
  * Compiles machine-learning models into JVM bytecode at build time.
@@ -48,6 +53,8 @@ import com.github.exabrial.petrify.internal.model.CompiledModel;
 public class FossilizeMojo extends AbstractMojo {
 	static final String PETRIFY_MANIFEST_DIR = "petrify";
 	static final String PETRIFY_MANIFEST_FILE = "manifest.txt";
+	static final String SERVICES_DIR = "META-INF";
+	static final String SERVICES_SUBDIR = "services";
 	private static final String PETRIFY_CLASSES_DIR = "petrify-classes";
 	private static final String PETRIFY_CLASSPATH_ENTRY = "<classpathentry exported=\"true\" kind=\"lib\" path=\"target/"
 			+ PETRIFY_CLASSES_DIR + "\"/>";
@@ -109,6 +116,37 @@ public class FossilizeMojo extends AbstractMojo {
 				processFossil(fossil);
 			}
 			writeManifest();
+
+			final List<FossilConfig> serviceFossils = Arrays.stream(fossils).filter(FossilConfig::isRegisterService).toList();
+
+			if (!serviceFossils.isEmpty()) {
+				createServicesDirectory(outputDirectory);
+				if (isEclipseIntegrationEnabled()) {
+					createServicesDirectory(resolveEclipseBaseDirectory());
+				}
+				final List<String> fossilClassNames = new ArrayList<>();
+				final List<String> classifierClassNames = new ArrayList<>();
+				final List<String> regressionClassNames = new ArrayList<>();
+				for (final FossilConfig serviceFossil : serviceFossils) {
+					final String fossilClassName = serviceFossil.getTargetPackageName() + "." + serviceFossil.resolveClassName();
+					fossilClassNames.add(fossilClassName);
+					switch (serviceFossil.getModelType()) {
+						case classifier -> classifierClassNames.add(fossilClassName);
+						case regressor -> regressionClassNames.add(fossilClassName);
+					}
+				}
+
+				writeServiceFile(outputDirectory, Fossil.class, fossilClassNames);
+				writeServiceFile(outputDirectory, ClassifierFossil.class, classifierClassNames);
+				writeServiceFile(outputDirectory, RegressionFossil.class, regressionClassNames);
+
+				if (isEclipseIntegrationEnabled()) {
+					writeServiceFile(resolveEclipseBaseDirectory(), Fossil.class, fossilClassNames);
+					writeServiceFile(resolveEclipseBaseDirectory(), ClassifierFossil.class, classifierClassNames);
+					writeServiceFile(resolveEclipseBaseDirectory(), RegressionFossil.class, regressionClassNames);
+				}
+			}
+
 			refreshOutputDirectories();
 
 			if (isEclipseIntegrationEnabled()) {
@@ -438,6 +476,28 @@ public class FossilizeMojo extends AbstractMojo {
 			}
 		} catch (final IOException ioException) {
 			throw new MojoExecutionException("createOutputDirectories() failed to create output directories", ioException);
+		}
+	}
+
+	protected void createServicesDirectory(final String baseDirectory) throws MojoExecutionException {
+		final Path servicesDirectory = Path.of(baseDirectory, SERVICES_DIR, SERVICES_SUBDIR);
+		try {
+			Files.createDirectories(servicesDirectory);
+		} catch (final IOException ioException) {
+			throw new MojoExecutionException("createServicesDirectory() failed to create servicesDirectory:" + servicesDirectory,
+					ioException);
+		}
+	}
+
+	protected void writeServiceFile(final String baseDirectory, final Class<? extends Fossil> serviceInterface,
+			final List<String> classNames) throws MojoExecutionException {
+		final Path serviceFile = Path.of(baseDirectory, SERVICES_DIR, SERVICES_SUBDIR, serviceInterface.getName());
+		try (OutputStream outputStream = buildContext.newFileOutputStream(serviceFile.toFile())) {
+			final String content = classNames.stream().map((final String className) -> className + "\n").collect(Collectors.joining());
+			outputStream.write(content.getBytes(StandardCharsets.UTF_8));
+			getLog().info("writeServiceFile() wrote providers:" + classNames.size() + " to:" + serviceFile);
+		} catch (final IOException ioException) {
+			throw new MojoExecutionException("writeServiceFile() failed to write serviceFile:" + serviceFile, ioException);
 		}
 	}
 
