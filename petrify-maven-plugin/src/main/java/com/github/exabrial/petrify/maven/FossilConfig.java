@@ -82,6 +82,13 @@ public class FossilConfig {
 	 */
 	private boolean ignoreFeatureNamesFromModel;
 
+	/**
+	 * If true (the default), the generated fossil is listed in {@code META-INF/services} under
+	 * {@code com.github.exabrial.petrify.model.Fossil} and under {@code ClassifierFossil} or {@code RegressionFossil} for its
+	 * {@link #modelType}, so it can be discovered with {@link java.util.ServiceLoader}. Set to false to leave this fossil out.
+	 */
+	private boolean registerService = true;
+
 	public String[] resolveFeatureNames() {
 		final String[] result;
 		if (featureNames != null && !featureNames.isEmpty()) {
