@@ -788,16 +788,16 @@ public class Petrify {
 	protected void emitMetadataMethods(final ClassBuilder classBuilder, final ModelMetadata metadata) {
 		if (metadata != null) {
 			if (metadata.modelFamily != null) {
-				emitGetStringMethod(classBuilder, "getModelFamily", metadata.modelFamily);
+				emitGetModelFamilyMethod(classBuilder, metadata.modelFamily);
 			}
 			if (metadata.modelName != null) {
-				emitGetStringMethod(classBuilder, "getModelName", metadata.modelName);
+				emitGetModelNameMethod(classBuilder, metadata.modelName);
 			}
 			if (metadata.majorVersion != null) {
-				emitGetIntegerMethod(classBuilder, "getMajorVersion", metadata.majorVersion);
+				emitGetMajorVersionMethod(classBuilder, metadata.majorVersion);
 			}
 			if (metadata.minorVersion != null) {
-				emitGetIntegerMethod(classBuilder, "getMinorVersion", metadata.minorVersion);
+				emitGetMinorVersionMethod(classBuilder, metadata.minorVersion);
 			}
 			if (metadata.featureNames != null) {
 				emitGetFeatureNamesMethod(classBuilder, metadata.featureNames);
@@ -816,18 +816,36 @@ public class Petrify {
 				});
 	}
 
-	protected void emitGetStringMethod(final ClassBuilder classBuilder, final String methodName, final String value) {
-		classBuilder.withMethodBody(methodName, MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+	protected void emitGetModelFamilyMethod(final ClassBuilder classBuilder, final String modelFamily) {
+		classBuilder.withMethodBody("getModelFamily", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
-					codeBuilder.ldc(value);
+					codeBuilder.ldc(modelFamily);
 					codeBuilder.areturn();
 				});
 	}
 
-	protected void emitGetIntegerMethod(final ClassBuilder classBuilder, final String methodName, final int value) {
-		classBuilder.withMethodBody(methodName, MethodTypeDesc.of(ConstantDescs.CD_Integer), ClassFile.ACC_PUBLIC,
+	protected void emitGetModelNameMethod(final ClassBuilder classBuilder, final String modelName) {
+		classBuilder.withMethodBody("getModelName", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
-					codeBuilder.ldc(value);
+					codeBuilder.ldc(modelName);
+					codeBuilder.areturn();
+				});
+	}
+
+	protected void emitGetMajorVersionMethod(final ClassBuilder classBuilder, final int majorVersion) {
+		classBuilder.withMethodBody("getMajorVersion", MethodTypeDesc.of(ConstantDescs.CD_Integer), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(majorVersion);
+					codeBuilder.invokestatic(ConstantDescs.CD_Integer, "valueOf",
+							MethodTypeDesc.of(ConstantDescs.CD_Integer, ConstantDescs.CD_int));
+					codeBuilder.areturn();
+				});
+	}
+
+	protected void emitGetMinorVersionMethod(final ClassBuilder classBuilder, final int minorVersion) {
+		classBuilder.withMethodBody("getMinorVersion", MethodTypeDesc.of(ConstantDescs.CD_Integer), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(minorVersion);
 					codeBuilder.invokestatic(ConstantDescs.CD_Integer, "valueOf",
 							MethodTypeDesc.of(ConstantDescs.CD_Integer, ConstantDescs.CD_int));
 					codeBuilder.areturn();
