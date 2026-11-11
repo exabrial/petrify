@@ -15,6 +15,29 @@ class FossilTest {
 	private final Fossil fossil = new Fossil() {
 		private static final long serialVersionUID = 1L;
 	};
+	private final Fossil versionedFossil = new Fossil() {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public String getModelFamily() {
+			return "family";
+		}
+
+		@Override
+		public String getModelName() {
+			return "name";
+		}
+
+		@Override
+		public Integer getMajorVersion() {
+			return 8;
+		}
+
+		@Override
+		public Integer getMinorVersion() {
+			return 1;
+		}
+	};
 
 	@Test
 	void testLogisticFloat() {
@@ -80,7 +103,6 @@ class FossilTest {
 
 	@Test
 	void testGetModelVersion() {
-		final Fossil versionedFossil = versionedFossil(8, 1);
 		assertEquals("8.1", versionedFossil.getModelVersion());
 	}
 
@@ -91,38 +113,20 @@ class FossilTest {
 
 	@Test
 	void testGetModelVersion_majorOnly() {
-		assertNull(versionedFossil(8, null).getModelVersion());
+		final Fossil majorOnlyFossil = new Fossil() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Integer getMajorVersion() {
+				return 8;
+			}
+		};
+		assertNull(majorOnlyFossil.getModelVersion());
 	}
 
 	@Test
 	void testFossilToString() {
-		final String result = Fossil.fossilToString(versionedFossil(8, 1));
+		final String result = Fossil.fossilToString(versionedFossil);
 		assertTrue(result.contains("[modelFamily=family, modelName=name, modelVersion=8.1]"), result);
-	}
-
-	private static Fossil versionedFossil(final Integer majorVersion, final Integer minorVersion) {
-		return new Fossil() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public String getModelFamily() {
-				return "family";
-			}
-
-			@Override
-			public String getModelName() {
-				return "name";
-			}
-
-			@Override
-			public Integer getMajorVersion() {
-				return majorVersion;
-			}
-
-			@Override
-			public Integer getMinorVersion() {
-				return minorVersion;
-			}
-		};
 	}
 }
