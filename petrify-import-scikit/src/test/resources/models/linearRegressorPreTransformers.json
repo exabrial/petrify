@@ -40,6 +40,8 @@
 			}
 		]
 	},
+	"model_family": "linear",
 	"model_name": "linear_regressor_pre_transformers",
-	"model_version": "1.0.0"
+	"major_version": 1,
+	"minor_version": 0
 }

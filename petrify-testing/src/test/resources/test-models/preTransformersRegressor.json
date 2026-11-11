@@ -41,5 +41,6 @@
 		]
 	},
 	"model_name": "pre_transformers_regressor",
-	"model_version": "1.0.0"
+	"major_version": 1,
+	"minor_version": 0
 }

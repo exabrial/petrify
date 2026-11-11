@@ -66,11 +66,14 @@ public class ScikitVintner implements Vintner {
 			}
 			vine.preTransformers = buildPreTransformers(model.getPreTransformers(), vine.nFeatures);
 			vine.precisionMode = PrecisionMode.F64;
-			if (model.getFeatureNames() != null || model.getModelName() != null || model.getModelVersion() != null) {
+			if (model.getFeatureNames() != null || model.getModelFamily() != null || model.getModelName() != null
+					|| model.getMajorVersion() != null || model.getMinorVersion() != null) {
 				vine.metadata = new ModelMetadata();
 				vine.metadata.featureNames = model.getFeatureNames();
+				vine.metadata.modelFamily = model.getModelFamily();
 				vine.metadata.modelName = model.getModelName();
-				vine.metadata.modelVersion = model.getModelVersion();
+				vine.metadata.majorVersion = model.getMajorVersion();
+				vine.metadata.minorVersion = model.getMinorVersion();
 			}
 			return (T) vine;
 		} catch (final UnexpectedTreeBranch | UnexpectedCometImpact pe) {

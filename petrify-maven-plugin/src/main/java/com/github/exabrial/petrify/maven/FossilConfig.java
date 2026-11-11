@@ -58,16 +58,29 @@ public class FossilConfig {
 	private String targetClassName;
 
 	/**
+	 * Optional model family baked into the generated fossil's metadata. Retrievable at runtime via
+	 * {@code Fossil.getModelFamily()}.
+	 */
+	private String modelFamily;
+
+	/**
 	 * Optional human-readable model name baked into the generated fossil's metadata. Retrievable at
 	 * runtime via {@code Fossil.getModelName()}.
 	 */
 	private String modelName;
 
 	/**
-	 * Optional model version string baked into the generated fossil's metadata. Retrievable at
-	 * runtime via {@code Fossil.getModelVersion()}.
+	 * Optional major version baked into the generated fossil's metadata. Retrievable at runtime via
+	 * {@code Fossil.getMajorVersion()}.
 	 */
-	private String modelVersion;
+	private Integer majorVersion;
+
+	/**
+	 * Optional minor version baked into the generated fossil's metadata. Retrievable at runtime via
+	 * {@code Fossil.getMinorVersion()}. With {@link #majorVersion}, {@code Fossil.getModelVersion()} returns
+	 * {@code majorVersion.minorVersion}.
+	 */
+	private Integer minorVersion;
 
 	/**
 	 * Comma-separated override for the feature-name list baked into the generated fossil. Useful when

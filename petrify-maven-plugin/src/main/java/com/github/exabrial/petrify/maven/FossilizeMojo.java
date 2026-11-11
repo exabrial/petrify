@@ -329,17 +329,29 @@ public class FossilizeMojo extends AbstractMojo {
 	}
 
 	protected void applyConfigMetadata(final Grove grove, final FossilConfig fossilConfig) {
+		if (fossilConfig.getModelFamily() != null) {
+			if (grove.metadata == null) {
+				grove.metadata = new ModelMetadata();
+			}
+			grove.metadata.modelFamily = fossilConfig.getModelFamily();
+		}
 		if (fossilConfig.getModelName() != null) {
 			if (grove.metadata == null) {
 				grove.metadata = new ModelMetadata();
 			}
 			grove.metadata.modelName = fossilConfig.getModelName();
 		}
-		if (fossilConfig.getModelVersion() != null) {
+		if (fossilConfig.getMajorVersion() != null) {
 			if (grove.metadata == null) {
 				grove.metadata = new ModelMetadata();
 			}
-			grove.metadata.modelVersion = fossilConfig.getModelVersion();
+			grove.metadata.majorVersion = fossilConfig.getMajorVersion();
+		}
+		if (fossilConfig.getMinorVersion() != null) {
+			if (grove.metadata == null) {
+				grove.metadata = new ModelMetadata();
+			}
+			grove.metadata.minorVersion = fossilConfig.getMinorVersion();
 		}
 		final String[] resolvedFeatureNames = fossilConfig.resolveFeatureNames();
 		if (resolvedFeatureNames != null) {
@@ -353,17 +365,29 @@ public class FossilizeMojo extends AbstractMojo {
 	}
 
 	protected void applyConfigMetadata(final Vine vine, final FossilConfig fossilConfig) {
+		if (fossilConfig.getModelFamily() != null) {
+			if (vine.metadata == null) {
+				vine.metadata = new ModelMetadata();
+			}
+			vine.metadata.modelFamily = fossilConfig.getModelFamily();
+		}
 		if (fossilConfig.getModelName() != null) {
 			if (vine.metadata == null) {
 				vine.metadata = new ModelMetadata();
 			}
 			vine.metadata.modelName = fossilConfig.getModelName();
 		}
-		if (fossilConfig.getModelVersion() != null) {
+		if (fossilConfig.getMajorVersion() != null) {
 			if (vine.metadata == null) {
 				vine.metadata = new ModelMetadata();
 			}
-			vine.metadata.modelVersion = fossilConfig.getModelVersion();
+			vine.metadata.majorVersion = fossilConfig.getMajorVersion();
+		}
+		if (fossilConfig.getMinorVersion() != null) {
+			if (vine.metadata == null) {
+				vine.metadata = new ModelMetadata();
+			}
+			vine.metadata.minorVersion = fossilConfig.getMinorVersion();
 		}
 		final String[] resolvedFeatureNames = fossilConfig.resolveFeatureNames();
 		if (resolvedFeatureNames != null) {

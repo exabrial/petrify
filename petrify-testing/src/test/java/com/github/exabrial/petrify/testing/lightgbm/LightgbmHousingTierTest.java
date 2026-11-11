@@ -35,7 +35,9 @@ class LightgbmHousingTierTest {
 	private ClassifierFossil fossil;
 
 	private final String modelName = "Lightgbm Housing Tier, Junit5 Test";
-	private final String modelVersion = "1.2.3";
+	private final String modelFamily = "housing";
+	private final int majorVersion = 1;
+	private final int minorVersion = 2;
 
 	@BeforeAll
 	void beforeAll() {
@@ -43,7 +45,9 @@ class LightgbmHousingTierTest {
 		final ClassifierGrove grove = arborist.toGrove(MODEL);
 
 		grove.metadata.modelName = modelName;
-		grove.metadata.modelVersion = modelVersion;
+		grove.metadata.modelFamily = modelFamily;
+		grove.metadata.majorVersion = majorVersion;
+		grove.metadata.minorVersion = minorVersion;
 
 		final Petrify petrify = new Petrify();
 		fossil = petrify.fossilize(MethodHandles.lookup(), grove);
@@ -68,8 +72,23 @@ class LightgbmHousingTierTest {
 	}
 
 	@Test
+	void testGetModelFamily() {
+		assertEquals(modelFamily, fossil.getModelFamily());
+	}
+
+	@Test
+	void testGetMajorVersion() {
+		assertEquals(majorVersion, fossil.getMajorVersion());
+	}
+
+	@Test
+	void testGetMinorVersion() {
+		assertEquals(minorVersion, fossil.getMinorVersion());
+	}
+
+	@Test
 	void testGetModelVersion() {
-		assertEquals(modelVersion, fossil.getModelVersion());
+		assertEquals("1.2", fossil.getModelVersion());
 	}
 
 	@Test

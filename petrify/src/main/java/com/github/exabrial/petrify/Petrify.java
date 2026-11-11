@@ -787,11 +787,17 @@ public class Petrify {
 
 	protected void emitMetadataMethods(final ClassBuilder classBuilder, final ModelMetadata metadata) {
 		if (metadata != null) {
-			if (metadata.modelName != null) {
-				emitGetModelNameMethod(classBuilder, metadata.modelName);
+			if (metadata.modelFamily != null) {
+				emitGetStringMethod(classBuilder, "getModelFamily", metadata.modelFamily);
 			}
-			if (metadata.modelVersion != null) {
-				emitGetModelVersionMethod(classBuilder, metadata.modelVersion);
+			if (metadata.modelName != null) {
+				emitGetStringMethod(classBuilder, "getModelName", metadata.modelName);
+			}
+			if (metadata.majorVersion != null) {
+				emitGetIntegerMethod(classBuilder, "getMajorVersion", metadata.majorVersion);
+			}
+			if (metadata.minorVersion != null) {
+				emitGetIntegerMethod(classBuilder, "getMinorVersion", metadata.minorVersion);
 			}
 			if (metadata.featureNames != null) {
 				emitGetFeatureNamesMethod(classBuilder, metadata.featureNames);
@@ -810,18 +816,20 @@ public class Petrify {
 				});
 	}
 
-	protected void emitGetModelNameMethod(final ClassBuilder classBuilder, final String modelName) {
-		classBuilder.withMethodBody("getModelName", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+	protected void emitGetStringMethod(final ClassBuilder classBuilder, final String methodName, final String value) {
+		classBuilder.withMethodBody(methodName, MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
-					codeBuilder.ldc(modelName);
+					codeBuilder.ldc(value);
 					codeBuilder.areturn();
 				});
 	}
 
-	protected void emitGetModelVersionMethod(final ClassBuilder classBuilder, final String modelVersion) {
-		classBuilder.withMethodBody("getModelVersion", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+	protected void emitGetIntegerMethod(final ClassBuilder classBuilder, final String methodName, final int value) {
+		classBuilder.withMethodBody(methodName, MethodTypeDesc.of(ConstantDescs.CD_Integer), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
-					codeBuilder.ldc(modelVersion);
+					codeBuilder.ldc(value);
+					codeBuilder.invokestatic(ConstantDescs.CD_Integer, "valueOf",
+							MethodTypeDesc.of(ConstantDescs.CD_Integer, ConstantDescs.CD_int));
 					codeBuilder.areturn();
 				});
 	}

@@ -14,7 +14,9 @@ import lombok.ToString;
 public class ModelMetadata implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+	public String modelFamily;
 	public String modelName;
-	public String modelVersion;
+	public Integer majorVersion;
+	public Integer minorVersion;
 	public String[] featureNames;
 }

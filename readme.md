@@ -281,8 +281,10 @@ Model files are resolved from `src/main/models/` by default.
 | `modelDirectory` | No | Override the model directory (defaults to `src/main/models/`) |
 | `featureNames` | No | Comma-separated feature names in column order. Enables `FeatureMapper` on the compiled `Fossil`. |
 | `ignoreFeatureNamesFromModel` | No | If `true`, discard any feature names embedded in the model file. Defaults to `false`. |
+| `modelFamily` | No | Model family metadata. Stored on the compiled `Fossil`. |
 | `modelName` | No | Model name metadata. Stored on the compiled `Fossil`. |
-| `modelVersion` | No | Model version metadata. Stored on the compiled `Fossil`. |
+| `majorVersion` | No | Major version metadata. Stored on the compiled `Fossil`. |
+| `minorVersion` | No | Minor version metadata. Stored on the compiled `Fossil`. With `majorVersion`, `Fossil.getModelVersion()` returns `majorVersion.minorVersion`. |
 
 #### Plugin-level parameters
 
