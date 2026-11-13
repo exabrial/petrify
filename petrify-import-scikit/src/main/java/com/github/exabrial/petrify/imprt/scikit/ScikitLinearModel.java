@@ -25,10 +25,14 @@ class ScikitLinearModel implements Serializable {
 	private double[][] coefficients;
 	@JsonbProperty("feature_names")
 	private String[] featureNames;
+	@JsonbProperty("model_family")
+	private String modelFamily;
 	@JsonbProperty("model_name")
 	private String modelName;
-	@JsonbProperty("model_version")
-	private String modelVersion;
+	@JsonbProperty("major_version")
+	private Integer majorVersion;
+	@JsonbProperty("minor_version")
+	private Integer minorVersion;
 	@JsonbProperty("pre_transformers")
 	private Map<Integer, List<ScikitPreTransformer>> preTransformers;
 }

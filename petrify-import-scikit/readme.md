@@ -30,8 +30,10 @@ with open("logistic_housing_tier.json", "w") as f:
         "intercepts": model.intercept_.tolist(),
         "coefficients": model.coef_.tolist(),
         "feature_names": data.feature_names,
+        "model_family": "housing",
         "model_name": "logistic_housing_tier",
-        "model_version": "1.0.0"
+        "major_version": 1,
+        "minor_version": 0
     }, f)
 ```
 
@@ -49,8 +51,10 @@ with open("logistic_binary.json", "w") as f:
         "intercepts": model.intercept_.tolist(),
         "coefficients": model.coef_.tolist(),
         "feature_names": data.feature_names,
+        "model_family": "housing",
         "model_name": "logistic_binary",
-        "model_version": "1.0.0"
+        "major_version": 1,
+        "minor_version": 0
     }, f)
 ```
 
@@ -69,8 +73,10 @@ with open("linear_regressor_housing.json", "w") as f:
         "intercepts": [model.intercept_] if isinstance(model.intercept_, float) else model.intercept_.tolist(),
         "coefficients": [model.coef_.tolist()],
         "feature_names": data.feature_names,
+        "model_family": "housing",
         "model_name": "linear_regressor_housing",
-        "model_version": "1.0.0"
+        "major_version": 1,
+        "minor_version": 0
     }, f)
 ```
 
@@ -96,8 +102,10 @@ with open("linear_regressor_housing.json", "w") as f:
             {"transformer": "log1p"}
         ]
     },
+    "model_family": "housing",
     "model_name": "logistic_housing_tier",
-    "model_version": "1.0.0"
+    "major_version": 1,
+    "minor_version": 0
 }
 ```
 
@@ -110,8 +118,10 @@ with open("linear_regressor_housing.json", "w") as f:
 | `coefficients` | `double[][]` | yes | Coefficient matrix. One row per class (classifier) or per target (regressor). For binary OVR classifiers, scikit stores a single row. |
 | `feature_names` | `string[]` | no | Feature names in column order. Enables `FeatureMapper` for named-feature-to-array conversion. |
 | `pre_transformers` | `object` | no | Transformers to apply to features before the model runs. See [Pre-transformers](#pre-transformers). |
+| `model_family` | `string` | no | Model family metadata. Stored on the compiled `Fossil`. |
 | `model_name` | `string` | no | Model name metadata. Stored on the compiled `Fossil`. |
-| `model_version` | `string` | no | Model version metadata. Stored on the compiled `Fossil`. |
+| `major_version` | `int` | no | Major version metadata. Stored on the compiled `Fossil`. |
+| `minor_version` | `int` | no | Minor version metadata. Stored on the compiled `Fossil`. With `major_version`, `Fossil.getModelVersion()` returns `major_version.minor_version`. |
 
 
 ## Pre-transformers

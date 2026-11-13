@@ -37,8 +37,10 @@ class ITestScikitVintner {
 		assertArrayEquals(INTERCEPTS, vine.intercepts);
 		assertArrayEquals(PRE_TRANSFORMERS, vine.preTransformers);
 		assertArrayEquals(FEATURE_NAMES, vine.metadata.featureNames);
+		assertEquals("linear", vine.metadata.modelFamily);
 		assertEquals("linear_classifier_pre_transformers", vine.metadata.modelName);
-		assertEquals("1.0.0", vine.metadata.modelVersion);
+		assertEquals(1, vine.metadata.majorVersion);
+		assertEquals(0, vine.metadata.minorVersion);
 	}
 
 	@Test
@@ -53,7 +55,9 @@ class ITestScikitVintner {
 		assertArrayEquals(INTERCEPTS, vine.intercepts);
 		assertArrayEquals(PRE_TRANSFORMERS, vine.preTransformers);
 		assertArrayEquals(FEATURE_NAMES, vine.metadata.featureNames);
+		assertEquals("linear", vine.metadata.modelFamily);
 		assertEquals("linear_regressor_pre_transformers", vine.metadata.modelName);
-		assertEquals("1.0.0", vine.metadata.modelVersion);
+		assertEquals(1, vine.metadata.majorVersion);
+		assertEquals(0, vine.metadata.minorVersion);
 	}
 }

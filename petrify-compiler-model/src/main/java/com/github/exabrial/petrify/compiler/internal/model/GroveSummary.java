@@ -14,11 +14,17 @@ public record GroveSummary(int treeCount, int branchCount, int leafCount, ModelM
 		result.append(", branchCount=").append(branchCount);
 		result.append(", leafCount=").append(leafCount);
 		if (metadata != null) {
+			if (metadata.modelFamily != null) {
+				result.append(", modelFamily=").append(metadata.modelFamily);
+			}
 			if (metadata.modelName != null) {
 				result.append(", modelName=").append(metadata.modelName);
 			}
-			if (metadata.modelVersion != null) {
-				result.append(", modelVersion=").append(metadata.modelVersion);
+			if (metadata.majorVersion != null) {
+				result.append(", majorVersion=").append(metadata.majorVersion);
+			}
+			if (metadata.minorVersion != null) {
+				result.append(", minorVersion=").append(metadata.minorVersion);
 			}
 			if (metadata.featureNames != null) {
 				result.append(", featureCount=").append(metadata.featureNames.length);

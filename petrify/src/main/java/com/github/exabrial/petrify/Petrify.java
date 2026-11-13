@@ -787,11 +787,17 @@ public class Petrify {
 
 	protected void emitMetadataMethods(final ClassBuilder classBuilder, final ModelMetadata metadata) {
 		if (metadata != null) {
+			if (metadata.modelFamily != null) {
+				emitGetModelFamilyMethod(classBuilder, metadata.modelFamily);
+			}
 			if (metadata.modelName != null) {
 				emitGetModelNameMethod(classBuilder, metadata.modelName);
 			}
-			if (metadata.modelVersion != null) {
-				emitGetModelVersionMethod(classBuilder, metadata.modelVersion);
+			if (metadata.majorVersion != null) {
+				emitGetMajorVersionMethod(classBuilder, metadata.majorVersion);
+			}
+			if (metadata.minorVersion != null) {
+				emitGetMinorVersionMethod(classBuilder, metadata.minorVersion);
 			}
 			if (metadata.featureNames != null) {
 				emitGetFeatureNamesMethod(classBuilder, metadata.featureNames);
@@ -810,6 +816,14 @@ public class Petrify {
 				});
 	}
 
+	protected void emitGetModelFamilyMethod(final ClassBuilder classBuilder, final String modelFamily) {
+		classBuilder.withMethodBody("getModelFamily", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(modelFamily);
+					codeBuilder.areturn();
+				});
+	}
+
 	protected void emitGetModelNameMethod(final ClassBuilder classBuilder, final String modelName) {
 		classBuilder.withMethodBody("getModelName", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
@@ -818,10 +832,22 @@ public class Petrify {
 				});
 	}
 
-	protected void emitGetModelVersionMethod(final ClassBuilder classBuilder, final String modelVersion) {
-		classBuilder.withMethodBody("getModelVersion", MethodTypeDesc.of(ConstantDescs.CD_String), ClassFile.ACC_PUBLIC,
+	protected void emitGetMajorVersionMethod(final ClassBuilder classBuilder, final int majorVersion) {
+		classBuilder.withMethodBody("getMajorVersion", MethodTypeDesc.of(ConstantDescs.CD_Integer), ClassFile.ACC_PUBLIC,
 				(final CodeBuilder codeBuilder) -> {
-					codeBuilder.ldc(modelVersion);
+					codeBuilder.ldc(majorVersion);
+					codeBuilder.invokestatic(ConstantDescs.CD_Integer, "valueOf",
+							MethodTypeDesc.of(ConstantDescs.CD_Integer, ConstantDescs.CD_int));
+					codeBuilder.areturn();
+				});
+	}
+
+	protected void emitGetMinorVersionMethod(final ClassBuilder classBuilder, final int minorVersion) {
+		classBuilder.withMethodBody("getMinorVersion", MethodTypeDesc.of(ConstantDescs.CD_Integer), ClassFile.ACC_PUBLIC,
+				(final CodeBuilder codeBuilder) -> {
+					codeBuilder.ldc(minorVersion);
+					codeBuilder.invokestatic(ConstantDescs.CD_Integer, "valueOf",
+							MethodTypeDesc.of(ConstantDescs.CD_Integer, ConstantDescs.CD_int));
 					codeBuilder.areturn();
 				});
 	}

@@ -6,12 +6,37 @@
 package com.github.exabrial.petrify.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 class FossilTest {
 	private final Fossil fossil = new Fossil() {
 		private static final long serialVersionUID = 1L;
+	};
+	private final Fossil versionedFossil = new Fossil() {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public String getModelFamily() {
+			return "family";
+		}
+
+		@Override
+		public String getModelName() {
+			return "name";
+		}
+
+		@Override
+		public Integer getMajorVersion() {
+			return 8;
+		}
+
+		@Override
+		public Integer getMinorVersion() {
+			return 1;
+		}
 	};
 
 	@Test
@@ -74,5 +99,34 @@ class FossilTest {
 		assertEquals(1.5f, narrowed[0]);
 		assertEquals(-2.5f, narrowed[1]);
 		assertEquals(0.0f, narrowed[2]);
+	}
+
+	@Test
+	void testGetModelVersion() {
+		assertEquals("8.1", versionedFossil.getModelVersion());
+	}
+
+	@Test
+	void testGetModelVersion_unversioned() {
+		assertNull(fossil.getModelVersion());
+	}
+
+	@Test
+	void testGetModelVersion_majorOnly() {
+		final Fossil majorOnlyFossil = new Fossil() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Integer getMajorVersion() {
+				return 8;
+			}
+		};
+		assertNull(majorOnlyFossil.getModelVersion());
+	}
+
+	@Test
+	void testFossilToString() {
+		final String result = Fossil.fossilToString(versionedFossil);
+		assertTrue(result.contains("[modelFamily=family, modelName=name, modelVersion=8.1]"), result);
 	}
 }

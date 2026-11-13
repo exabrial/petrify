@@ -20,12 +20,32 @@ public interface Fossil extends Serializable {
 		return Collections.emptyList();
 	}
 
+	default String getModelFamily() {
+		return null;
+	}
+
 	default String getModelName() {
 		return null;
 	}
 
-	default String getModelVersion() {
+	default Integer getMajorVersion() {
 		return null;
+	}
+
+	default Integer getMinorVersion() {
+		return null;
+	}
+
+	default String getModelVersion() {
+		final Integer majorVersion = getMajorVersion();
+		final Integer minorVersion = getMinorVersion();
+		final String modelVersion;
+		if (majorVersion != null && minorVersion != null) {
+			modelVersion = majorVersion + "." + minorVersion;
+		} else {
+			modelVersion = null;
+		}
+		return modelVersion;
 	}
 
 	default float logistic(final float score) {
@@ -74,8 +94,16 @@ public interface Fossil extends Serializable {
 		result.append('@').append(Integer.toHexString(System.identityHashCode(fossil)));
 		result.append('[');
 		boolean first = true;
+		final String modelFamily = fossil.getModelFamily();
+		if (modelFamily != null) {
+			result.append("modelFamily=").append(modelFamily);
+			first = false;
+		}
 		final String modelName = fossil.getModelName();
 		if (modelName != null) {
+			if (!first) {
+				result.append(", ");
+			}
 			result.append("modelName=").append(modelName);
 			first = false;
 		}
