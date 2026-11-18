@@ -27,6 +27,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<dep.version.protobuf>4.29.3</dep.version.protobuf>
+		<gpg.keyname>871638A21A7F2C38066471420306A354336B4F0D</gpg.keyname>
 	</properties>
 
 	<dependencyManagement>
